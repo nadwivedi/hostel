@@ -41,17 +41,17 @@ function Dashboard() {
 
   const StatCard = ({ title, value, icon, gradient, bgLight }) => (
     <div className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100`}>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-4xl font-bold text-gray-900">{loading ? '...' : value}</p>
+            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{title}</p>
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">{loading ? '...' : value}</p>
           </div>
-          <div className={`w-16 h-16 rounded-2xl ${gradient} flex items-center justify-center shadow-lg`}>
-            <span className="text-3xl">{icon}</span>
+          <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl ${gradient} flex items-center justify-center shadow-lg`}>
+            <span className="text-2xl sm:text-3xl">{icon}</span>
           </div>
         </div>
-        <div className={`mt-4 h-2 rounded-full ${bgLight}`}>
+        <div className={`mt-3 sm:mt-4 h-2 rounded-full ${bgLight}`}>
           <div
             className={`h-full rounded-full ${gradient} transition-all duration-500`}
             style={{ width: loading ? '0%' : '100%' }}
@@ -62,15 +62,15 @@ function Dashboard() {
   );
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back! Here's an overview of your hostel</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Welcome back! Here's an overview of your hostel</p>
         </div>
         <button
           onClick={fetchStats}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-medium cursor-pointer"
+          className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-medium cursor-pointer text-sm sm:text-base self-start sm:self-auto"
         >
           🔄 Refresh
         </button>
@@ -107,30 +107,30 @@ function Dashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Stats</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Available Rooms</span>
-              <span className="font-bold text-blue-600">{stats.totalRooms - stats.occupiedRooms}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Quick Stats</h3>
+          <div className="space-y-2 sm:space-y-3">
+            <div className="flex justify-between items-center py-2 sm:py-3 border-b border-gray-100">
+              <span className="text-sm sm:text-base text-gray-600">Available Rooms</span>
+              <span className="font-bold text-blue-600 text-sm sm:text-base">{stats.totalRooms - stats.occupiedRooms}</span>
             </div>
-            <div className="flex justify-between items-center py-3 border-b border-gray-100">
-              <span className="text-gray-600">Occupancy Rate</span>
-              <span className="font-bold text-green-600">
+            <div className="flex justify-between items-center py-2 sm:py-3 border-b border-gray-100">
+              <span className="text-sm sm:text-base text-gray-600">Occupancy Rate</span>
+              <span className="font-bold text-green-600 text-sm sm:text-base">
                 {stats.totalRooms > 0 ? Math.round((stats.occupiedRooms / stats.totalRooms) * 100) : 0}%
               </span>
             </div>
-            <div className="flex justify-between items-center py-3">
-              <span className="text-gray-600">Active Tenants</span>
-              <span className="font-bold text-purple-600">{stats.totalTenants}</span>
+            <div className="flex justify-between items-center py-2 sm:py-3">
+              <span className="text-sm sm:text-base text-gray-600">Active Tenants</span>
+              <span className="font-bold text-purple-600 text-sm sm:text-base">{stats.totalTenants}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h3>
-          <div className="space-y-4">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Recent Activity</h3>
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex items-start space-x-3">
               <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
               <div>

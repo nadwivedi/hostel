@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/mongodb');
@@ -9,6 +10,7 @@ const tenantRoutes = require('./routes/tenantRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const occupancyRoutes = require('./routes/occupancyRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,11 +24,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/occupancies', occupancyRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check route
 app.get('/', (req, res) => {

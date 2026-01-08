@@ -137,168 +137,283 @@ function Occupancy() {
   });
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Occupancy Management</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Occupancy Management</h1>
+        </div>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+          onClick={() => setShowForm(true)}
+          className="bg-blue-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-xs sm:text-base flex-shrink-0 whitespace-nowrap"
         >
-          {showForm ? 'Cancel' : 'Assign Room/Bed'}
+          <span className="sm:hidden">➕ Assign</span>
+          <span className="hidden sm:inline">Assign Room/Bed</span>
         </button>
       </div>
 
-      <div className="mb-6">
+      <div>
         <input
           type="text"
           placeholder="Search by tenant name or room number..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Assign Tenant to Room/Bed</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Tenant <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="tenantId"
-                  value={formData.tenantId}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Choose Tenant</option>
-                  {tenants.map((tenant) => (
-                    <option key={tenant._id} value={tenant._id}>
-                      {tenant.name} - {tenant.mobile}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Room <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="roomId"
-                  value={formData.roomId}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Choose Room</option>
-                  {rooms
-                    .filter((room) => room.status === 'AVAILABLE' || room.beds.some(bed => bed.status === 'AVAILABLE'))
-                    .map((room) => (
-                      <option key={room._id} value={room._id}>
-                        Room {room.roomNumber} - {room.roomType} (₹{room.rentAmount})
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              {selectedRoom && selectedRoom.beds && selectedRoom.beds.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Bed <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="bedNumber"
-                    value={formData.bedNumber}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Choose Bed</option>
-                    {selectedRoom.beds
-                      .filter((bed) => bed.status === 'AVAILABLE')
-                      .map((bed) => (
-                        <option key={bed._id} value={bed.bedNumber}>
-                          Bed {bed.bedNumber}
-                        </option>
-                      ))}
-                  </select>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-gray-50 rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="bg-gray-800 p-3 sm:p-4 text-white flex-shrink-0">
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base sm:text-xl font-bold truncate">Assign Tenant to Room/Bed</h2>
+                  <p className="text-gray-400 text-xs sm:text-sm">Enter the details to assign a tenant to a room or bed.</p>
                 </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rent Amount (₹) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="rentAmount"
-                  value={formData.rentAmount}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Advance Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  name="advanceAmount"
-                  value={formData.advanceAmount}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Join Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  name="joinDate"
-                  value={formData.joinDate}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows="2"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="text-gray-400 hover:bg-gray-700 rounded-full p-1.5 sm:p-2 transition flex-shrink-0"
+                >
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             </div>
 
-            <div className="mt-6">
+            {/* Form Content */}
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
+              {/* Section 1: Tenant Selection */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Tenant Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Select Tenant <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="tenantId"
+                      value={formData.tenantId}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    >
+                      <option value="">Choose Tenant</option>
+                      {tenants.map((tenant) => (
+                        <option key={tenant._id} value={tenant._id}>
+                          {tenant.name} - {tenant.mobile}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Join Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="joinDate"
+                      value={formData.joinDate}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Room/Bed Details */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Room/Bed Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Select Room <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="roomId"
+                      value={formData.roomId}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    >
+                      <option value="">Choose Room</option>
+                      {rooms
+                        .filter((room) => room.status === 'AVAILABLE' || room.beds.some(bed => bed.status === 'AVAILABLE'))
+                        .map((room) => (
+                          <option key={room._id} value={room._id}>
+                            Room {room.roomNumber} - {room.roomType} (₹{room.rentAmount})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {selectedRoom && selectedRoom.beds && selectedRoom.beds.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Select Bed <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="bedNumber"
+                        value={formData.bedNumber}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                      >
+                        <option value="">Choose Bed</option>
+                        {selectedRoom.beds
+                          .filter((bed) => bed.status === 'AVAILABLE')
+                          .map((bed) => (
+                            <option key={bed._id} value={bed.bedNumber}>
+                              Bed {bed.bedNumber}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section 3: Payment Information */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Payment Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Rent Amount (₹) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="rentAmount"
+                      value={formData.rentAmount}
+                      onChange={handleChange}
+                      required
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Advance Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      name="advanceAmount"
+                      value={formData.advanceAmount}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </form>
+
+            {/* Footer Actions */}
+            <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-100 flex flex-row justify-end items-center gap-2 sm:gap-3 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="px-4 sm:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-semibold transition text-sm sm:text-base"
+              >
+                Cancel
+              </button>
+
               <button
                 type="submit"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.querySelector('form').requestSubmit();
+                }}
+                className="px-4 sm:px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base"
               >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 Assign Room
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3 sm:space-y-4">
+        {filteredOccupancies.map((occupancy) => (
+          <div key={occupancy._id} className="bg-white rounded-lg shadow-md p-3 sm:p-4 border border-gray-200">
+            <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{occupancy.tenantId?.name || 'N/A'}</h3>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Room {occupancy.roomId?.roomNumber || 'N/A'}
+                  {occupancy.bedNumber && ` - Bed ${occupancy.bedNumber}`}
+                </p>
+              </div>
+              <span
+                className={`px-2 py-0.5 sm:py-1 inline-flex text-[10px] sm:text-xs leading-5 font-semibold rounded-full flex-shrink-0 ${
+                  occupancy.status === 'ACTIVE'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}
+              >
+                {occupancy.status}
+              </span>
+            </div>
+            <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Rent:</span>
+                <span className="font-semibold">₹{occupancy.rentAmount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Advance:</span>
+                <span className="font-semibold">₹{occupancy.advanceAmount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Join Date:</span>
+                <span className="font-semibold">
+                  {new Date(occupancy.joinDate).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+              {occupancy.leaveDate && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">End Date:</span>
+                  <span className="font-semibold">
+                    {new Date(occupancy.leaveDate).toLocaleDateString('en-GB', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+            </div>
+            {occupancy.status === 'ACTIVE' && (
+              <button
+                onClick={() => handleEndOccupancy(occupancy._id)}
+                className="mt-2.5 sm:mt-3 w-full bg-red-600 text-white py-1.5 sm:py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
+              >
+                End Occupancy
+              </button>
+            )}
+          </div>
+        ))}
+        {filteredOccupancies.length === 0 && (
+          <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">
+            {searchQuery ? 'No occupancies match your search.' : 'No occupancies found.'}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -391,7 +506,7 @@ function Occupancy() {
           </tbody>
         </table>
         {filteredOccupancies.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">
             {searchQuery ? 'No occupancies match your search.' : 'No occupancies found.'}
           </div>
         )}
