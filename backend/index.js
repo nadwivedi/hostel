@@ -8,6 +8,7 @@ const connectDB = require('./config/mongodb');
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
 const tenantRoutes = require('./routes/tenantRoutes');
 const roomRoutes = require('./routes/roomRoutes');
 const occupancyRoutes = require('./routes/occupancyRoutes');
@@ -32,6 +33,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/occupancies', occupancyRoutes);

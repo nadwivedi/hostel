@@ -58,7 +58,7 @@ const AdminSignup = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50">
-      <AdminNavbar />
+      <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
           <div className="text-center mb-8">
@@ -169,8 +169,8 @@ const AdminSignup = () => {
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     placeholder="Create password"
-                    required
-                    minLength={6}
+required
+minLength={4}
                   />
                 </div>
               </div>

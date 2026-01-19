@@ -10,6 +10,10 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'Email or mobile, password, and full name are required' });
     }
 
+    if (password.length < 4) {
+      return res.status(400).json({ message: 'Password must be at least 4 characters' });
+    }
+
     const existingUser = await User.findOne({
       $or: [{ email }, { mobile }],
     });

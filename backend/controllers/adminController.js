@@ -4,17 +4,15 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
   try {
-    const { email, mobile, password, fullName, superAdmin } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !mobile || !password || !fullName) {
-      return res.status(400).json({ message: 'Email, mobile, password, and full name are required' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const existingAdmin = await Admin.findOne({
-      $or: [{ email }, { mobile }],
-    });
+    const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
-      return res.status(400).json({ message: 'Admin already exists with this email or mobile' });
+      return res.status(400).json({ message: 'Admin already exists with this email' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -22,13 +20,11 @@ exports.register = async (req, res) => {
 
     const admin = await Admin.create({
       email,
-      mobile,
       password: hashedPassword,
-      fullName,
     });
 
     const token = jwt.sign(
-      { adminId: admin._id, isAdmin: true, superAdmin: admin.superAdmin },
+      { adminId: admin._id, isAdmin: true },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       { expiresIn: '24h' }
     );
@@ -45,9 +41,6 @@ exports.register = async (req, res) => {
       admin: {
         id: admin._id,
         email: admin.email,
-        mobile: admin.mobile,
-        fullName: admin.fullName,
-        superAdmin: admin.superAdmin,
       },
     });
   } catch (error) {
@@ -57,15 +50,13 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { loginId, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!loginId || !password) {
-      return res.status(400).json({ message: 'Email/mobile and password are required' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const admin = await Admin.findOne({
-      $or: [{ email: loginId }, { mobile: loginId }],
-    });
+    const admin = await Admin.findOne({ email });
 
     if (!admin) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -76,12 +67,11 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    if (!admin.isActive) {
-      return res.status(401).json({ message: 'Account is inactive' });
-    }
+    admin.lastLogin = new Date();
+    await admin.save();
 
     const token = jwt.sign(
-      { adminId: admin._id, isAdmin: true, superAdmin: admin.superAdmin },
+      { adminId: admin._id, isAdmin: true },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
       { expiresIn: '24h' }
     );
@@ -98,9 +88,7 @@ exports.login = async (req, res) => {
       admin: {
         id: admin._id,
         email: admin.email,
-        mobile: admin.mobile,
-        fullName: admin.fullName,
-        superAdmin: admin.superAdmin,
+        lastLogin: admin.lastLogin,
       },
     });
   } catch (error) {
@@ -123,9 +111,7 @@ exports.getCurrentAdmin = async (req, res) => {
       admin: {
         id: req.admin._id,
         email: req.admin.email,
-        mobile: req.admin.mobile,
-        fullName: req.admin.fullName,
-        superAdmin: req.admin.superAdmin,
+        lastLogin: req.admin.lastLogin,
       },
     });
   } catch (error) {

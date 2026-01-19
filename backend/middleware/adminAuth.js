@@ -22,10 +22,6 @@ const protectAdmin = async (req, res, next) => {
       return res.status(401).json({ message: 'Not authorized, admin not found' });
     }
 
-    if (!req.admin.isActive) {
-      return res.status(401).json({ message: 'Admin account is inactive' });
-    }
-
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -38,11 +34,4 @@ const protectAdmin = async (req, res, next) => {
   }
 };
 
-const authorizeSuperAdmin = (req, res, next) => {
-  if (!req.admin.superAdmin) {
-    return res.status(403).json({ message: 'Not authorized, super admin access required' });
-  }
-  next();
-};
-
-module.exports = { protectAdmin, authorizeSuperAdmin };
+module.exports = { protectAdmin };

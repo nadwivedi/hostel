@@ -1,31 +1,48 @@
 const mongoose = require('mongoose');
-const Admin = require('./models/Admin');
+const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
+
+const readline = require('readline').createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+const askQuestion = (question) => {
+  return new Promise((resolve) => {
+    readline.question(question, (answer) => {
+      resolve(answer);
+    });
+  });
+};
 
 const createAdmin = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hostel');
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB\n');
+
+    const email = await askQuestion('Enter email address: ');
+    const password = await askQuestion('Enter password: ');
+
+    readline.close();
+
+    if (!email || !password) {
+      console.log('\nError: Email and password are required!');
+      process.exit(1);
+    }
 
     const adminData = {
-      email: 'admin@hostel.com',
-      mobile: '9999999999',
-      password: 'Admin@123',
-      fullName: 'Super Admin',
-      superAdmin: true,
-      isActive: true,
+      email: email.trim(),
+      password: password,
     };
 
     const existingAdmin = await Admin.findOne({
-      $or: [{ email: adminData.email }, { mobile: adminData.mobile }],
+      email: adminData.email,
     });
 
     if (existingAdmin) {
-      console.log('Admin already exists with this email or mobile!');
+      console.log('\nAdmin already exists with this email!');
       console.log('Email:', existingAdmin.email);
-      console.log('Mobile:', existingAdmin.mobile);
-      console.log('Full Name:', existingAdmin.fullName);
       process.exit(0);
     }
 
@@ -37,12 +54,9 @@ const createAdmin = async () => {
       password: hashedPassword,
     });
 
-    console.log('Admin created successfully!');
+    console.log('\nAdmin created successfully!');
     console.log('Email:', admin.email);
-    console.log('Mobile:', admin.mobile);
     console.log('Password:', adminData.password);
-    console.log('Full Name:', admin.fullName);
-    console.log('Super Admin:', admin.superAdmin);
     console.log('\nPlease save these credentials securely!');
 
     process.exit(0);
