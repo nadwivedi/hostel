@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth');
+const { protectAdmin } = require('../middleware/adminAuth');
 const {
   getAllPayments,
   getPaymentById,
@@ -9,11 +11,11 @@ const {
   deletePayment,
 } = require('../controllers/paymentController');
 
-router.get('/', getAllPayments);
-router.get('/:id', getPaymentById);
-router.get('/tenant/:tenantId', getPaymentsByTenant);
-router.post('/', createPayment);
-router.patch('/:id', updatePayment);
-router.delete('/:id', deletePayment);
+router.get('/', protect, getAllPayments);
+router.get('/:id', protect, getPaymentById);
+router.get('/tenant/:tenantId', protect, getPaymentsByTenant);
+router.post('/', protectAdmin, createPayment);
+router.patch('/:id', protectAdmin, updatePayment);
+router.delete('/:id', protectAdmin, deletePayment);
 
 module.exports = router;

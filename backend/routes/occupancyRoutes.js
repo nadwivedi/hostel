@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth');
+const { protectAdmin } = require('../middleware/adminAuth');
 const {
   getAllOccupancies,
   getOccupancyById,
@@ -8,10 +10,10 @@ const {
   deleteOccupancy,
 } = require('../controllers/occupancyController');
 
-router.get('/', getAllOccupancies);
-router.get('/:id', getOccupancyById);
-router.post('/', createOccupancy);
-router.patch('/:id', updateOccupancy);
-router.delete('/:id', deleteOccupancy);
+router.get('/', protect, getAllOccupancies);
+router.get('/:id', protect, getOccupancyById);
+router.post('/', protectAdmin, createOccupancy);
+router.patch('/:id', protectAdmin, updateOccupancy);
+router.delete('/:id', protectAdmin, deleteOccupancy);
 
 module.exports = router;
