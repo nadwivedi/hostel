@@ -19,11 +19,12 @@ function Dashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
+      const config = { withCredentials: true };
       const [rooms, tenants, occupancies, payments] = await Promise.all([
-        axios.get(`${BACKEND_URL}/rooms`),
-        axios.get(`${BACKEND_URL}/tenants`),
-        axios.get(`${BACKEND_URL}/occupancies?status=ACTIVE`),
-        axios.get(`${BACKEND_URL}/payments?status=PENDING`),
+        axios.get(`${BACKEND_URL}/api/rooms`, config),
+        axios.get(`${BACKEND_URL}/api/tenants`, config),
+        axios.get(`${BACKEND_URL}/api/occupancies?status=ACTIVE`, config),
+        axios.get(`${BACKEND_URL}/api/payments?status=PENDING`, config),
       ]);
 
       setStats({
@@ -70,7 +71,7 @@ function Dashboard() {
         </div>
         <button
           onClick={fetchStats}
-          className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-medium cursor-pointer text-sm sm:text-base self-start sm:self-auto"
+          className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r- from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-medium cursor-pointer text-sm sm:text-base self-start sm:self-auto"
         >
           🔄 Refresh
         </button>

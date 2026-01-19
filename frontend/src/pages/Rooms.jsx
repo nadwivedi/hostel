@@ -22,7 +22,9 @@ function Rooms() {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/rooms`);
+      const response = await axios.get(`${BACKEND_URL}/api/rooms`, {
+        withCredentials: true,
+      });
       setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -80,10 +82,14 @@ function Rooms() {
       };
 
       if (editingRoom) {
-        await axios.patch(`${BACKEND_URL}/rooms/${editingRoom._id}`, roomData);
+        await axios.patch(`${BACKEND_URL}/api/rooms/${editingRoom._id}`, roomData, {
+          withCredentials: true,
+        });
         alert('✅ Room updated successfully!');
       } else {
-        await axios.post(`${BACKEND_URL}/rooms`, roomData);
+        await axios.post(`${BACKEND_URL}/api/rooms`, roomData, {
+          withCredentials: true,
+        });
         alert('✅ Room registered successfully!');
       }
 

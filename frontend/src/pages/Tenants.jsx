@@ -3,6 +3,7 @@ import axios from 'axios';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
+
 function Tenants() {
   const [tenants, setTenants] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -30,7 +31,9 @@ function Tenants() {
 
   const fetchTenants = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/tenants`);
+      const response = await axios.get(`${BACKEND_URL}/api/tenants`, {
+        withCredentials: true,
+      });
       setTenants(response.data);
     } catch (error) {
       console.error('Error fetching tenants:', error);
@@ -71,10 +74,11 @@ function Tenants() {
 
     try {
       setUploading(true);
-      const response = await axios.post(`${BACKEND_URL}/uploads/${type}`, formDataUpload, {
+      const response = await axios.post(`${BACKEND_URL}/api/uploads/${type}`, formDataUpload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        withCredentials: true,
       });
       setUploading(false);
       return response.data.fileUrl;
@@ -153,10 +157,14 @@ function Tenants() {
       };
 
       if (editingTenant) {
-        await axios.patch(`${BACKEND_URL}/tenants/${editingTenant._id}`, tenantData);
+        await axios.patch(`${BACKEND_URL}/api/tenants/${editingTenant._id}`, tenantData, {
+          withCredentials: true,
+        });
         alert('✅ Tenant updated successfully!');
       } else {
-        await axios.post(`${BACKEND_URL}/tenants`, tenantData);
+        await axios.post(`${BACKEND_URL}/api/tenants`, tenantData, {
+          withCredentials: true,
+        });
         alert('✅ Tenant registered successfully!');
       }
 

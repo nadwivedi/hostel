@@ -28,7 +28,9 @@ function Occupancy() {
 
   const fetchOccupancies = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/occupancies`);
+      const response = await axios.get(`${BACKEND_URL}/api/occupancies`, {
+        withCredentials: true,
+      });
       setOccupancies(response.data);
     } catch (error) {
       console.error('Error fetching occupancies:', error);
@@ -37,7 +39,9 @@ function Occupancy() {
 
   const fetchTenants = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/tenants`);
+      const response = await axios.get(`${BACKEND_URL}/api/tenants`, {
+        withCredentials: true,
+      });
       setTenants(response.data);
     } catch (error) {
       console.error('Error fetching tenants:', error);
@@ -46,7 +50,9 @@ function Occupancy() {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/rooms`);
+      const response = await axios.get(`${BACKEND_URL}/api/rooms`, {
+        withCredentials: true,
+      });
       setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -87,7 +93,9 @@ function Occupancy() {
         notes: formData.notes,
       };
 
-      await axios.post(`${BACKEND_URL}/occupancies`, occupancyData);
+      await axios.post(`${BACKEND_URL}/api/occupancies`, occupancyData, {
+        withCredentials: true,
+      });
       alert('Occupancy created successfully!');
       setShowForm(false);
       setFormData({
@@ -112,9 +120,11 @@ function Occupancy() {
     if (!confirm('Are you sure you want to end this occupancy?')) return;
 
     try {
-      await axios.patch(`${BACKEND_URL}/occupancies/${occupancyId}`, {
+      await axios.patch(`${BACKEND_URL}/api/occupancies/${occupancyId}`, {
         leaveDate: new Date(),
         status: 'COMPLETED',
+      }, {
+        withCredentials: true,
       });
       alert('Occupancy ended successfully!');
       fetchOccupancies();

@@ -26,7 +26,9 @@ function Payments() {
 
   const fetchPayments = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/payments`);
+      const response = await axios.get(`${BACKEND_URL}/api/payments`, {
+        withCredentials: true,
+      });
       setPayments(response.data);
     } catch (error) {
       console.error('Error fetching payments:', error);
@@ -35,7 +37,9 @@ function Payments() {
 
   const fetchActiveOccupancies = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/occupancies?status=ACTIVE`);
+      const response = await axios.get(`${BACKEND_URL}/api/occupancies?status=ACTIVE`, {
+        withCredentials: true,
+      });
       setOccupancies(response.data);
     } catch (error) {
       console.error('Error fetching occupancies:', error);
@@ -89,7 +93,9 @@ function Payments() {
         status: formData.status,
       };
 
-      await axios.post(`${BACKEND_URL}/payments`, paymentData);
+      await axios.post(`${BACKEND_URL}/api/payments`, paymentData, {
+        withCredentials: true,
+      });
       alert('Payment record created successfully!');
       setShowForm(false);
       setFormData({
@@ -124,10 +130,12 @@ function Payments() {
         newStatus = 'PARTIAL';
       }
 
-      await axios.patch(`${BACKEND_URL}/payments/${paymentId}`, {
+      await axios.patch(`${BACKEND_URL}/api/payments/${paymentId}`, {
         amountPaid: newAmountPaid,
         paymentDate: new Date(),
         status: newStatus,
+      }, {
+        withCredentials: true,
       });
       alert('Payment updated successfully!');
       fetchPayments();

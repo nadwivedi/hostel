@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
-const { protectAdmin } = require('../middleware/adminAuth');
+const { protectAll } = require('../middleware/authAll');
 const {
   getAllRooms,
   getRoomById,
@@ -11,11 +10,12 @@ const {
   deleteRoom,
 } = require('../controllers/roomController');
 
-router.get('/', protect, getAllRooms);
-router.get('/:id', protect, getRoomById);
-router.post('/', protectAdmin, createRoom);
-router.patch('/:id', protectAdmin, updateRoom);
-router.patch('/:roomId/beds/:bedId', protectAdmin, updateBedStatus);
-router.delete('/:id', protectAdmin, deleteRoom);
+// All routes use protectAll - authorization is handled in controllers
+router.get('/', protectAll, getAllRooms);
+router.get('/:id', protectAll, getRoomById);
+router.post('/', protectAll, createRoom);
+router.patch('/:id', protectAll, updateRoom);
+router.patch('/:roomId/beds/:bedId', protectAll, updateBedStatus);
+router.delete('/:id', protectAll, deleteRoom);
 
 module.exports = router;

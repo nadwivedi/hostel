@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [loginId, setLoginId] = useState('');
@@ -8,6 +8,7 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,17 +16,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
-        { loginId, password },
-        {
-          withCredentials: true,
-        }
-      );
-      
-      if (response.status === 200) {
-        navigate('/');
-      }
+      await login(loginId, password);
+      navigate('/');
     } catch (error) {
       setError(error.response?.data?.message || 'Login failed');
     } finally {
@@ -34,14 +26,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br- from-blue-50 via-indigo-50 to-purple-50">
       <div className="bg-white p-8 md:p-10 rounded-2xl shadow-2xl w-full max-w-md mx-4">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-20 h-20 bg-gradient-to-br- from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-4xl">🏨</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center md:justify-center md:gap-2">
-            <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+            <h1 className="text-lg md:text-2xl font-bold bg-gradient-to-r- from-blue-600 to-indigo-700 bg-clip-text text-transparent">
               Hostel Management System
             </h1>
             <p className="text-gray-600 mt-1 md:mt-0">Welcome back! Please login to continue</p>
@@ -106,7 +98,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+            className="w-full bg-gradient-to-r- from-blue-600 to-indigo-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
           >
             {loading ? (
               <span className="flex items-center justify-center">

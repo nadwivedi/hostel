@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const occupancySchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tenant',

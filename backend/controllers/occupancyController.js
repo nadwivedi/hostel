@@ -1,11 +1,13 @@
 const Occupancy = require('../models/Occupancy');
 const Room = require('../models/Room');
 
-// Get all occupancies
+// Get all occupancies (filtered by user, all for admin)
 exports.getAllOccupancies = async (req, res) => {
   try {
     const { status } = req.query;
-    const filter = status ? { status } : {};
+    const filter = req.isAdmin ? {} : { userId: req.user._id };
+    if (status) filter.status = status;
+
     const occupancies = await Occupancy.find(filter)
       .populate('tenantId')
       .populate('roomId')
@@ -25,6 +27,12 @@ exports.getOccupancyById = async (req, res) => {
     if (!occupancy) {
       return res.status(404).json({ message: 'Occupancy not found' });
     }
+
+    // Check ownership for non-admin users
+    if (!req.isAdmin && occupancy.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to access this occupancy' });
+    }
+
     res.status(200).json(occupancy);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -36,8 +44,18 @@ exports.createOccupancy = async (req, res) => {
   try {
     const { roomId, bedNumber } = req.body;
 
+    const occupancyData = {
+      ...req.body,
+      userId: req.isAdmin ? req.body.userId : req.user._id,
+    };
+
+    // If admin is creating without specifying userId, return error
+    if (req.isAdmin && !req.body.userId) {
+      return res.status(400).json({ message: 'userId is required when admin creates an occupancy' });
+    }
+
     // Create occupancy
-    const occupancy = await Occupancy.create(req.body);
+    const occupancy = await Occupancy.create(occupancyData);
 
     // Update room/bed status
     const room = await Room.findById(roomId);
@@ -73,6 +91,11 @@ exports.updateOccupancy = async (req, res) => {
     const occupancy = await Occupancy.findById(req.params.id);
     if (!occupancy) {
       return res.status(404).json({ message: 'Occupancy not found' });
+    }
+
+    // Check ownership for non-admin users
+    if (!req.isAdmin && occupancy.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this occupancy' });
     }
 
     // Update occupancy
@@ -111,10 +134,17 @@ exports.updateOccupancy = async (req, res) => {
 // Delete occupancy
 exports.deleteOccupancy = async (req, res) => {
   try {
-    const occupancy = await Occupancy.findByIdAndDelete(req.params.id);
+    const occupancy = await Occupancy.findById(req.params.id);
     if (!occupancy) {
       return res.status(404).json({ message: 'Occupancy not found' });
     }
+
+    // Check ownership for non-admin users
+    if (!req.isAdmin && occupancy.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this occupancy' });
+    }
+
+    await Occupancy.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Occupancy deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

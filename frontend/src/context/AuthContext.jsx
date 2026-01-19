@@ -30,6 +30,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const login = async (loginId, password) => {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+      { loginId, password },
+      {
+        withCredentials: true,
+      }
+    );
+    setUser(response.data.user);
+    setIsAuthenticated(true);
+    return response;
+  };
+
   const logout = async () => {
     try {
       await axios.post(
@@ -51,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
+    login,
     logout,
     checkAuth,
   };

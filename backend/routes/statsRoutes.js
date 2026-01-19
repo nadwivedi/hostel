@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { protectAll } = require('../middleware/authAll');
 const { getDashboardStats } = require('../controllers/statsController');
 
-router.get('/dashboard', getDashboardStats);
+// Dashboard stats - shows user-specific stats for users, all stats for admin
+router.get('/dashboard', protectAll, getDashboardStats);
 
 module.exports = router;

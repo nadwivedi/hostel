@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protectAdmin } = require('../middleware/adminAuth');
+const { protectAll } = require('../middleware/authAll');
 const { uploadAadhar, uploadPhoto } = require('../config/multer');
 const {
   uploadAadharImage,
@@ -8,10 +8,9 @@ const {
   deleteUploadedFile
 } = require('../controllers/uploadController');
 
-router.post('/aadhar', protectAdmin, uploadAadhar.single('aadhar'), uploadAadharImage);
-
-router.post('/photo', protectAdmin, uploadPhoto.single('photo'), uploadPhotoImage);
-
-router.delete('/delete', protectAdmin, deleteUploadedFile);
+// Allow both users and admins to upload files
+router.post('/aadhar', protectAll, uploadAadhar.single('aadhar'), uploadAadharImage);
+router.post('/photo', protectAll, uploadPhoto.single('photo'), uploadPhotoImage);
+router.delete('/delete', protectAll, deleteUploadedFile);
 
 module.exports = router;

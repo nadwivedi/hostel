@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
-const { protectAdmin } = require('../middleware/adminAuth');
+const { protectAll } = require('../middleware/authAll');
 const {
   getAllPayments,
   getPaymentById,
@@ -11,11 +10,12 @@ const {
   deletePayment,
 } = require('../controllers/paymentController');
 
-router.get('/', protect, getAllPayments);
-router.get('/:id', protect, getPaymentById);
-router.get('/tenant/:tenantId', protect, getPaymentsByTenant);
-router.post('/', protectAdmin, createPayment);
-router.patch('/:id', protectAdmin, updatePayment);
-router.delete('/:id', protectAdmin, deletePayment);
+// All routes use protectAll - authorization is handled in controllers
+router.get('/', protectAll, getAllPayments);
+router.get('/:id', protectAll, getPaymentById);
+router.get('/tenant/:tenantId', protectAll, getPaymentsByTenant);
+router.post('/', protectAll, createPayment);
+router.patch('/:id', protectAll, updatePayment);
+router.delete('/:id', protectAll, deletePayment);
 
 module.exports = router;
