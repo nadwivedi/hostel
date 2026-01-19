@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import StatCard from '../components/Stats';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -40,28 +41,6 @@ function Dashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon, gradient, bgLight }) => (
-    <div className={`bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100`}>
-      <div className="p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">{loading ? '...' : value}</p>
-          </div>
-          <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl ${gradient} flex items-center justify-center shadow-lg`}>
-            <span className="text-2xl sm:text-3xl">{icon}</span>
-          </div>
-        </div>
-        <div className={`mt-3 sm:mt-4 h-2 rounded-full ${bgLight}`}>
-          <div
-            className={`h-full rounded-full ${gradient} transition-all duration-500`}
-            style={{ width: loading ? '0%' : '100%' }}
-          ></div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -77,31 +56,31 @@ function Dashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Rooms"
-          value={stats.totalRooms}
+          value={loading ? '...' : stats.totalRooms}
           icon="🏠"
           gradient="bg-gradient-to-br from-blue-500 to-blue-600"
           bgLight="bg-blue-100"
         />
         <StatCard
           title="Occupied Rooms"
-          value={stats.occupiedRooms}
+          value={loading ? '...' : stats.occupiedRooms}
           icon="✅"
           gradient="bg-gradient-to-br from-green-500 to-green-600"
           bgLight="bg-green-100"
         />
         <StatCard
           title="Total Tenants"
-          value={stats.totalTenants}
+          value={loading ? '...' : stats.totalTenants}
           icon="👥"
-          gradient="bg-gradient-to-br from-purple-500 to-purple-600"
+          gradient="bg-gradient-to-br from-purple-300 to-purple-600"
           bgLight="bg-purple-100"
         />
         <StatCard
           title="Pending Payments"
-          value={stats.pendingPayments}
+          value={loading ? '...' : stats.pendingPayments}
           icon="⚠️"
           gradient="bg-gradient-to-br from-red-500 to-red-600"
           bgLight="bg-red-100"

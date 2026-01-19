@@ -35,7 +35,7 @@ function Navbar() {
                 <span className="text-xl sm:text-2xl">🏨</span>
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r- from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                   Hostel Manager
                 </h1>
                 <p className="text-xs text-gray-500 hidden sm:block">Manage your hostel efficiently</p>
@@ -49,7 +49,7 @@ function Navbar() {
                   to={link.path}
                   className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     isActive(link.path)
-                      ? 'bg-gradient-to-r- from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30 scale-105'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30 scale-105'
                       : 'text-gray-700 hover:bg-gray-100 hover:scale-105'
                   }`}
                 >
@@ -60,13 +60,9 @@ function Navbar() {
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
-                <p className="text-xs text-gray-500">{user?.email || user?.mobile}</p>
-              </div>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                className=" hidden md:flex px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
               >
                 Logout
               </button>
@@ -88,11 +84,9 @@ function Navbar() {
           {isMobileMenuOpen && (
             <div className="lg:hidden border-t border-gray-200 py-3 space-y-1">
               <div className="px-4 py-3 bg-gray-50">
-                <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
-                <p className="text-xs text-gray-500">{user?.email || user?.mobile}</p>
                 <button
                   onClick={handleLogout}
-                  className="mt-2 w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                 >
                   Logout
                 </button>

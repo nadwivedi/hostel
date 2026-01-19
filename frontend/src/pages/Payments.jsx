@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import StatCard from "../components/Stats";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -7,16 +8,16 @@ function Payments() {
   const [payments, setPayments] = useState([]);
   const [occupancies, setOccupancies] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState("ALL");
   const [formData, setFormData] = useState({
-    occupancyId: '',
-    tenantId: '',
+    occupancyId: "",
+    tenantId: "",
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
-    rentAmount: '',
-    amountPaid: '',
-    paymentDate: new Date().toISOString().split('T')[0],
-    status: 'PENDING',
+    rentAmount: "",
+    amountPaid: "",
+    paymentDate: new Date().toISOString().split("T")[0],
+    status: "PENDING",
   });
 
   useEffect(() => {
@@ -31,18 +32,21 @@ function Payments() {
       });
       setPayments(response.data);
     } catch (error) {
-      console.error('Error fetching payments:', error);
+      console.error("Error fetching payments:", error);
     }
   };
 
   const fetchActiveOccupancies = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/occupancies?status=ACTIVE`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${BACKEND_URL}/api/occupancies?status=ACTIVE`,
+        {
+          withCredentials: true,
+        },
+      );
       setOccupancies(response.data);
     } catch (error) {
-      console.error('Error fetching occupancies:', error);
+      console.error("Error fetching occupancies:", error);
     }
   };
 
@@ -53,7 +57,7 @@ function Payments() {
       [name]: value,
     });
 
-    if (name === 'occupancyId') {
+    if (name === "occupancyId") {
       const occupancy = occupancies.find((occ) => occ._id === value);
       if (occupancy) {
         setFormData({
@@ -65,16 +69,22 @@ function Payments() {
       }
     }
 
-    if (name === 'amountPaid' || name === 'rentAmount') {
-      const paid = name === 'amountPaid' ? parseFloat(value) : parseFloat(formData.amountPaid);
-      const rent = name === 'rentAmount' ? parseFloat(value) : parseFloat(formData.rentAmount);
+    if (name === "amountPaid" || name === "rentAmount") {
+      const paid =
+        name === "amountPaid"
+          ? parseFloat(value)
+          : parseFloat(formData.amountPaid);
+      const rent =
+        name === "rentAmount"
+          ? parseFloat(value)
+          : parseFloat(formData.rentAmount);
 
       if (paid >= rent) {
-        setFormData((prev) => ({ ...prev, status: 'PAID' }));
+        setFormData((prev) => ({ ...prev, status: "PAID" }));
       } else if (paid > 0) {
-        setFormData((prev) => ({ ...prev, status: 'PARTIAL' }));
+        setFormData((prev) => ({ ...prev, status: "PARTIAL" }));
       } else {
-        setFormData((prev) => ({ ...prev, status: 'PENDING' }));
+        setFormData((prev) => ({ ...prev, status: "PENDING" }));
       }
     }
   };
@@ -96,77 +106,83 @@ function Payments() {
       await axios.post(`${BACKEND_URL}/api/payments`, paymentData, {
         withCredentials: true,
       });
-      alert('Payment record created successfully!');
+      alert("Payment record created successfully!");
       setShowForm(false);
       setFormData({
-        occupancyId: '',
-        tenantId: '',
+        occupancyId: "",
+        tenantId: "",
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
-        rentAmount: '',
-        amountPaid: '',
-        paymentDate: new Date().toISOString().split('T')[0],
-        status: 'PENDING',
+        rentAmount: "",
+        amountPaid: "",
+        paymentDate: new Date().toISOString().split("T")[0],
+        status: "PENDING",
       });
       fetchPayments();
     } catch (error) {
-      console.error('Error creating payment:', error);
-      alert('Error creating payment record');
+      console.error("Error creating payment:", error);
+      alert("Error creating payment record");
     }
   };
 
   const handleUpdatePayment = async (paymentId, amountPaid) => {
-    const amount = prompt('Enter payment amount:', amountPaid);
+    const amount = prompt("Enter payment amount:", amountPaid);
     if (amount === null) return;
 
     try {
       const payment = payments.find((p) => p._id === paymentId);
       const newAmountPaid = parseFloat(amount);
-      let newStatus = 'PENDING';
+      let newStatus = "PENDING";
 
       if (newAmountPaid >= payment.rentAmount) {
-        newStatus = 'PAID';
+        newStatus = "PAID";
       } else if (newAmountPaid > 0) {
-        newStatus = 'PARTIAL';
+        newStatus = "PARTIAL";
       }
 
-      await axios.patch(`${BACKEND_URL}/api/payments/${paymentId}`, {
-        amountPaid: newAmountPaid,
-        paymentDate: new Date(),
-        status: newStatus,
-      }, {
-        withCredentials: true,
-      });
-      alert('Payment updated successfully!');
+      await axios.patch(
+        `${BACKEND_URL}/api/payments/${paymentId}`,
+        {
+          amountPaid: newAmountPaid,
+          paymentDate: new Date(),
+          status: newStatus,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+      alert("Payment updated successfully!");
       fetchPayments();
     } catch (error) {
-      console.error('Error updating payment:', error);
-      alert('Error updating payment');
+      console.error("Error updating payment:", error);
+      alert("Error updating payment");
     }
   };
 
   const months = [
-    { value: 1, label: 'January' },
-    { value: 2, label: 'February' },
-    { value: 3, label: 'March' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'May' },
-    { value: 6, label: 'June' },
-    { value: 7, label: 'July' },
-    { value: 8, label: 'August' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'October' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' },
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
   ];
 
   const filteredPayments = payments.filter((payment) => {
-    if (filterStatus === 'ALL') return true;
+    if (filterStatus === "ALL") return true;
     return payment.status === filterStatus;
   });
 
   // Calculate stats
-  const pendingPayments = payments.filter(p => p.status === 'PENDING' || p.status === 'PARTIAL').length;
+  const pendingPayments = payments.filter(
+    (p) => p.status === "PENDING" || p.status === "PARTIAL",
+  ).length;
 
   // Calculate rents due in next 2 days
   const today = new Date();
@@ -184,43 +200,33 @@ function Payments() {
 
   if (currentDate <= dueDate && currentDate + 2 >= dueDate) {
     // Count active occupancies that don't have payment for current month
-    const currentMonthPayments = payments.filter(p =>
-      p.month === currentMonth + 1 && p.year === currentYear
+    const currentMonthPayments = payments.filter(
+      (p) => p.month === currentMonth + 1 && p.year === currentYear,
     );
-    const paidTenantIds = currentMonthPayments.map(p => p.tenantId?._id);
-    rentsDueIn2Days = occupancies.filter(occ =>
-      !paidTenantIds.includes(occ.tenantId?._id)
+    const paidTenantIds = currentMonthPayments.map((p) => p.tenantId?._id);
+    rentsDueIn2Days = occupancies.filter(
+      (occ) => !paidTenantIds.includes(occ.tenantId?._id),
     ).length;
   }
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Pending Payments</p>
-              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-red-600">{pendingPayments}</p>
-            </div>
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
-              <span className="text-2xl sm:text-3xl">⚠️</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Due in Next 2 Days</p>
-              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-orange-600">{rentsDueIn2Days}</p>
-            </div>
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg">
-              <span className="text-2xl sm:text-3xl">📅</span>
-            </div>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard
+          title="Pending Payments"
+          value={pendingPayments}
+          icon="⚠️"
+          gradient="bg-gradient-to-br from-red-500 to-red-600"
+          bgLight="bg-red-100"
+        />
+        <StatCard
+          title="Due in Next 2 Days"
+          value={rentsDueIn2Days}
+          icon="📅"
+          gradient="bg-gradient-to-br from-orange-500 to-orange-600"
+          bgLight="bg-orange-100"
+        />
         <div className="sm:col-span-2 lg:col-span-1 flex items-center justify-center sm:justify-end">
           <button
             onClick={() => setShowForm(true)}
@@ -238,22 +244,39 @@ function Payments() {
               <div className="flex justify-between items-center">
                 <div>
                   <h2 className="text-xl font-bold">Create Payment Record</h2>
-                  <p className="text-gray-400 text-sm">Enter payment details for the tenant.</p>
+                  <p className="text-gray-400 text-sm">
+                    Enter payment details for the tenant.
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowForm(false)}
                   className="text-gray-400 hover:bg-gray-700 rounded-full p-2 transition"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              className="flex-1 overflow-y-auto p-6 space-y-6"
+            >
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Tenant & Period</h3>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">
+                  Tenant & Period
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -313,7 +336,9 @@ function Payments() {
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Payment Details</h3>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">
+                  Payment Details
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
@@ -389,12 +414,22 @@ function Payments() {
                 type="submit"
                 onClick={(e) => {
                   e.preventDefault();
-                  document.querySelector('form').requestSubmit();
+                  document.querySelector("form").requestSubmit();
                 }}
                 className="px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold transition flex items-center gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 Create Payment
               </button>
@@ -405,33 +440,41 @@ function Payments() {
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
         <button
-          onClick={() => setFilterStatus('ALL')}
+          onClick={() => setFilterStatus("ALL")}
           className={`px-3 sm:px-4 py-2 rounded-lg whitespace-nowrap text-sm sm:text-base ${
-            filterStatus === 'ALL' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+            filterStatus === "ALL"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700"
           } cursor-pointer`}
         >
           All
         </button>
         <button
-          onClick={() => setFilterStatus('PENDING')}
+          onClick={() => setFilterStatus("PENDING")}
           className={`px-3 sm:px-4 py-2 rounded-lg whitespace-nowrap text-sm sm:text-base ${
-            filterStatus === 'PENDING' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'
+            filterStatus === "PENDING"
+              ? "bg-red-600 text-white"
+              : "bg-gray-200 text-gray-700"
           } cursor-pointer`}
         >
           Pending
         </button>
         <button
-          onClick={() => setFilterStatus('PARTIAL')}
+          onClick={() => setFilterStatus("PARTIAL")}
           className={`px-3 sm:px-4 py-2 rounded-lg whitespace-nowrap text-sm sm:text-base ${
-            filterStatus === 'PARTIAL' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700'
+            filterStatus === "PARTIAL"
+              ? "bg-yellow-600 text-white"
+              : "bg-gray-200 text-gray-700"
           } cursor-pointer`}
         >
           Partial
         </button>
         <button
-          onClick={() => setFilterStatus('PAID')}
+          onClick={() => setFilterStatus("PAID")}
           className={`px-3 sm:px-4 py-2 rounded-lg whitespace-nowrap text-sm sm:text-base ${
-            filterStatus === 'PAID' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'
+            filterStatus === "PAID"
+              ? "bg-green-600 text-white"
+              : "bg-gray-200 text-gray-700"
           } cursor-pointer`}
         >
           Paid
@@ -441,21 +484,27 @@ function Payments() {
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-4">
         {filteredPayments.map((payment) => (
-          <div key={payment._id} className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+          <div
+            key={payment._id}
+            className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
+          >
             <div className="flex justify-between items-start mb-3">
               <div>
-                <h3 className="font-bold text-gray-900">{payment.tenantId?.name || 'N/A'}</h3>
+                <h3 className="font-bold text-gray-900">
+                  {payment.tenantId?.name || "N/A"}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  {months.find((m) => m.value === payment.month)?.label} {payment.year}
+                  {months.find((m) => m.value === payment.month)?.label}{" "}
+                  {payment.year}
                 </p>
               </div>
               <span
                 className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  payment.status === 'PAID'
-                    ? 'bg-green-100 text-green-800'
-                    : payment.status === 'PARTIAL'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
+                  payment.status === "PAID"
+                    ? "bg-green-100 text-green-800"
+                    : payment.status === "PARTIAL"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
                 }`}
               >
                 {payment.status}
@@ -468,28 +517,34 @@ function Payments() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Paid:</span>
-                <span className="font-semibold text-green-600">₹{payment.amountPaid}</span>
+                <span className="font-semibold text-green-600">
+                  ₹{payment.amountPaid}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Balance:</span>
-                <span className="font-semibold text-red-600">₹{payment.rentAmount - payment.amountPaid}</span>
+                <span className="font-semibold text-red-600">
+                  ₹{payment.rentAmount - payment.amountPaid}
+                </span>
               </div>
               {payment.paymentDate && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date:</span>
                   <span className="font-semibold">
-                    {new Date(payment.paymentDate).toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
+                    {new Date(payment.paymentDate).toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
                     })}
                   </span>
                 </div>
               )}
             </div>
-            {payment.status !== 'PAID' && (
+            {payment.status !== "PAID" && (
               <button
-                onClick={() => handleUpdatePayment(payment._id, payment.amountPaid)}
+                onClick={() =>
+                  handleUpdatePayment(payment._id, payment.amountPaid)
+                }
                 className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm"
               >
                 Record Payment
@@ -498,7 +553,9 @@ function Payments() {
           </div>
         ))}
         {filteredPayments.length === 0 && (
-          <div className="text-center py-8 text-gray-500">No payments found.</div>
+          <div className="text-center py-8 text-gray-500">
+            No payments found.
+          </div>
         )}
       </div>
 
@@ -537,10 +594,11 @@ function Payments() {
             {filteredPayments.map((payment) => (
               <tr key={payment._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {payment.tenantId?.name || 'N/A'}
+                  {payment.tenantId?.name || "N/A"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {months.find((m) => m.value === payment.month)?.label} {payment.year}
+                  {months.find((m) => m.value === payment.month)?.label}{" "}
+                  {payment.year}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   ₹{payment.rentAmount}
@@ -553,30 +611,35 @@ function Payments() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {payment.paymentDate
-                    ? new Date(payment.paymentDate).toLocaleDateString('en-GB', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                      })
-                    : '-'}
+                    ? new Date(payment.paymentDate).toLocaleDateString(
+                        "en-GB",
+                        {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        },
+                      )
+                    : "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      payment.status === 'PAID'
-                        ? 'bg-green-100 text-green-800'
-                        : payment.status === 'PARTIAL'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
+                      payment.status === "PAID"
+                        ? "bg-green-100 text-green-800"
+                        : payment.status === "PARTIAL"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
                     }`}
                   >
                     {payment.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {payment.status !== 'PAID' && (
+                  {payment.status !== "PAID" && (
                     <button
-                      onClick={() => handleUpdatePayment(payment._id, payment.amountPaid)}
+                      onClick={() =>
+                        handleUpdatePayment(payment._id, payment.amountPaid)
+                      }
                       className="text-blue-600 hover:text-blue-900 cursor-pointer"
                     >
                       Record Payment
