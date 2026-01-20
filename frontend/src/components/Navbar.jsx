@@ -10,7 +10,7 @@ function Navbar() {
 
   const navLinks = [
     { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/tenants', label: 'Tenants', icon: '👥' },
+    { path: '/tenants', label: 'Tenants', icon: '👤' },
     { path: '/rooms', label: 'Rooms', icon: '🏠' },
     { path: '/occupancy', label: 'Occupancy', icon: '🔑' },
     { path: '/payments', label: 'Payments', icon: '💰' },
@@ -88,6 +88,13 @@ function Navbar() {
             </div>
           </div>
 
+          {isMobileMenuOpen && (
+            <div
+              className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          )}
+
           <div
             className={`lg:hidden fixed left-0 top-0 h-full bg-gradient-to-br from-blue-900 to-blue-800 text-white transform transition-transform duration-300 ease-in-out z-50 w-66 shadow-2xl ${
               isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
@@ -126,14 +133,14 @@ function Navbar() {
                       ? "bg-gradient-to-r from-blue-600/30 to-blue-500/30 border border-blue-400/40 shadow-lg"
                       : "hover:bg-white/10 hover:border border-transparent hover:border-blue-400/20"
                   }`}
-                >
-                  <span
-                    className={`text-xl ${
-                      isActive(link.path) ? "text-blue-300" : "text-blue-200 group-hover:text-blue-300"
-                    }`}
                   >
-                    {link.icon}
-                  </span>
+                    <span
+                      className={`text-xl ${
+                        isActive(link.path) ? "text-white" : "text-blue-200 group-hover:text-white"
+                      }`}
+                    >
+                      {link.icon}
+                    </span>
                   <span
                     className={`text-sm font-semibold ${
                       isActive(link.path) ? "text-white" : "text-blue-100 group-hover:text-white"
