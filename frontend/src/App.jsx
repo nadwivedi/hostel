@@ -8,6 +8,7 @@ import Tenants from './pages/Tenants';
 import Rooms from './pages/Rooms';
 import Occupancy from './pages/Occupancy';
 import Payments from './pages/Payments';
+import Settings from './pages/Settings';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -33,6 +34,7 @@ function App() {
             <Route path="rooms" element={<Rooms />} />
             <Route path="occupancy" element={<Occupancy />} />
             <Route path="payments" element={<Payments />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </BrowserRouter>

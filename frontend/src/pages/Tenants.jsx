@@ -242,17 +242,17 @@ function Tenants() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
         <div
-          className="bg-white rounded-lg shadow-md border border-blue-500 p-2 lg:p-3.5 hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 transform"
+          className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 transform"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[8px] lg:text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-0.5 lg:mb-1 whitespace-nowrap">Total Tenants</p>
-              <h3 className="text-lg lg:text-2xl font-black text-gray-800">{tenants.length}</h3>
+              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 lg:mb-1 whitespace-nowrap">Total Tenants</p>
+              <h3 className="text-xl lg:text-3xl font-black text-gray-800">{tenants.length}</h3>
             </div>
-            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-              <span className="text-sm lg:text-xl">👥</span>
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+              <span className="text-lg lg:text-xl">👥</span>
             </div>
           </div>
         </div>
