@@ -193,7 +193,22 @@ function Tenants() {
       fetchTenants();
     } catch (error) {
       console.error('Error saving tenant:', error);
-      toast.error(error.response?.data?.message || 'Error saving tenant');
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Error saving tenant');
+    }
+  };
+
+  const handleDelete = async (tenant) => {
+    if (!window.confirm(`Are you sure you want to delete ${tenant.name}?`)) return;
+    
+    try {
+      await axios.delete(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
+        withCredentials: true,
+      });
+      toast.success('Tenant deleted successfully!');
+      fetchTenants();
+    } catch (error) {
+      console.error('Error deleting tenant:', error);
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Error deleting tenant');
     }
   };
 
@@ -602,13 +617,21 @@ function Tenants() {
                     })}
                   </span>
                 </div>
+               </div>
+              <div className="flex gap-2 mt-2.5 sm:mt-3">
+                <button
+                  onClick={() => handleEdit(tenant)}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(tenant)}
+                  className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
+                >
+                  🗑️ Delete
+                </button>
               </div>
-              <button
-                onClick={() => handleEdit(tenant)}
-                className="mt-2.5 sm:mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
-              >
-                ✏️ Edit Tenant
-              </button>
             </div>
           ))}
           {filteredTenants.length === 0 && (
@@ -681,14 +704,22 @@ function Tenants() {
                         year: 'numeric',
                       })}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleEdit(tenant)}
-                      className="text-blue-600 hover:text-blue-900 font-medium cursor-pointer"
-                    >
-                      ✏️ Edit
-                    </button>
-                  </td>
+                   <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleEdit(tenant)}
+                        className="text-blue-600 hover:text-blue-900 font-medium cursor-pointer"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(tenant)}
+                        className="text-red-600 hover:text-red-900 font-medium cursor-pointer"
+                      >
+                        🗑️ Delete
+                      </button>
+                      </div>
+                    </td>
                 </tr>
               ))}
             </tbody>

@@ -33,20 +33,51 @@ exports.getTenantById = async (req, res) => {
 // Create tenant
 exports.createTenant = async (req, res) => {
   try {
+    const { name, mobile, email, adharNo, adharImg, photo, dob, gender } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide tenant name' });
+    }
+
+    if (!mobile || mobile.length !== 10) {
+      return res.status(400).json({ success: false, message: 'Please provide valid 10-digit mobile number' });
+    }
+
+    if (email && email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'Please provide valid email address' });
+      }
+    }
+
+    if (adharNo && adharNo.length !== 12) {
+      return res.status(400).json({ success: false, message: 'Please provide valid 12-digit Aadhar number' });
+    }
+
+    if (gender && gender !== '' && !['Male', 'Female'].includes(gender)) {
+      return res.status(400).json({ success: false, message: 'Gender must be Male or Female' });
+    }
+
     const tenantData = {
-      ...req.body,
+      name: name.trim(),
+      mobile,
+      email: email || '',
+      adharNo: adharNo || '',
+      adharImg: adharImg || '',
+      photo: photo || '',
+      dob: dob || undefined,
+      gender: gender || undefined,
       userId: req.isAdmin ? req.body.userId : req.user._id,
     };
 
-    // If admin is creating without specifying userId, return error
     if (req.isAdmin && !req.body.userId) {
-      return res.status(400).json({ message: 'userId is required when admin creates a tenant' });
+      return res.status(400).json({ success: false, message: 'userId is required when admin creates a tenant' });
     }
 
     const tenant = await Tenant.create(tenantData);
-    res.status(201).json(tenant);
+    res.status(201).json({ success: true, data: tenant });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
