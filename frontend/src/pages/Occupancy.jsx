@@ -171,28 +171,55 @@ function Occupancy() {
   });
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex items-start justify-between gap-2 sm:gap-3">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Occupancy Management</h1>
-        </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-xs sm:text-base flex-shrink-0 whitespace-nowrap"
+    <div className="space-y-4 sm:space-y-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+        <div
+          className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 transform"
         >
-          <span className="sm:hidden">➕ Assign</span>
-          <span className="hidden sm:inline">Assign Room/Bed</span>
-        </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 lg:mb-1 whitespace-nowrap">Total Occupancy</p>
+              <h3 className="text-xl lg:text-3xl font-black text-gray-800">{occupancies.length}</h3>
+            </div>
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+              <span className="text-lg lg:text-xl">🔑</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <input
-          type="text"
-          placeholder="Search by tenant name or room number..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+        <div className="px-6 py-5 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b border-gray-200">
+          <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
+            <div className="relative flex-1 lg:max-w-md">
+              <input
+                type="text"
+                placeholder="Search by tenant name or room..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-400 transition-all bg-white shadow-sm"
+              />
+              <svg
+                className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 lg:px-6 py-3 bg-gray-700 text-white rounded-xl hover:shadow-xl font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden lg:inline">Assign Room</span>
+              <span className="lg:hidden">Assign</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {showForm && (
@@ -375,191 +402,217 @@ function Occupancy() {
         </div>
       )}
 
-      {/* Mobile Card View */}
-      <div className="block md:hidden space-y-3 sm:space-y-4">
-        {filteredOccupancies.map((occupancy) => (
-          <div key={occupancy._id} className="bg-white rounded-lg shadow-md p-3 sm:p-4 border border-gray-200">
-            <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 text-sm sm:text-base truncate">{occupancy.tenantId?.name || 'N/A'}</h3>
-                <p className="text-xs sm:text-sm text-gray-600">
-                  Room {occupancy.roomId?.roomNumber || 'N/A'}
-                  {occupancy.bedNumber && ` - Bed ${occupancy.bedNumber}`}
-                </p>
-              </div>
-              <span
-                className={`px-2 py-0.5 sm:py-1 inline-flex text-[10px] sm:text-xs leading-5 font-semibold rounded-full flex-shrink-0 ${
-                  occupancy.status === 'ACTIVE'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {occupancy.status}
-              </span>
-            </div>
-            <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Rent:</span>
-                <span className="font-semibold">₹{occupancy.rentAmount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Advance:</span>
-                <span className="font-semibold">₹{occupancy.advanceAmount}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Join Date:</span>
-                <span className="font-semibold">
-                  {new Date(occupancy.joinDate).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
-              {occupancy.leaveDate && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">End Date:</span>
-                  <span className="font-semibold">
-                    {new Date(occupancy.leaveDate).toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                    })}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2 mt-2.5 sm:mt-3">
-              {occupancy.status === 'ACTIVE' && (
-                <button
-                  onClick={() => handleEndOccupancy(occupancy._id)}
-                  className="flex-1 bg-red-600 text-white py-1.5 sm:py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
-                >
-                  End
-                </button>
-              )}
-              <button
-                onClick={() => handleDelete(occupancy)}
-                className="flex-1 bg-gray-200 text-gray-700 py-1.5 sm:py-2 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-        {filteredOccupancies.length === 0 && (
-          <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">
-            {searchQuery ? 'No occupancies match your search.' : 'No occupancies found.'}
-          </div>
-        )}
-      </div>
-
-      {/* Desktop Table View */}
-      <div className="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tenant
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Room
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Bed
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rent
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Advance
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Join Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                End Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredOccupancies.map((occupancy) => (
-              <tr key={occupancy._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {occupancy.tenantId?.name || 'N/A'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {occupancy.roomId?.roomNumber || 'N/A'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {occupancy.bedNumber ? `Bed ${occupancy.bedNumber}` : '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ₹{occupancy.rentAmount}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  ₹{occupancy.advanceAmount}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(occupancy.joinDate).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {occupancy.leaveDate
-                    ? new Date(occupancy.leaveDate).toLocaleDateString('en-GB', {
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+        {/* Mobile Card View */}
+        <div className="block lg:hidden">
+          {filteredOccupancies.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {filteredOccupancies.map((occupancy) => (
+                <div key={occupancy._id} className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                        {occupancy.tenantId?.name?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                      <div className="ml-3">
+                        <div className="text-sm font-bold text-gray-900">{occupancy.tenantId?.name || 'N/A'}</div>
+                        <div className="text-xs text-gray-500 flex items-center mt-0.5">
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                          </svg>
+                          Room {occupancy.roomId?.roomNumber || 'N/A'}{occupancy.bedNumber && ` - Bed ${occupancy.bedNumber}`}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {occupancy.status === 'ACTIVE' && (
+                        <button
+                          onClick={() => handleEndOccupancy(occupancy._id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+                          title="End Occupancy"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(occupancy)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+                        title="Delete"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-600">₹{occupancy.rentAmount}/month</span>
+                      <span className={`px-2 py-0.5 rounded-full ${
+                        occupancy.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-700 font-semibold'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {occupancy.status}
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-1 rounded-lg bg-green-100 text-green-700 font-semibold border border-green-200">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {new Date(occupancy.joinDate).toLocaleDateString('en-GB', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
-                      })
-                    : '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      occupancy.status === 'ACTIVE'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {occupancy.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <div className="flex items-center gap-3">
-                    {occupancy.status === 'ACTIVE' && (
-                      <button
-                        onClick={() => handleEndOccupancy(occupancy._id)}
-                        className="text-red-600 hover:text-red-900 cursor-pointer"
-                      >
-                        End
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDelete(occupancy)}
-                      className="text-gray-600 hover:text-gray-900 cursor-pointer"
-                    >
-                      Delete
-                    </button>
+                      })}
+                    </span>
                   </div>
-                </td>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">No Occupancy Found</h3>
+              <p className="text-sm text-gray-500 text-center max-w-xs">
+                {searchQuery ? 'No occupancies match your search criteria.' : 'Get started by assigning a room to a tenant.'}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-700">
+              <tr>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Tenant
+                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Room
+                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Bed
+                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Rent
+                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Advance
+                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Join Date
+                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-4 py-4 text-center text-sm font-bold text-white uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {filteredOccupancies.length === 0 && (
-          <div className="text-center py-8 sm:py-12 text-gray-500 text-sm sm:text-base">
-            {searchQuery ? 'No occupancies match your search.' : 'No occupancies found.'}
-          </div>
-        )}
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredOccupancies.length > 0 ? (
+                filteredOccupancies.map((occupancy) => (
+                  <tr key={occupancy._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 group">
+                    <td className="px-4 py-4">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                          {occupancy.tenantId?.name?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-bold text-gray-900">{occupancy.tenantId?.name || 'N/A'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-700 font-medium">
+                      Room {occupancy.roomId?.roomNumber || 'N/A'}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-600">
+                      {occupancy.bedNumber ? `Bed ${occupancy.bedNumber}` : '-'}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-600">
+                      ₹{occupancy.rentAmount}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-600">
+                      ₹{occupancy.advanceAmount}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center text-sm">
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-green-100 text-green-700 font-semibold border border-green-200">
+                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {new Date(occupancy.joinDate).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                        occupancy.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {occupancy.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        {occupancy.status === 'ACTIVE' && (
+                          <button
+                            onClick={() => handleEndOccupancy(occupancy._id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+                            title="End Occupancy"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(occupancy)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
+                          title="Delete"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="px-6 py-16">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-700 mb-2">No Occupancy Found</h3>
+                      <p className="text-sm text-gray-500 text-center max-w-xs">
+                        {searchQuery ? 'No occupancies match your search criteria.' : 'Get started by assigning a room to a tenant.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
