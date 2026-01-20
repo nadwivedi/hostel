@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from '../App';
+import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 
 function Tenants() {
+  const { user } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -163,7 +165,7 @@ function Tenants() {
       };
 
       if (editingTenant) {
-        await axios.patch(`${BACKEND_URL}/api/tenants/${editingTenant._id}`, tenantData, {
+        await axios.patch(`${BACKEND_URL}/api/tenants/${editingTenant._id}`, { userId: user?._id, ...tenantData }, {
           withCredentials: true,
         });
         toast.success('Tenant updated successfully!');
@@ -202,6 +204,7 @@ function Tenants() {
     
     try {
       await axios.delete(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
+        data: { userId: user?._id },
         withCredentials: true,
       });
       toast.success('Tenant deleted successfully!');

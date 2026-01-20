@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from '../App';
+import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Occupancy() {
+  const { user } = useAuth();
   const [occupancies, setOccupancies] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -96,7 +99,7 @@ function Occupancy() {
       await axios.post(`${BACKEND_URL}/api/occupancies`, occupancyData, {
         withCredentials: true,
       });
-      alert('Occupancy created successfully!');
+      toast.success('Occupancy created successfully!');
       setShowForm(false);
       setFormData({
         tenantId: '',
@@ -112,7 +115,7 @@ function Occupancy() {
       fetchRooms();
     } catch (error) {
       console.error('Error creating occupancy:', error);
-      alert('Error creating occupancy');
+      toast.error(error.response?.data?.message || 'Error creating occupancy');
     }
   };
 
@@ -126,12 +129,33 @@ function Occupancy() {
       }, {
         withCredentials: true,
       });
-      alert('Occupancy ended successfully!');
+      toast.success('Occupancy ended successfully!');
       fetchOccupancies();
       fetchRooms();
     } catch (error) {
       console.error('Error ending occupancy:', error);
-      alert('Error ending occupancy');
+      toast.error('Error ending occupancy');
+    }
+  };
+
+  const handleDelete = async (occupancy) => {
+    const confirmMessage = occupancy.status === 'ACTIVE' 
+      ? `This occupancy is ACTIVE. Are you sure you want to delete it?`
+      : `Are you sure you want to delete this occupancy record?`;
+    
+    if (!window.confirm(confirmMessage)) return;
+
+    try {
+      await axios.delete(`${BACKEND_URL}/api/occupancies/${occupancy._id}`, {
+        data: { userId: user?._id },
+        withCredentials: true,
+      });
+      toast.success('Occupancy deleted successfully!');
+      fetchOccupancies();
+      fetchRooms();
+    } catch (error) {
+      console.error('Error deleting occupancy:', error);
+      toast.error(error.response?.data?.message || 'Error deleting occupancy');
     }
   };
 
@@ -405,14 +429,22 @@ function Occupancy() {
                 </div>
               )}
             </div>
-            {occupancy.status === 'ACTIVE' && (
+            <div className="flex gap-2 mt-2.5 sm:mt-3">
+              {occupancy.status === 'ACTIVE' && (
+                <button
+                  onClick={() => handleEndOccupancy(occupancy._id)}
+                  className="flex-1 bg-red-600 text-white py-1.5 sm:py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
+                >
+                  End
+                </button>
+              )}
               <button
-                onClick={() => handleEndOccupancy(occupancy._id)}
-                className="mt-2.5 sm:mt-3 w-full bg-red-600 text-white py-1.5 sm:py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
+                onClick={() => handleDelete(occupancy)}
+                className="flex-1 bg-gray-200 text-gray-700 py-1.5 sm:py-2 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer text-xs sm:text-sm font-medium"
               >
-                End Occupancy
+                Delete
               </button>
-            )}
+            </div>
           </div>
         ))}
         {filteredOccupancies.length === 0 && (
@@ -502,14 +534,22 @@ function Occupancy() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {occupancy.status === 'ACTIVE' && (
+                  <div className="flex items-center gap-3">
+                    {occupancy.status === 'ACTIVE' && (
+                      <button
+                        onClick={() => handleEndOccupancy(occupancy._id)}
+                        className="text-red-600 hover:text-red-900 cursor-pointer"
+                      >
+                        End
+                      </button>
+                    )}
                     <button
-                      onClick={() => handleEndOccupancy(occupancy._id)}
-                      className="text-red-600 hover:text-red-900 cursor-pointer"
+                      onClick={() => handleDelete(occupancy)}
+                      className="text-gray-600 hover:text-gray-900 cursor-pointer"
                     >
-                      End Occupancy
+                      Delete
                     </button>
-                  )}
+                  </div>
                 </td>
               </tr>
             ))}

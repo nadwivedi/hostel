@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import StatCard from "../components/Stats";
+import { toast } from "../App";
+import { useAuth } from "../context/AuthContext";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Payments() {
+  const { user } = useAuth();
   const [payments, setPayments] = useState([]);
   const [occupancies, setOccupancies] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -106,7 +109,7 @@ function Payments() {
       await axios.post(`${BACKEND_URL}/api/payments`, paymentData, {
         withCredentials: true,
       });
-      alert("Payment record created successfully!");
+      toast.success('Payment record created successfully!');
       setShowForm(false);
       setFormData({
         occupancyId: "",
@@ -121,7 +124,7 @@ function Payments() {
       fetchPayments();
     } catch (error) {
       console.error("Error creating payment:", error);
-      alert("Error creating payment record");
+      toast.error(error.response?.data?.message || "Error creating payment record");
     }
   };
 
@@ -149,13 +152,29 @@ function Payments() {
         },
         {
           withCredentials: true,
-        },
+        }
       );
-      alert("Payment updated successfully!");
+      toast.success('Payment updated successfully!');
       fetchPayments();
     } catch (error) {
       console.error("Error updating payment:", error);
-      alert("Error updating payment");
+      toast.error(error.response?.data?.message || "Error updating payment");
+    }
+  };
+
+  const handleDelete = async (payment) => {
+    if (!window.confirm(`Are you sure you want to delete this payment record?`)) return;
+
+    try {
+      await axios.delete(`${BACKEND_URL}/api/payments/${payment._id}`, {
+        data: { userId: user?._id },
+        withCredentials: true,
+      });
+      toast.success('Payment deleted successfully!');
+      fetchPayments();
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+      toast.error(error.response?.data?.message || 'Error deleting payment');
     }
   };
 
@@ -540,16 +559,24 @@ function Payments() {
                 </div>
               )}
             </div>
-            {payment.status !== "PAID" && (
+            <div className="flex gap-2 mt-3">
+              {payment.status !== "PAID" && (
+                <button
+                  onClick={() =>
+                    handleUpdatePayment(payment._id, payment.amountPaid)
+                  }
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm"
+                >
+                  Record
+                </button>
+              )}
               <button
-                onClick={() =>
-                  handleUpdatePayment(payment._id, payment.amountPaid)
-                }
-                className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer text-sm"
+                onClick={() => handleDelete(payment)}
+                className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer text-sm"
               >
-                Record Payment
+                Delete
               </button>
-            )}
+            </div>
           </div>
         ))}
         {filteredPayments.length === 0 && (
@@ -635,16 +662,24 @@ function Payments() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {payment.status !== "PAID" && (
+                  <div className="flex items-center gap-3">
+                    {payment.status !== "PAID" && (
+                      <button
+                        onClick={() =>
+                          handleUpdatePayment(payment._id, payment.amountPaid)
+                        }
+                        className="text-blue-600 hover:text-blue-900 cursor-pointer"
+                      >
+                        Record
+                      </button>
+                    )}
                     <button
-                      onClick={() =>
-                        handleUpdatePayment(payment._id, payment.amountPaid)
-                      }
-                      className="text-blue-600 hover:text-blue-900 cursor-pointer"
+                      onClick={() => handleDelete(payment)}
+                      className="text-gray-600 hover:text-gray-900 cursor-pointer"
                     >
-                      Record Payment
+                      Delete
                     </button>
-                  )}
+                  </div>
                 </td>
               </tr>
             ))}

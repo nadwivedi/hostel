@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Payment = require('../models/Payment');
 
 // Get all payments (filtered by user, all for admin)
@@ -63,71 +64,171 @@ exports.getPaymentsByTenant = async (req, res) => {
 // Create payment
 exports.createPayment = async (req, res) => {
   try {
+    const { occupancyId, tenantId, month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
+
+    if (!occupancyId || occupancyId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide occupancy ID' });
+    }
+
+    if (!tenantId || tenantId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide tenant ID' });
+    }
+
+    if (!month || isNaN(month) || month < 1 || month > 12) {
+      return res.status(400).json({ success: false, message: 'Please provide valid month (1-12)' });
+    }
+
+    if (!year || isNaN(year) || year < 2000 || year > 2100) {
+      return res.status(400).json({ success: false, message: 'Please provide valid year' });
+    }
+
+    if (!rentAmount || isNaN(rentAmount) || rentAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
+    }
+
+    if (amountPaid !== undefined && amountPaid !== null && (isNaN(amountPaid) || amountPaid < 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid amount paid' });
+    }
+
+    if (status && !['PENDING', 'PAID', 'PARTIAL'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Status must be PENDING, PAID, or PARTIAL' });
+    }
+
+    if (amountPaid > rentAmount) {
+      return res.status(400).json({ success: false, message: 'Amount paid cannot exceed rent amount' });
+    }
+
     const paymentData = {
-      ...req.body,
+      occupancyId,
+      tenantId,
+      month,
+      year,
+      rentAmount,
+      amountPaid: amountPaid || 0,
+      paymentDate: amountPaid > 0 ? paymentDate : null,
+      status: status || 'PENDING',
       userId: req.isAdmin ? req.body.userId : req.user._id,
     };
 
-    // If admin is creating without specifying userId, return error
     if (req.isAdmin && !req.body.userId) {
-      return res.status(400).json({ message: 'userId is required when admin creates a payment' });
+      return res.status(400).json({ success: false, message: 'userId is required when admin creates a payment' });
     }
 
     const payment = await Payment.create(paymentData);
     const populatedPayment = await Payment.findById(payment._id)
       .populate('tenantId')
       .populate('occupancyId');
-    res.status(201).json(populatedPayment);
+    res.status(201).json({ success: true, data: populatedPayment });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 // Update payment
 exports.updatePayment = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const { userId, month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
+    const paymentId = req.params.id;
+
+    if (!userId || userId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide user ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid payment ID format' });
+    }
+
+    const payment = await Payment.findById(paymentId);
     if (!payment) {
-      return res.status(404).json({ message: 'Payment not found' });
+      return res.status(404).json({ success: false, message: 'Payment not found' });
     }
 
-    // Check ownership for non-admin users
-    if (!req.isAdmin && payment.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to update this payment' });
+    if (!req.isAdmin && payment.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this payment' });
     }
 
-    // Don't allow changing userId
-    const { userId, ...updateData } = req.body;
+    if (month !== undefined && (isNaN(month) || month < 1 || month > 12)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid month (1-12)' });
+    }
 
-    const updatedPayment = await Payment.findByIdAndUpdate(req.params.id, updateData, {
+    if (year !== undefined && (isNaN(year) || year < 2000 || year > 2100)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid year' });
+    }
+
+    if (rentAmount !== undefined && (isNaN(rentAmount) || rentAmount <= 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
+    }
+
+    if (amountPaid !== undefined && amountPaid !== null && (isNaN(amountPaid) || amountPaid < 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid amount paid' });
+    }
+
+    if (status !== undefined && !['PENDING', 'PAID', 'PARTIAL'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Status must be PENDING, PAID, or PARTIAL' });
+    }
+
+    const currentRentAmount = rentAmount !== undefined ? rentAmount : payment.rentAmount;
+    if (amountPaid !== undefined && amountPaid > currentRentAmount) {
+      return res.status(400).json({ success: false, message: 'Amount paid cannot exceed rent amount' });
+    }
+
+    const updateData = {
+      ...(month !== undefined && { month }),
+      ...(year !== undefined && { year }),
+      ...(rentAmount !== undefined && { rentAmount }),
+      ...(amountPaid !== undefined && { amountPaid }),
+      ...(paymentDate !== undefined && { paymentDate: amountPaid > 0 ? paymentDate : null }),
+      ...(status !== undefined && { status }),
+    };
+
+    const updatedPayment = await Payment.findByIdAndUpdate(paymentId, updateData, {
       new: true,
       runValidators: true,
     })
       .populate('tenantId')
       .populate('occupancyId');
 
-    res.status(200).json(updatedPayment);
+    res.status(200).json({ success: true, data: updatedPayment });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 // Delete payment
 exports.deletePayment = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.id);
+    const { userId } = req.body;
+    const paymentId = req.params.id;
+
+    if (!userId || userId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide user ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid payment ID format' });
+    }
+
+    const payment = await Payment.findById(paymentId);
     if (!payment) {
-      return res.status(404).json({ message: 'Payment not found' });
+      return res.status(404).json({ success: false, message: 'Payment not found' });
     }
 
     // Check ownership for non-admin users
-    if (!req.isAdmin && payment.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this payment' });
+    if (!req.isAdmin && payment.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this payment' });
     }
 
-    await Payment.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Payment deleted successfully' });
+    await Payment.findByIdAndDelete(paymentId);
+    res.status(200).json({ success: true, message: 'Payment deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

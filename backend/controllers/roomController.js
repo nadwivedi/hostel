@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Room = require('../models/Room');
 
 // Get all rooms (filtered by user, all for admin)
@@ -36,47 +37,118 @@ exports.getRoomById = async (req, res) => {
 // Create room
 exports.createRoom = async (req, res) => {
   try {
+    const { roomNumber, floor, rentType, rentAmount, capacity, beds } = req.body;
+
+    if (!roomNumber || roomNumber.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide room number' });
+    }
+
+    if (!rentAmount || isNaN(rentAmount) || rentAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
+    }
+
+    if (!capacity || isNaN(capacity) || capacity <= 0) {
+      return res.status(400).json({ success: false, message: 'Please provide valid room capacity' });
+    }
+
+    if (rentType && !['PER_ROOM', 'PER_BED'].includes(rentType)) {
+      return res.status(400).json({ success: false, message: 'Rent type must be PER_ROOM or PER_BED' });
+    }
+
+    if (rentType === 'PER_BED' && (!beds || !Array.isArray(beds) || beds.length === 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide beds for PER_BED room type' });
+    }
+
+    if (rentType === 'PER_BED' && beds && beds.length > capacity) {
+      return res.status(400).json({ success: false, message: 'Number of beds cannot exceed room capacity' });
+    }
+
     const roomData = {
-      ...req.body,
+      roomNumber: roomNumber.trim(),
+      floor: floor || 1,
+      rentType: rentType || 'PER_ROOM',
+      rentAmount,
+      capacity,
+      beds: rentType === 'PER_BED' ? beds : [],
+      status: 'AVAILABLE',
       userId: req.isAdmin ? req.body.userId : req.user._id,
     };
 
-    // If admin is creating without specifying userId, return error
     if (req.isAdmin && !req.body.userId) {
-      return res.status(400).json({ message: 'userId is required when admin creates a room' });
+      return res.status(400).json({ success: false, message: 'userId is required when admin creates a room' });
     }
 
     const room = await Room.create(roomData);
-    res.status(201).json(room);
+    res.status(201).json({ success: true, data: room });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 // Update room
 exports.updateRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const { userId, roomNumber, floor, rentType, rentAmount, capacity, status } = req.body;
+    const roomId = req.params.id;
+
+    if (!userId || userId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide user ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(roomId)) {
+      return res.status(400).json({ success: false, message: 'Invalid room ID format' });
+    }
+
+    const room = await Room.findById(roomId);
     if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
+      return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
-    // Check ownership for non-admin users
-    if (!req.isAdmin && room.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to update this room' });
+    if (!req.isAdmin && room.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this room' });
     }
 
-    // Don't allow changing userId
-    const { userId, ...updateData } = req.body;
+    if (roomNumber !== undefined && (typeof roomNumber !== 'string' || roomNumber.trim() === '')) {
+      return res.status(400).json({ success: false, message: 'Please provide valid room number' });
+    }
 
-    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, updateData, {
+    if (rentAmount !== undefined && (isNaN(rentAmount) || rentAmount <= 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
+    }
+
+    if (capacity !== undefined && (isNaN(capacity) || capacity <= 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid room capacity' });
+    }
+
+    if (rentType !== undefined && !['PER_ROOM', 'PER_BED'].includes(rentType)) {
+      return res.status(400).json({ success: false, message: 'Rent type must be PER_ROOM or PER_BED' });
+    }
+
+    if (status !== undefined && !['AVAILABLE', 'OCCUPIED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Status must be AVAILABLE or OCCUPIED' });
+    }
+
+    const updateData = {
+      ...(roomNumber !== undefined && { roomNumber: roomNumber.trim() }),
+      ...(floor !== undefined && { floor: floor || 1 }),
+      ...(rentType !== undefined && { rentType }),
+      ...(rentAmount !== undefined && { rentAmount }),
+      ...(capacity !== undefined && { capacity }),
+      ...(status !== undefined && { status }),
+    };
+
+    const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, {
       new: true,
       runValidators: true,
     });
 
-    res.status(200).json(updatedRoom);
+    res.status(200).json({ success: true, data: updatedRoom });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -113,19 +185,34 @@ exports.updateBedStatus = async (req, res) => {
 // Delete room
 exports.deleteRoom = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const { userId } = req.body;
+    const roomId = req.params.id;
+
+    if (!userId || userId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide user ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(roomId)) {
+      return res.status(400).json({ success: false, message: 'Invalid room ID format' });
+    }
+
+    const room = await Room.findById(roomId);
     if (!room) {
-      return res.status(404).json({ message: 'Room not found' });
+      return res.status(404).json({ success: false, message: 'Room not found' });
     }
 
     // Check ownership for non-admin users
-    if (!req.isAdmin && room.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this room' });
+    if (!req.isAdmin && room.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this room' });
     }
 
-    await Room.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Room deleted successfully' });
+    await Room.findByIdAndDelete(roomId);
+    res.status(200).json({ success: true, message: 'Room deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

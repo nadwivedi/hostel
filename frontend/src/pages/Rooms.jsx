@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from '../App';
+import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Rooms() {
+  const { user } = useAuth();
   const [rooms, setRooms] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -82,15 +85,15 @@ function Rooms() {
       };
 
       if (editingRoom) {
-        await axios.patch(`${BACKEND_URL}/api/rooms/${editingRoom._id}`, roomData, {
+        await axios.patch(`${BACKEND_URL}/api/rooms/${editingRoom._id}`, { userId: user?._id, ...roomData }, {
           withCredentials: true,
         });
-        alert('✅ Room updated successfully!');
+        toast.success('Room updated successfully!');
       } else {
         await axios.post(`${BACKEND_URL}/api/rooms`, roomData, {
           withCredentials: true,
         });
-        alert('✅ Room registered successfully!');
+        toast.success('Room registered successfully!');
       }
 
       setShowForm(false);
@@ -106,7 +109,7 @@ function Rooms() {
       fetchRooms();
     } catch (error) {
       console.error('Error saving room:', error);
-      alert('❌ Error saving room');
+      toast.error(error.response?.data?.message || 'Error saving room');
     }
   };
 
@@ -121,6 +124,22 @@ function Rooms() {
       capacity: '',
       numberOfBeds: 0,
     });
+  };
+
+  const handleDelete = async (room) => {
+    if (!window.confirm(`Are you sure you want to delete Room ${room.roomNumber}?`)) return;
+
+    try {
+      await axios.delete(`${BACKEND_URL}/api/rooms/${room._id}`, {
+        data: { userId: user?._id },
+        withCredentials: true,
+      });
+      toast.success('Room deleted successfully!');
+      fetchRooms();
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      toast.error(error.response?.data?.message || 'Error deleting room');
+    }
   };
 
   return (
@@ -365,12 +384,18 @@ function Rooms() {
                 )}
               </div>
 
-              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 flex gap-2">
                 <button
                   onClick={() => handleEdit(room)}
-                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all font-medium cursor-pointer text-xs sm:text-sm"
+                  className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-all font-medium cursor-pointer text-xs sm:text-sm"
                 >
-                  ✏️ Edit Room
+                  ✏️ Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(room)}
+                  className="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-all font-medium cursor-pointer text-xs sm:text-sm"
+                >
+                  🗑️ Delete
                 </button>
               </div>
             </div>

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Occupancy = require('../models/Occupancy');
 const Room = require('../models/Room');
 
@@ -42,32 +43,58 @@ exports.getOccupancyById = async (req, res) => {
 // Create occupancy
 exports.createOccupancy = async (req, res) => {
   try {
-    const { roomId, bedNumber } = req.body;
+    const { tenantId, roomId, bedNumber, rentAmount, advanceAmount, joinDate, status } = req.body;
+
+    if (!tenantId || tenantId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide tenant ID' });
+    }
+
+    if (!roomId || roomId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide room ID' });
+    }
+
+    if (!rentAmount || isNaN(rentAmount) || rentAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
+    }
+
+    if (advanceAmount !== undefined && advanceAmount !== null && (isNaN(advanceAmount) || advanceAmount < 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid advance amount' });
+    }
+
+    if (!joinDate) {
+      return res.status(400).json({ success: false, message: 'Please provide join date' });
+    }
+
+    if (status && !['ACTIVE', 'COMPLETED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Status must be ACTIVE or COMPLETED' });
+    }
 
     const occupancyData = {
-      ...req.body,
+      tenantId,
+      roomId,
+      bedNumber: bedNumber || undefined,
+      rentAmount,
+      advanceAmount: advanceAmount || 0,
+      joinDate,
+      leaveDate: undefined,
+      status: status || 'ACTIVE',
       userId: req.isAdmin ? req.body.userId : req.user._id,
     };
 
-    // If admin is creating without specifying userId, return error
     if (req.isAdmin && !req.body.userId) {
-      return res.status(400).json({ message: 'userId is required when admin creates an occupancy' });
+      return res.status(400).json({ success: false, message: 'userId is required when admin creates an occupancy' });
     }
 
-    // Create occupancy
     const occupancy = await Occupancy.create(occupancyData);
 
-    // Update room/bed status
     const room = await Room.findById(roomId);
     if (room) {
       if (bedNumber) {
-        // Update bed status by bedNumber
         const bed = room.beds.find(b => b.bedNumber === bedNumber);
         if (bed) {
           bed.status = 'OCCUPIED';
         }
       } else {
-        // Update room status (for PER_ROOM type)
         room.status = 'OCCUPIED';
       }
       await room.save();
@@ -77,44 +104,72 @@ exports.createOccupancy = async (req, res) => {
       .populate('tenantId')
       .populate('roomId');
 
-    res.status(201).json(populatedOccupancy);
+    res.status(201).json({ success: true, data: populatedOccupancy });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 // Update occupancy
 exports.updateOccupancy = async (req, res) => {
   try {
-    const { leaveDate, status } = req.body;
+    const { userId, rentAmount, advanceAmount, joinDate, leaveDate, status, notes } = req.body;
+    const occupancyId = req.params.id;
 
-    const occupancy = await Occupancy.findById(req.params.id);
+    if (!userId || userId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide user ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(occupancyId)) {
+      return res.status(400).json({ success: false, message: 'Invalid occupancy ID format' });
+    }
+
+    const occupancy = await Occupancy.findById(occupancyId);
     if (!occupancy) {
-      return res.status(404).json({ message: 'Occupancy not found' });
+      return res.status(404).json({ success: false, message: 'Occupancy not found' });
     }
 
-    // Check ownership for non-admin users
-    if (!req.isAdmin && occupancy.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to update this occupancy' });
+    if (!req.isAdmin && occupancy.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this occupancy' });
     }
 
-    // Update occupancy
-    if (leaveDate) occupancy.leaveDate = leaveDate;
-    if (status) occupancy.status = status;
+    if (rentAmount !== undefined && (isNaN(rentAmount) || rentAmount <= 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
+    }
+
+    if (advanceAmount !== undefined && advanceAmount !== null && (isNaN(advanceAmount) || advanceAmount < 0)) {
+      return res.status(400).json({ success: false, message: 'Please provide valid advance amount' });
+    }
+
+    if (joinDate !== undefined && !joinDate) {
+      return res.status(400).json({ success: false, message: 'Please provide valid join date' });
+    }
+
+    if (status !== undefined && !['ACTIVE', 'COMPLETED'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Status must be ACTIVE or COMPLETED' });
+    }
+
+    if (rentAmount !== undefined) occupancy.rentAmount = rentAmount;
+    if (advanceAmount !== undefined) occupancy.advanceAmount = advanceAmount;
+    if (joinDate !== undefined) occupancy.joinDate = joinDate;
+    if (leaveDate !== undefined) occupancy.leaveDate = leaveDate;
+    if (status !== undefined) occupancy.status = status;
+    if (notes !== undefined) occupancy.notes = notes;
     await occupancy.save();
 
-    // If ending occupancy, update room/bed status
     if (status === 'COMPLETED') {
       const room = await Room.findById(occupancy.roomId);
       if (room) {
         if (occupancy.bedNumber) {
-          // Update bed status by bedNumber
           const bed = room.beds.find(b => b.bedNumber === occupancy.bedNumber);
           if (bed) {
             bed.status = 'AVAILABLE';
           }
         } else {
-          // Update room status (for PER_ROOM type)
           room.status = 'AVAILABLE';
         }
         await room.save();
@@ -125,28 +180,43 @@ exports.updateOccupancy = async (req, res) => {
       .populate('tenantId')
       .populate('roomId');
 
-    res.status(200).json(updatedOccupancy);
+    res.status(200).json({ success: true, data: updatedOccupancy });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
 // Delete occupancy
 exports.deleteOccupancy = async (req, res) => {
   try {
-    const occupancy = await Occupancy.findById(req.params.id);
+    const { userId } = req.body;
+    const occupancyId = req.params.id;
+
+    if (!userId || userId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Please provide user ID' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(occupancyId)) {
+      return res.status(400).json({ success: false, message: 'Invalid occupancy ID format' });
+    }
+
+    const occupancy = await Occupancy.findById(occupancyId);
     if (!occupancy) {
-      return res.status(404).json({ message: 'Occupancy not found' });
+      return res.status(404).json({ success: false, message: 'Occupancy not found' });
     }
 
     // Check ownership for non-admin users
-    if (!req.isAdmin && occupancy.userId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this occupancy' });
+    if (!req.isAdmin && occupancy.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this occupancy' });
     }
 
-    await Occupancy.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'Occupancy deleted successfully' });
+    await Occupancy.findByIdAndDelete(occupancyId);
+    res.status(200).json({ success: true, message: 'Occupancy deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
