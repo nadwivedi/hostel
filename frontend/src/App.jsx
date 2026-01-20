@@ -8,11 +8,16 @@ import Tenants from './pages/Tenants';
 import Rooms from './pages/Rooms';
 import Occupancy from './pages/Occupancy';
 import Payments from './pages/Payments';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+export { toast };
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ToastContainer position="top-right" autoClose={1000} />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from '../App';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -85,7 +86,7 @@ function Tenants() {
     } catch (error) {
       console.error(`Error uploading ${type}:`, error);
       setUploading(false);
-      alert(`Error uploading ${type}`);
+      toast.error(`Error uploading ${type}`);
       return null;
     }
   };
@@ -151,21 +152,26 @@ function Tenants() {
       }
 
       const tenantData = {
-        ...formData,
-        adharImg: aadharUrl || '',
-        photo: photoUrl || '',
+        name: formData.name,
+        mobile: formData.mobile,
+        email: formData.email || undefined,
+        adharNo: formData.adharNo || undefined,
+        adharImg: aadharUrl || undefined,
+        photo: photoUrl || undefined,
+        dob: formData.dob || undefined,
+        ...(formData.gender && { gender: formData.gender }),
       };
 
       if (editingTenant) {
         await axios.patch(`${BACKEND_URL}/api/tenants/${editingTenant._id}`, tenantData, {
           withCredentials: true,
         });
-        alert('✅ Tenant updated successfully!');
+        toast.success('Tenant updated successfully!');
       } else {
         await axios.post(`${BACKEND_URL}/api/tenants`, tenantData, {
           withCredentials: true,
         });
-        alert('✅ Tenant registered successfully!');
+        toast.success('Tenant registered successfully!');
       }
 
       setShowForm(false);
@@ -187,7 +193,7 @@ function Tenants() {
       fetchTenants();
     } catch (error) {
       console.error('Error saving tenant:', error);
-      alert('❌ Error saving tenant');
+      toast.error(error.response?.data?.message || 'Error saving tenant');
     }
   };
 
