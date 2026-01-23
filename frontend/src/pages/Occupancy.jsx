@@ -73,13 +73,24 @@ function Occupancy() {
       const room = rooms.find((r) => r._id === value);
       setSelectedRoom(room);
       if (room) {
+        const rent = room.rentAmount || 0;
         setFormData({
           ...formData,
           roomId: value,
-          rentAmount: room.rentAmount,
+          rentAmount: rent,
+          advanceAmount: rent * 2,
           bedNumber: '',
         });
       }
+    }
+
+    if (name === 'rentAmount') {
+      const rent = parseFloat(value) || 0;
+      setFormData({
+        ...formData,
+        rentAmount: value,
+        advanceAmount: rent * 2,
+      });
     }
   };
 

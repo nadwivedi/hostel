@@ -170,7 +170,7 @@ function Tenants() {
         });
         toast.success('Tenant updated successfully!');
       } else {
-        await axios.post(`${BACKEND_URL}/api/tenants`, tenantData, {
+        await axios.post(`${BACKEND_URL}/api/tenants`, { userId: user?._id, ...tenantData }, {
           withCredentials: true,
         });
         toast.success('Tenant registered successfully!');
