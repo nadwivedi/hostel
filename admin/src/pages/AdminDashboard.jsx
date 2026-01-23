@@ -86,21 +86,17 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back! Here's an overview of your hostel management system.</p>
-        </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {statCards.map((stat, index) => (
-            <div key={index} className={`p-6 rounded-2xl shadow-lg ${stat.bgColor} hover:shadow-xl transition-all duration-300`}>
+            <div key={index} className={`p-4 sm:p-5 lg:p-6 rounded-2xl shadow-lg ${stat.bgColor} hover:shadow-xl transition-all duration-300`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1 whitespace-nowrap">{stat.title}</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stat.value}</p>
                 </div>
-                <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
-                  <span className="text-2xl">{stat.icon}</span>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                  <span className="text-lg sm:text-xl lg:text-2xl">{stat.icon}</span>
                 </div>
               </div>
             </div>
