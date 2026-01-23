@@ -15,7 +15,6 @@ function Rooms() {
     floor: '',
     rentType: 'PER_ROOM',
     rentAmount: '',
-    capacity: '',
     numberOfBeds: 0,
   });
 
@@ -49,7 +48,6 @@ function Rooms() {
       floor: room.floor || '',
       rentType: room.rentType,
       rentAmount: room.rentAmount,
-      capacity: room.capacity,
       numberOfBeds: room.beds?.length || 0,
     });
     setShowForm(true);
@@ -87,7 +85,6 @@ function Rooms() {
         floor: formData.floor ? parseInt(formData.floor) : undefined,
         rentType: formData.rentType,
         rentAmount: parseFloat(formData.rentAmount),
-        capacity: parseInt(formData.capacity),
         beds: beds,
       };
 
@@ -110,7 +107,6 @@ function Rooms() {
         floor: '',
         rentType: 'PER_ROOM',
         rentAmount: '',
-        capacity: '',
         numberOfBeds: 0,
       });
       fetchRooms();
@@ -128,7 +124,6 @@ function Rooms() {
       floor: '',
       rentType: 'PER_ROOM',
       rentAmount: '',
-      capacity: '',
       numberOfBeds: 0,
     });
   };
@@ -272,47 +267,6 @@ function Rooms() {
                   </div>
                 </div>
               </div>
-
-              {/* Section 3: Capacity & Beds */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Capacity & Beds</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Capacity <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="capacity"
-                      value={formData.capacity}
-                      onChange={handleChange}
-                      required
-                      min="1"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                      placeholder="Max occupants"
-                    />
-                  </div>
-
-                  {formData.rentType === 'PER_BED' && !editingRoom && (
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Number of Beds <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        name="numberOfBeds"
-                        value={formData.numberOfBeds}
-                        onChange={handleChange}
-                        required={formData.rentType === 'PER_BED'}
-                        min="1"
-                        max="20"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                        placeholder="Total beds"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
             </form>
 
             {/* Footer Actions */}
@@ -380,11 +334,6 @@ function Rooms() {
                   <span className="text-xs sm:text-sm font-medium">
                     ₹{room.rentAmount} <span className="text-gray-500">/ {room.rentType === 'PER_ROOM' ? 'Room' : 'Bed'}</span>
                   </span>
-                </div>
-
-                <div className="flex items-center space-x-2 text-gray-700">
-                  <span className="text-base sm:text-lg">👥</span>
-                  <span className="text-xs sm:text-sm font-medium">Capacity: {room.capacity}</span>
                 </div>
 
                 {room.beds && room.beds.length > 0 && (

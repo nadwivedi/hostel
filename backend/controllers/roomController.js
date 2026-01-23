@@ -37,7 +37,7 @@ exports.getRoomById = async (req, res) => {
 // Create room
 exports.createRoom = async (req, res) => {
   try {
-    const { roomNumber, floor, rentType, rentAmount, capacity, beds } = req.body;
+    const { roomNumber, floor, rentType, rentAmount, beds } = req.body;
 
     if (!roomNumber || roomNumber.trim() === '') {
       return res.status(400).json({ success: false, message: 'Please provide room number' });
@@ -45,10 +45,6 @@ exports.createRoom = async (req, res) => {
 
     if (!rentAmount || isNaN(rentAmount) || rentAmount <= 0) {
       return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
-    }
-
-    if (!capacity || isNaN(capacity) || capacity <= 0) {
-      return res.status(400).json({ success: false, message: 'Please provide valid room capacity' });
     }
 
     if (rentType && !['PER_ROOM', 'PER_BED'].includes(rentType)) {
@@ -59,16 +55,11 @@ exports.createRoom = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide beds for PER_BED room type' });
     }
 
-    if (rentType === 'PER_BED' && beds && beds.length > capacity) {
-      return res.status(400).json({ success: false, message: 'Number of beds cannot exceed room capacity' });
-    }
-
     const roomData = {
       roomNumber: roomNumber.trim(),
       floor: floor || 1,
       rentType: rentType || 'PER_ROOM',
       rentAmount,
-      capacity,
       beds: rentType === 'PER_BED' ? beds : [],
       status: 'AVAILABLE',
       userId: req.isAdmin ? req.body.userId : req.user._id,
@@ -88,7 +79,7 @@ exports.createRoom = async (req, res) => {
 // Update room
 exports.updateRoom = async (req, res) => {
   try {
-    const { userId, roomNumber, floor, rentType, rentAmount, capacity, status } = req.body;
+    const { userId, roomNumber, floor, rentType, rentAmount, status } = req.body;
     const roomId = req.params.id;
 
     if (!userId || userId.trim() === '') {
@@ -120,10 +111,6 @@ exports.updateRoom = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide valid rent amount' });
     }
 
-    if (capacity !== undefined && (isNaN(capacity) || capacity <= 0)) {
-      return res.status(400).json({ success: false, message: 'Please provide valid room capacity' });
-    }
-
     if (rentType !== undefined && !['PER_ROOM', 'PER_BED'].includes(rentType)) {
       return res.status(400).json({ success: false, message: 'Rent type must be PER_ROOM or PER_BED' });
     }
@@ -137,7 +124,6 @@ exports.updateRoom = async (req, res) => {
       ...(floor !== undefined && { floor: floor || 1 }),
       ...(rentType !== undefined && { rentType }),
       ...(rentAmount !== undefined && { rentAmount }),
-      ...(capacity !== undefined && { capacity }),
       ...(status !== undefined && { status }),
     };
 

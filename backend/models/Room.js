@@ -40,10 +40,6 @@ const roomSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    capacity: {
-      type: Number,
-      required: true,
-    },
     status: {
       type: String,
       enum: ['AVAILABLE', 'OCCUPIED',],
