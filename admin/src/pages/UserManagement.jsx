@@ -144,29 +144,29 @@ const UserManagement = () => {
       <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-2xl shadow-xl">
-              <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-white p-4 lg:p-6 rounded-2xl shadow-xl">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg className="w-5 h-5 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Total Users</p>
-                  <p className="text-4xl font-bold text-gray-900">{users.length}</p>
+                  <p className="text-xs lg:text-sm text-gray-500">Total Users</p>
+                  <p className="text-2xl lg:text-4xl font-bold text-gray-900">{users.length}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="lg:col-span-3">
-            <div className="bg-white p-6 rounded-2xl shadow-xl h-full">
-              <div className="flex flex-col sm:flex-row gap-4 h-full">
+            <div className="bg-white p-4 lg:p-6 rounded-2xl shadow-xl h-full">
+              <div className="flex flex-col sm:flex-row gap-3 h-full">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 lg:h-5 lg:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -175,15 +175,15 @@ const UserManagement = () => {
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={handleSearch}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent h-full"
+                    className="w-full pl-9 pr-4 py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent h-full text-sm"
                   />
                 </div>
 
                 <button
                   onClick={handleAddUser}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                  className="px-5 py-2.5 lg:px-8 lg:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl flex items-center justify-center space-x-1.5 lg:space-x-2 text-sm"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                   <span>Add User</span>
@@ -194,7 +194,7 @@ const UserManagement = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="hidden md:overflow-x-auto md:block">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
@@ -222,7 +222,7 @@ const UserManagement = () => {
                           </div>
                           <div className="ml-3">
                             <p className="text-sm font-medium text-gray-900">{user.fullName || 'N/A'}</p>
-                            <p className="text-xs text-gray-500">ID: {user._id.slice(-6)}</p>
+<p className="text-xs text-gray-500">ID: {user._id || 'N/A'}</p>
                           </div>
                         </div>
                       </td>
@@ -266,7 +266,70 @@ const UserManagement = () => {
             </table>
           </div>
 
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="md:hidden">
+            {filteredUsers.length === 0 ? (
+              <div className="px-4 py-12 text-center text-gray-500">
+                {searchTerm ? 'No users found matching your search' : 'No users in the system'}
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {filteredUsers.map((user) => (
+                  <div key={user._id} className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                          {user.fullName?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <p className="text-base font-semibold text-gray-900">{user.fullName || 'N/A'}</p>
+                          <p className="text-xs text-gray-500">ID: {user._id || 'N/A'}</p>
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {user.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => handleEditUser(user)}
+                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-all"
+                          title="Edit User"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(user._id)}
+                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all"
+                          title="Delete User"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 space-y-1">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span className="truncate">{user.email || '-'}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span>{user.mobile || '-'}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 py-3 lg:px-6 lg:py-4 border-t border-gray-200 bg-gray-50">
             <p className="text-sm text-gray-600">
               Showing {filteredUsers.length} of {users.length} users
             </p>
