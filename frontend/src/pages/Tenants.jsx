@@ -17,6 +17,8 @@ function Tenants() {
   const [aadharPreview, setAadharPreview] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [previewPhoto, setPreviewPhoto] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -70,10 +72,17 @@ function Tenants() {
 
   const handleFileUpload = async (file, type, tenantName) => {
     if (!file) return null;
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return null;
+    }
 
     const formDataUpload = new FormData();
     formDataUpload.append(type, file);
     formDataUpload.append('tenantName', tenantName);
+    formDataUpload.append('userId', userId);
 
     try {
       setUploading(true);
@@ -140,6 +149,13 @@ function Tenants() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
+    
     try {
       // Upload files if selected
       let aadharUrl = formData.adharImg;
@@ -165,12 +181,12 @@ function Tenants() {
       };
 
       if (editingTenant) {
-        await axios.patch(`${BACKEND_URL}/api/tenants/${editingTenant._id}`, { userId: user?._id, ...tenantData }, {
+        await axios.patch(`${BACKEND_URL}/api/tenants/${editingTenant._id}`, { userId, ...tenantData }, {
           withCredentials: true,
         });
         toast.success('Tenant updated successfully!');
       } else {
-        await axios.post(`${BACKEND_URL}/api/tenants`, { userId: user?._id, ...tenantData }, {
+        await axios.post(`${BACKEND_URL}/api/tenants`, { userId, ...tenantData }, {
           withCredentials: true,
         });
         toast.success('Tenant registered successfully!');
@@ -202,9 +218,15 @@ function Tenants() {
   const handleDelete = async (tenant) => {
     if (!window.confirm(`Are you sure you want to delete ${tenant.name}?`)) return;
     
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
+    
     try {
       await axios.delete(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
-        data: { userId: user?._id },
+        data: { userId },
         withCredentials: true,
       });
       toast.success('Tenant deleted successfully!');
@@ -586,6 +608,29 @@ function Tenants() {
         </div>
       )}
 
+      {previewPhoto && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setPreviewPhoto(null)}
+        >
+          <div className="relative max-w-3xl w-full max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewPhoto(null)}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img
+              src={previewPhoto}
+              alt="Tenant Photo"
+              className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
         {/* Mobile Card View */}
         <div className="block lg:hidden">
@@ -595,17 +640,22 @@ function Tenants() {
                 <div key={tenant._id} className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
-                        {tenant.photo ? (
+                      {tenant.photo ? (
+                        <button
+                          onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
+                          className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
+                        >
                           <img
                             src={`${BACKEND_URL}${tenant.photo}`}
                             alt={tenant.name}
                             className="w-full h-full object-cover rounded-full"
                           />
-                        ) : (
-                          tenant.name.charAt(0).toUpperCase()
-                        )}
-                      </div>
+                        </button>
+                      ) : (
+                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                          {tenant.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div className="ml-3">
                         <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
                         <div className="text-xs text-gray-500 flex items-center mt-0.5">
@@ -706,17 +756,22 @@ function Tenants() {
                   <tr key={tenant._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 group">
                     <td className="px-4 py-4">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
-                          {tenant.photo ? (
+                        {tenant.photo ? (
+                          <button
+                            onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
+                            className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
+                          >
                             <img
                               src={`${BACKEND_URL}${tenant.photo}`}
                               alt={tenant.name}
                               className="w-full h-full object-cover rounded-full"
                             />
-                          ) : (
-                            tenant.name.charAt(0).toUpperCase()
-                          )}
-                        </div>
+                          </button>
+                        ) : (
+                          <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                            {tenant.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                         <div className="ml-4">
                           <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
                         </div>

@@ -57,6 +57,13 @@ function Rooms() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
+    
     try {
       const beds = [];
       if (formData.rentType === 'PER_BED' && formData.numberOfBeds > 0) {
@@ -85,12 +92,12 @@ function Rooms() {
       };
 
       if (editingRoom) {
-        await axios.patch(`${BACKEND_URL}/api/rooms/${editingRoom._id}`, { userId: user?._id, ...roomData }, {
+        await axios.patch(`${BACKEND_URL}/api/rooms/${editingRoom._id}`, { userId, ...roomData }, {
           withCredentials: true,
         });
         toast.success('Room updated successfully!');
       } else {
-        await axios.post(`${BACKEND_URL}/api/rooms`, roomData, {
+        await axios.post(`${BACKEND_URL}/api/rooms`, { userId, ...roomData }, {
           withCredentials: true,
         });
         toast.success('Room registered successfully!');
@@ -128,10 +135,16 @@ function Rooms() {
 
   const handleDelete = async (room) => {
     if (!window.confirm(`Are you sure you want to delete Room ${room.roomNumber}?`)) return;
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
 
     try {
       await axios.delete(`${BACKEND_URL}/api/rooms/${room._id}`, {
-        data: { userId: user?._id },
+        data: { userId },
         withCredentials: true,
       });
       toast.success('Room deleted successfully!');

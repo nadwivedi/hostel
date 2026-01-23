@@ -96,6 +96,13 @@ function Occupancy() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
+    
     try {
       const occupancyData = {
         tenantId: formData.tenantId,
@@ -105,6 +112,7 @@ function Occupancy() {
         advanceAmount: parseFloat(formData.advanceAmount) || 0,
         joinDate: formData.joinDate,
         notes: formData.notes,
+        userId,
       };
 
       await axios.post(`${BACKEND_URL}/api/occupancies`, occupancyData, {
@@ -132,9 +140,16 @@ function Occupancy() {
 
   const handleEndOccupancy = async (occupancyId) => {
     if (!confirm('Are you sure you want to end this occupancy?')) return;
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
 
     try {
       await axios.patch(`${BACKEND_URL}/api/occupancies/${occupancyId}`, {
+        userId,
         leaveDate: new Date(),
         status: 'COMPLETED',
       }, {
@@ -155,10 +170,16 @@ function Occupancy() {
       : `Are you sure you want to delete this occupancy record?`;
     
     if (!window.confirm(confirmMessage)) return;
+    
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
 
     try {
       await axios.delete(`${BACKEND_URL}/api/occupancies/${occupancy._id}`, {
-        data: { userId: user?._id },
+        data: { userId },
         withCredentials: true,
       });
       toast.success('Occupancy deleted successfully!');
