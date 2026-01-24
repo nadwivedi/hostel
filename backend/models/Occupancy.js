@@ -29,6 +29,10 @@ const occupancySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    advanceLeft: {
+      type: Number,
+      default: 0,
+    },
     joinDate: {
       type: Date,
       required: true,

@@ -70,12 +70,17 @@ exports.createOccupancy = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Status must be ACTIVE or COMPLETED' });
     }
 
+    // Calculate advanceLeft (security deposit after first month's rent is deducted)
+    const advance = advanceAmount || 0;
+    const advanceLeft = advance > 0 ? advance - rentAmount : 0;
+
     const occupancyData = {
       tenantId,
       roomId,
       bedNumber: bedNumber || undefined,
       rentAmount,
-      advanceAmount: advanceAmount || 0,
+      advanceAmount: advance,
+      advanceLeft: advanceLeft > 0 ? advanceLeft : 0,
       joinDate,
       leaveDate: undefined,
       status: status || 'ACTIVE',
@@ -115,6 +120,7 @@ exports.createOccupancy = async (req, res) => {
     });
 
     if (!existingPayment) {
+      // First month's rent is covered by advance, so mark as PAID
       await Payment.create({
         userId: occupancyData.userId,
         occupancyId: occupancy._id,
@@ -122,8 +128,9 @@ exports.createOccupancy = async (req, res) => {
         month: paymentMonth,
         year: paymentYear,
         rentAmount,
-        amountPaid: 0,
-        status: 'PENDING',
+        amountPaid: rentAmount,
+        paymentDate: new Date(joinDate),
+        status: 'PAID',
       });
     }
 
@@ -186,6 +193,13 @@ exports.updateOccupancy = async (req, res) => {
     if (leaveDate !== undefined) occupancy.leaveDate = leaveDate;
     if (status !== undefined) occupancy.status = status;
     if (notes !== undefined) occupancy.notes = notes;
+
+    // Recalculate advanceLeft if rentAmount or advanceAmount changed
+    if (rentAmount !== undefined || advanceAmount !== undefined) {
+      const newAdvanceLeft = occupancy.advanceAmount - occupancy.rentAmount;
+      occupancy.advanceLeft = newAdvanceLeft > 0 ? newAdvanceLeft : 0;
+    }
+
     await occupancy.save();
 
     if (status === 'COMPLETED') {
