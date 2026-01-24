@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Occupancy = require('../models/Occupancy');
 const Room = require('../models/Room');
+const Payment = require('../models/Payment');
 
 // Get all occupancies (filtered by user, all for admin)
 exports.getAllOccupancies = async (req, res) => {
@@ -98,6 +99,32 @@ exports.createOccupancy = async (req, res) => {
         room.status = 'OCCUPIED';
       }
       await room.save();
+    }
+
+    // Auto-create payment for the current month
+    const joinDateObj = new Date(joinDate);
+    const currentDate = new Date();
+    const paymentMonth = joinDateObj.getMonth() + 1; // 1-12
+    const paymentYear = joinDateObj.getFullYear();
+
+    // Check if payment already exists for this occupancy and month/year
+    const existingPayment = await Payment.findOne({
+      occupancyId: occupancy._id,
+      month: paymentMonth,
+      year: paymentYear,
+    });
+
+    if (!existingPayment) {
+      await Payment.create({
+        userId: occupancyData.userId,
+        occupancyId: occupancy._id,
+        tenantId,
+        month: paymentMonth,
+        year: paymentYear,
+        rentAmount,
+        amountPaid: 0,
+        status: 'PENDING',
+      });
     }
 
     const populatedOccupancy = await Occupancy.findById(occupancy._id)
