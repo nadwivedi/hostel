@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from '../App';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Occupancy() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [occupancies, setOccupancies] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [rooms, setRooms] = useState([]);
@@ -440,7 +442,11 @@ function Occupancy() {
           {filteredOccupancies.length > 0 ? (
             <div className="divide-y divide-gray-100">
               {filteredOccupancies.map((occupancy) => (
-                <div key={occupancy._id} className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
+                <div
+                  key={occupancy._id}
+                  onClick={() => navigate(`/occupancy/${occupancy._id}`)}
+                  className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
@@ -459,7 +465,10 @@ function Occupancy() {
                     <div className="flex items-center gap-1">
                       {occupancy.status === 'ACTIVE' && (
                         <button
-                          onClick={() => handleEndOccupancy(occupancy._id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEndOccupancy(occupancy._id);
+                          }}
                           className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
                           title="End Occupancy"
                         >
@@ -469,7 +478,10 @@ function Occupancy() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleDelete(occupancy)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(occupancy);
+                        }}
                         className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
                         title="Delete"
                       >
@@ -553,7 +565,11 @@ function Occupancy() {
             <tbody className="divide-y divide-gray-100">
               {filteredOccupancies.length > 0 ? (
                 filteredOccupancies.map((occupancy) => (
-                  <tr key={occupancy._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 group">
+                  <tr
+                    key={occupancy._id}
+                    onClick={() => navigate(`/occupancy/${occupancy._id}`)}
+                    className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 group cursor-pointer"
+                  >
                     <td className="px-4 py-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
@@ -603,7 +619,10 @@ function Occupancy() {
                       <div className="flex items-center justify-center gap-2">
                         {occupancy.status === 'ACTIVE' && (
                           <button
-                            onClick={() => handleEndOccupancy(occupancy._id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEndOccupancy(occupancy._id);
+                            }}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
                             title="End Occupancy"
                           >
@@ -613,7 +632,10 @@ function Occupancy() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(occupancy)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(occupancy);
+                          }}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
                           title="Delete"
                         >

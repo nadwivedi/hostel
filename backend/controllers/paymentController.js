@@ -61,6 +61,26 @@ exports.getPaymentsByTenant = async (req, res) => {
   }
 };
 
+// Get payments by occupancy
+exports.getPaymentsByOccupancy = async (req, res) => {
+  try {
+    const filter = { occupancyId: req.params.occupancyId };
+
+    // For non-admin users, also filter by userId
+    if (!req.isAdmin) {
+      filter.userId = req.user._id;
+    }
+
+    const payments = await Payment.find(filter)
+      .populate('tenantId')
+      .populate('occupancyId')
+      .sort({ year: -1, month: -1 });
+    res.status(200).json(payments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Create payment
 exports.createPayment = async (req, res) => {
   try {
@@ -98,6 +118,9 @@ exports.createPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Amount paid cannot exceed rent amount' });
     }
 
+    // Calculate dueDate if not provided (5th of the specified month/year as default)
+    const dueDate = req.body.dueDate || new Date(year, month - 1, 5);
+
     const paymentData = {
       occupancyId,
       tenantId,
@@ -105,6 +128,7 @@ exports.createPayment = async (req, res) => {
       year,
       rentAmount,
       amountPaid: amountPaid || 0,
+      dueDate: dueDate,
       paymentDate: amountPaid > 0 ? paymentDate : null,
       status: status || 'PENDING',
       userId: req.isAdmin ? req.body.userId : req.user._id,
@@ -127,16 +151,8 @@ exports.createPayment = async (req, res) => {
 // Update payment
 exports.updatePayment = async (req, res) => {
   try {
-    const { userId, month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
+    const { month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
     const paymentId = req.params.id;
-
-    if (!userId || userId.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Please provide user ID' });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
-    }
 
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ success: false, message: 'Invalid payment ID format' });
@@ -147,7 +163,8 @@ exports.updatePayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Payment not found' });
     }
 
-    if (!req.isAdmin && payment.userId.toString() !== userId) {
+    // Check ownership for non-admin users
+    if (!req.isAdmin && payment.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this payment' });
     }
 
@@ -201,16 +218,7 @@ exports.updatePayment = async (req, res) => {
 // Delete payment
 exports.deletePayment = async (req, res) => {
   try {
-    const { userId } = req.body;
     const paymentId = req.params.id;
-
-    if (!userId || userId.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Please provide user ID' });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: 'Invalid user ID format' });
-    }
 
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
       return res.status(400).json({ success: false, message: 'Invalid payment ID format' });
@@ -222,12 +230,98 @@ exports.deletePayment = async (req, res) => {
     }
 
     // Check ownership for non-admin users
-    if (!req.isAdmin && payment.userId.toString() !== userId) {
+    if (!req.isAdmin && payment.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this payment' });
     }
 
     await Payment.findByIdAndDelete(paymentId);
     res.status(200).json({ success: true, message: 'Payment deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Mark payment as paid (and auto-create next month's payment)
+exports.markAsPaid = async (req, res) => {
+  try {
+    const paymentId = req.params.id;
+    const { paymentDate } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid payment ID format' });
+    }
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment not found' });
+    }
+
+    // Check ownership for non-admin users
+    if (!req.isAdmin && payment.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this payment' });
+    }
+
+    const paymentService = require('../services/paymentService');
+    const updatedPayment = await paymentService.markAsPaid(paymentId, paymentDate || new Date());
+
+    const populatedPayment = await Payment.findById(updatedPayment._id)
+      .populate('tenantId')
+      .populate('occupancyId');
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment marked as paid and next month payment created',
+      data: populatedPayment,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// Get upcoming payments (for alerts)
+exports.getUpcomingPayments = async (req, res) => {
+  try {
+    const { days } = req.query;
+    const daysAhead = days ? parseInt(days) : 7;
+
+    const paymentService = require('../services/paymentService');
+    let upcomingPayments = await paymentService.getUpcomingPayments(daysAhead);
+
+    // Filter by user if not admin
+    if (!req.isAdmin) {
+      upcomingPayments = upcomingPayments.filter(
+        (p) => p.userId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      count: upcomingPayments.length,
+      data: upcomingPayments,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get overdue payments
+exports.getOverduePayments = async (req, res) => {
+  try {
+    const paymentService = require('../services/paymentService');
+    let overduePayments = await paymentService.getOverduePayments();
+
+    // Filter by user if not admin
+    if (!req.isAdmin) {
+      overduePayments = overduePayments.filter(
+        (p) => p.userId.toString() === req.user._id.toString()
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      count: overduePayments.length,
+      data: overduePayments,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -35,6 +35,10 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    dueDate: {
+      type: Date,
+      required: true,
+    },
     paymentDate: {
       type: Date,
     },
@@ -48,6 +52,9 @@ const paymentSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Prevent duplicate payments for same month/year
+paymentSchema.index({ occupancyId: 1, year: 1, month: 1 }, { unique: true });
 
 const Payment = mongoose.model('Payment', paymentSchema);
 

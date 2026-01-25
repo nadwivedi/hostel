@@ -106,11 +106,11 @@ exports.createOccupancy = async (req, res) => {
       await room.save();
     }
 
-    // Auto-create payment for the current month
+    // Auto-create payment for the joining month and next month
     const joinDateObj = new Date(joinDate);
-    const currentDate = new Date();
     const paymentMonth = joinDateObj.getMonth() + 1; // 1-12
     const paymentYear = joinDateObj.getFullYear();
+    const dueDay = joinDateObj.getDate(); // Day of the month they joined
 
     // Check if payment already exists for this occupancy and month/year
     const existingPayment = await Payment.findOne({
@@ -120,7 +120,9 @@ exports.createOccupancy = async (req, res) => {
     });
 
     if (!existingPayment) {
-      // First month's rent is covered by advance, so mark as PAID
+      // Create first month payment (joining month) - marked as PAID from advance
+      const firstMonthDueDate = new Date(paymentYear, paymentMonth - 1, dueDay);
+
       await Payment.create({
         userId: occupancyData.userId,
         occupancyId: occupancy._id,
@@ -129,9 +131,35 @@ exports.createOccupancy = async (req, res) => {
         year: paymentYear,
         rentAmount,
         amountPaid: rentAmount,
+        dueDate: firstMonthDueDate,
         paymentDate: new Date(joinDate),
         status: 'PAID',
       });
+
+      // Create second month payment (next month) - PENDING
+      let nextMonth = paymentMonth + 1;
+      let nextYear = paymentYear;
+
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear += 1;
+      }
+
+      const nextMonthDueDate = new Date(nextYear, nextMonth - 1, dueDay);
+
+      await Payment.create({
+        userId: occupancyData.userId,
+        occupancyId: occupancy._id,
+        tenantId,
+        month: nextMonth,
+        year: nextYear,
+        rentAmount,
+        amountPaid: 0,
+        dueDate: nextMonthDueDate,
+        status: 'PENDING',
+      });
+
+      console.log(`✓ Created first month payment (PAID) and second month payment (PENDING, Due: ${nextMonthDueDate.toLocaleDateString()})`);
     }
 
     const populatedOccupancy = await Occupancy.findById(occupancy._id)
