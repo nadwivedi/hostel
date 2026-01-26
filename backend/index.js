@@ -27,7 +27,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      "http://hosteladm.softwarebytes.in",
+      "https://hosteladm.softwarebytes.in",
       "https://hostelapi.softwarebytes.in",
       "https://hostel.softwarebytes.in",
     ],
