@@ -24,6 +24,10 @@ const roomSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    locationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Location',
+    },
     roomNumber: {
       type: String,
       required: true,
@@ -46,7 +50,7 @@ const roomSchema = new mongoose.Schema(
       default: 'AVAILABLE',
     },
     beds: [bedSchema],
-   
+
   },
   {
     timestamps: true,
