@@ -55,13 +55,19 @@ function Rooms() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const userId = user?.id || user?._id;
     if (!userId) {
       toast.error('User not authenticated. Please log in again.');
       return;
     }
-    
+
+    // Validate number of beds for PER_BED type when creating new room
+    if (formData.rentType === 'PER_BED' && !editingRoom && (!formData.numberOfBeds || parseInt(formData.numberOfBeds) < 1)) {
+      toast.error('Please specify the number of beds for this room');
+      return;
+    }
+
     try {
       const beds = [];
       if (formData.rentType === 'PER_BED' && formData.numberOfBeds > 0) {
@@ -265,6 +271,37 @@ function Rooms() {
                       placeholder="Monthly rent"
                     />
                   </div>
+
+                  {formData.rentType === 'PER_BED' && !editingRoom && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Number of Beds <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="numberOfBeds"
+                        value={formData.numberOfBeds}
+                        onChange={handleChange}
+                        required
+                        min="1"
+                        max="20"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                        placeholder="How many beds in this room?"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Each bed can be managed separately for occupancy</p>
+                    </div>
+                  )}
+
+                  {formData.rentType === 'PER_BED' && editingRoom && editingRoom.beds?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Beds in Room
+                      </label>
+                      <p className="text-sm text-gray-600 py-2">
+                        This room has <span className="font-bold">{editingRoom.beds.length}</span> beds configured
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </form>
