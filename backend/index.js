@@ -31,6 +31,7 @@ app.use(
       "https://hosteladm.softwarebytes.in",
       "https://hostelapi.softwarebytes.in",
       "https://hostel.softwarebytes.in",
+      'https://hosteladmin2.vercel.app'
     ],
     credentials: true,
   }),
