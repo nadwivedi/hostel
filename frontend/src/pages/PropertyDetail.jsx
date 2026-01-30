@@ -26,6 +26,7 @@ function PropertyDetail() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -254,6 +255,7 @@ function PropertyDetail() {
     setPhotoFile(null);
     setAadharPreview(null);
     setPhotoPreview(null);
+    setShowAdditionalDetails(false);
     setFormData({
       name: '',
       mobile: '',
@@ -320,40 +322,40 @@ function PropertyDetail() {
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-2 lg:gap-4 mt-1">
         {/* Total Rooms */}
-        <div className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4">
+        <div className="bg-white rounded-xl shadow-lg border border-blue-500 p-2 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Rooms</p>
-              <h3 className="text-xl lg:text-3xl font-black text-blue-600">{totalRooms}</h3>
+              <p className="text-[8px] lg:text-xs font-bold text-gray-500 uppercase">Rooms</p>
+              <h3 className="text-base lg:text-3xl font-black text-blue-600">{totalRooms}</h3>
             </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-lg">🏠</span>
+            <div className="w-6 h-6 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md lg:rounded-lg flex items-center justify-center">
+              <span className="text-xs lg:text-lg">🏠</span>
             </div>
           </div>
         </div>
 
         {/* Total Beds */}
-        <div className="bg-white rounded-xl shadow-lg border border-purple-500 p-3 lg:p-4">
+        <div className="bg-white rounded-xl shadow-lg border border-purple-500 p-2 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Beds</p>
-              <h3 className="text-xl lg:text-3xl font-black text-purple-600">{totalBeds}</h3>
+              <p className="text-[8px] lg:text-xs font-bold text-gray-500 uppercase">Beds</p>
+              <h3 className="text-base lg:text-3xl font-black text-purple-600">{totalBeds}</h3>
             </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
-              <span className="text-lg">🛏️</span>
+            <div className="w-6 h-6 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md lg:rounded-lg flex items-center justify-center">
+              <span className="text-xs lg:text-lg">🛏️</span>
             </div>
           </div>
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-white rounded-xl shadow-lg border border-red-500 p-3 lg:p-4">
+        <div className="bg-white rounded-xl shadow-lg border border-red-500 p-2 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Pending</p>
-              <h3 className="text-xl lg:text-3xl font-black text-red-600">Rs.{pendingPayments.toLocaleString()}</h3>
+              <p className="text-[8px] lg:text-xs font-bold text-gray-500 uppercase">Pending</p>
+              <h3 className="text-base lg:text-3xl font-black text-red-600">₹{pendingPayments.toLocaleString()}</h3>
             </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-lg">💰</span>
+            <div className="w-6 h-6 lg:w-10 lg:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-md lg:rounded-lg flex items-center justify-center">
+              <span className="text-xs lg:text-lg">💰</span>
             </div>
           </div>
         </div>
@@ -402,33 +404,33 @@ function PropertyDetail() {
 
       {/* Tenant Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-gray-50 rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="bg-gray-800 p-3 sm:p-4 text-white flex-shrink-0">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-1 sm:p-4">
+          <div className="bg-gray-50 rounded-lg shadow-xl max-w-4xl w-full max-h-[98vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gray-800 p-2 sm:p-4 text-white flex-shrink-0">
               <div className="flex justify-between items-center gap-2">
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold truncate">
+                  <h2 className="text-sm sm:text-xl font-bold truncate">
                     {editingTenant ? 'Edit Tenant' : 'Add New Tenant'}
                   </h2>
-                  <p className="text-gray-400 text-xs sm:text-sm">
+                  <p className="text-gray-400 text-[10px] sm:text-sm">
                     {location.propertyName || location.location}
                   </p>
                 </div>
-                <button onClick={handleCancel} className="text-gray-400 hover:bg-gray-700 rounded-full p-1.5 sm:p-2 transition">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onClick={handleCancel} className="text-gray-400 hover:bg-gray-700 rounded-full p-1 sm:p-2 transition">
+                  <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 space-y-2 sm:space-y-4">
               {/* Personal Information */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
-                <h3 className="text-base font-bold text-gray-800 mb-3">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
+                <h3 className="text-xs sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Personal Information</h3>
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
                       Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -437,12 +439,12 @@ function PropertyDetail() {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                      placeholder="Enter full name"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                      placeholder="Full name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
                       Mobile <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -453,23 +455,12 @@ function PropertyDetail() {
                       required
                       maxLength="10"
                       inputMode="numeric"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                      placeholder="10-digit mobile number"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                      placeholder="Mobile"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Aadhar Number</label>
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Aadhar No.</label>
                     <input
                       type="text"
                       name="adharNo"
@@ -477,19 +468,20 @@ function PropertyDetail() {
                       onChange={handleChange}
                       maxLength="12"
                       inputMode="numeric"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                      placeholder="12-digit Aadhar number"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                      placeholder="12-digit"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Room Assignment */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
-                <h3 className="text-base font-bold text-gray-800 mb-3">Room Assignment</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+              <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
+                <h3 className="text-xs sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Room Assignment</h3>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  {/* Room row - full width */}
+                  <div className="col-span-2">
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
                       Room <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -497,7 +489,7 @@ function PropertyDetail() {
                       value={formData.roomId}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
                     >
                       <option value="">Select Room</option>
                       {rooms.map((room) => {
@@ -507,7 +499,7 @@ function PropertyDetail() {
                         const isAvailable = availableCount > 0 || (editingTenant && editingTenant.roomId?._id === room._id);
                         return (
                           <option key={room._id} value={room._id} disabled={!isAvailable}>
-                            Room {room.roomNumber} - Rs.{room.rentAmount}
+                            Room {room.roomNumber} - ₹{room.rentAmount}
                             {room.rentType === 'PER_BED' ? ` (${availableCount} beds)` : ''}
                             {!isAvailable ? ' (Full)' : ''}
                           </option>
@@ -516,9 +508,10 @@ function PropertyDetail() {
                     </select>
                   </div>
 
+                  {/* Bed & Join Date row (or just Join Date if no bed) */}
                   {selectedRoom?.rentType === 'PER_BED' && (
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
                         Bed <span className="text-red-500">*</span>
                       </label>
                       <select
@@ -526,7 +519,7 @@ function PropertyDetail() {
                         value={formData.bedNumber}
                         onChange={handleChange}
                         required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
                       >
                         <option value="">Select Bed</option>
                         {selectedRoom.beds?.map((bed) => {
@@ -542,9 +535,24 @@ function PropertyDetail() {
                     </div>
                   )}
 
+                  <div className={selectedRoom?.rentType === 'PER_BED' ? '' : 'col-span-2'}>
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
+                      Join Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="joiningDate"
+                      value={formData.joiningDate}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    />
+                  </div>
+
+                  {/* Rent & Advance row */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Rent Amount (Rs.) <span className="text-red-500">*</span>
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
+                      Rent (₹) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -553,46 +561,32 @@ function PropertyDetail() {
                       onChange={handleChange}
                       required
                       min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
                       placeholder="Monthly rent"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Advance Amount (Rs.)</label>
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Advance (₹)</label>
                     <input
                       type="number"
                       name="advanceAmount"
                       value={formData.advanceAmount}
                       onChange={handleChange}
                       min="0"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                      placeholder="Security deposit"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Joining Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      name="joiningDate"
-                      value={formData.joiningDate}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                      placeholder="Deposit"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Document Uploads */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
-                <h3 className="text-base font-bold text-gray-800 mb-3">Documents</h3>
-                <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
+                <h3 className="text-xs sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">Documents</h3>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Aadhar Card</label>
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Aadhar Card</label>
                     <input
                       type="file"
                       id="aadharUpload"
@@ -603,25 +597,25 @@ function PropertyDetail() {
                     <label
                       htmlFor="aadharUpload"
                       className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                        aadharPreview || formData.adharImg ? 'border-green-400 bg-green-50 p-1' : 'border-gray-300 hover:bg-gray-50 p-4'
+                        aadharPreview || formData.adharImg ? 'border-green-400 bg-green-50 p-1' : 'border-gray-300 hover:bg-gray-50 p-2 sm:p-4'
                       }`}
                     >
                       {aadharPreview ? (
-                        <img src={aadharPreview} alt="Aadhar" className="w-full h-24 object-contain rounded" />
+                        <img src={aadharPreview} alt="Aadhar" className="w-full h-16 sm:h-24 object-contain rounded" />
                       ) : formData.adharImg ? (
-                        <img src={`${BACKEND_URL}${formData.adharImg}`} alt="Aadhar" className="w-full h-24 object-contain rounded" />
+                        <img src={`${BACKEND_URL}${formData.adharImg}`} alt="Aadhar" className="w-full h-16 sm:h-24 object-contain rounded" />
                       ) : (
                         <>
-                          <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
-                          <span className="text-xs text-gray-500">Upload</span>
+                          <span className="text-[10px] sm:text-xs text-gray-500">Upload</span>
                         </>
                       )}
                     </label>
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Photo</label>
+                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Photo</label>
                     <input
                       type="file"
                       id="photoUpload"
@@ -632,19 +626,19 @@ function PropertyDetail() {
                     <label
                       htmlFor="photoUpload"
                       className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                        photoPreview || formData.photo ? 'border-green-400 bg-green-50 p-1' : 'border-gray-300 hover:bg-gray-50 p-4'
+                        photoPreview || formData.photo ? 'border-green-400 bg-green-50 p-1' : 'border-gray-300 hover:bg-gray-50 p-2 sm:p-4'
                       }`}
                     >
                       {photoPreview ? (
-                        <img src={photoPreview} alt="Photo" className="w-full h-24 object-cover rounded" />
+                        <img src={photoPreview} alt="Photo" className="w-full h-16 sm:h-24 object-cover rounded" />
                       ) : formData.photo ? (
-                        <img src={`${BACKEND_URL}${formData.photo}`} alt="Photo" className="w-full h-24 object-cover rounded" />
+                        <img src={`${BACKEND_URL}${formData.photo}`} alt="Photo" className="w-full h-16 sm:h-24 object-cover rounded" />
                       ) : (
                         <>
-                          <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-xs text-gray-500">Upload</span>
+                          <span className="text-[10px] sm:text-xs text-gray-500">Upload</span>
                         </>
                       )}
                     </label>
@@ -652,53 +646,82 @@ function PropertyDetail() {
                 </div>
               </div>
 
-              {/* Additional Details */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
-                <h3 className="text-base font-bold text-gray-800 mb-3">Additional Details</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Date of Birth</label>
-                    <input
-                      type="date"
-                      name="dob"
-                      value={formData.dob}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                    />
+              {/* Additional Details - Collapsible */}
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
+                  className="w-full p-2 sm:p-3 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-xs sm:text-base font-bold text-gray-800">Additional Details</span>
+                  <svg
+                    className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 transition-transform ${showAdditionalDetails ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showAdditionalDetails && (
+                  <div className="p-2 sm:p-4 pt-0 sm:pt-0 border-t border-gray-100">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                      <div>
+                        <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">DOB</label>
+                        <input
+                          type="date"
+                          name="dob"
+                          value={formData.dob}
+                          onChange={handleChange}
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Gender</label>
+                        <select
+                          name="gender"
+                          value={formData.gender}
+                          onChange={handleChange}
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                        >
+                          <option value="">Select</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                          placeholder="email@example.com"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2 sm:mt-4">
+                      <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">Notes</label>
+                      <textarea
+                        name="notes"
+                        value={formData.notes}
+                        onChange={handleChange}
+                        rows="2"
+                        className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                        placeholder="Notes..."
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Gender</label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                    >
-                      <option value="">Select</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Notes</label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows="2"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                    placeholder="Any additional notes..."
-                  />
-                </div>
+                )}
               </div>
             </form>
 
-            <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-100 flex justify-end gap-2 sm:gap-3 flex-shrink-0">
+            <div className="border-t border-gray-200 p-2 sm:p-4 bg-gray-100 flex justify-end gap-2 flex-shrink-0">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-4 sm:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-semibold text-sm"
+                className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-semibold text-xs sm:text-sm"
               >
                 Cancel
               </button>
@@ -709,9 +732,9 @@ function PropertyDetail() {
                   document.querySelector('form').requestSubmit();
                 }}
                 disabled={uploading}
-                className={`px-4 sm:px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold flex items-center gap-2 text-sm ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-3 sm:px-6 py-1.5 sm:py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold flex items-center gap-2 text-xs sm:text-sm ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {uploading ? 'Uploading...' : editingTenant ? 'Update' : 'Add Tenant'}
+                {uploading ? 'Uploading...' : editingTenant ? 'Update' : 'Add'}
               </button>
             </div>
           </div>
