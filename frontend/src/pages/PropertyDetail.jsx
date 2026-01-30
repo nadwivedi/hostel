@@ -53,7 +53,7 @@ function PropertyDetail() {
       const config = { withCredentials: true };
 
       const [locationsRes, tenantsRes, roomsRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/locations`, config),
+        axios.get(`${BACKEND_URL}/api/properties`, config),
         axios.get(`${BACKEND_URL}/api/tenants?locationId=${locationId}`, config),
         axios.get(`${BACKEND_URL}/api/rooms?locationId=${locationId}`, config),
       ]);
@@ -309,28 +309,19 @@ function PropertyDetail() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Header */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition"
-            >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-                {location.propertyName || location.location}
-              </h1>
-              {location.propertyName && (
-                <p className="text-sm text-gray-500">{location.location}</p>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Back Button & Property Name */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate('/')}
+          className="p-2 hover:bg-gray-100 rounded-lg transition"
+        >
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          {location.propertyName || location.location}
+        </h1>
       </div>
 
       {/* Stats Cards */}

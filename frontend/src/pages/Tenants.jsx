@@ -58,7 +58,7 @@ function Tenants() {
 
   const fetchLocations = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/locations`, {
+      const response = await axios.get(`${BACKEND_URL}/api/properties`, {
         withCredentials: true,
       });
       setLocations(response.data);
