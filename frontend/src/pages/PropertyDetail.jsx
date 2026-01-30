@@ -14,19 +14,11 @@ function PropertyDetail() {
   const [location, setLocation] = useState(null);
   const [tenants, setTenants] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ACTIVE');
   const [showForm, setShowForm] = useState(false);
-  const [showRoomForm, setShowRoomForm] = useState(false);
-  const [editingRoom, setEditingRoom] = useState(null);
-  const [roomFormData, setRoomFormData] = useState({
-    roomNumber: '',
-    floor: '',
-    rentType: 'PER_ROOM',
-    rentAmount: '',
-    numberOfBeds: 0,
-  });
   const [editingTenant, setEditingTenant] = useState(null);
   const [aadharFile, setAadharFile] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -61,16 +53,18 @@ function PropertyDetail() {
       setLoading(true);
       const config = { withCredentials: true };
 
-      const [locationsRes, tenantsRes, roomsRes] = await Promise.all([
+      const [locationsRes, tenantsRes, roomsRes, paymentsRes] = await Promise.all([
         axios.get(`${BACKEND_URL}/api/properties`, config),
         axios.get(`${BACKEND_URL}/api/tenants?locationId=${locationId}`, config),
         axios.get(`${BACKEND_URL}/api/rooms?locationId=${locationId}`, config),
+        axios.get(`${BACKEND_URL}/api/payments?locationId=${locationId}`, config),
       ]);
 
       const loc = locationsRes.data.find(l => l._id === locationId);
       setLocation(loc);
       setTenants(tenantsRes.data);
       setRooms(roomsRes.data);
+      setPayments(paymentsRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Error loading property data');
@@ -286,6 +280,7 @@ function PropertyDetail() {
     );
 
   const activeTenants = tenants.filter(t => t.status === 'ACTIVE').length;
+  const totalRooms = rooms.length;
   const totalBeds = rooms.reduce((acc, r) => acc + (r.beds?.length || (r.rentType === 'PER_ROOM' ? 1 : 0)), 0);
   const occupiedBeds = rooms.reduce((acc, r) => {
     if (r.rentType === 'PER_BED') {
@@ -293,6 +288,9 @@ function PropertyDetail() {
     }
     return acc + (r.status === 'OCCUPIED' ? 1 : 0);
   }, 0);
+  const pendingPayments = payments
+    .filter(p => p.status !== 'PAID')
+    .reduce((acc, p) => acc + (p.rentAmount - p.amountPaid), 0);
 
   const selectedRoom = rooms.find(r => r._id === formData.roomId);
   const availableBeds = selectedRoom?.beds?.filter(b => b.status === 'AVAILABLE') || [];
@@ -320,12 +318,13 @@ function PropertyDetail() {
     <div className="space-y-4 sm:space-y-5">
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-2 lg:gap-4 mt-4">
+      <div className="grid grid-cols-3 gap-2 lg:gap-4 mt-1">
+        {/* Total Rooms */}
         <div className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Rooms</p>
-              <h3 className="text-xl lg:text-3xl font-black text-gray-800">{rooms.length}</h3>
+              <h3 className="text-xl lg:text-3xl font-black text-blue-600">{totalRooms}</h3>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <span className="text-lg">🏠</span>
@@ -333,83 +332,31 @@ function PropertyDetail() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg border border-green-500 p-3 lg:p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Tenants</p>
-              <h3 className="text-xl lg:text-3xl font-black text-green-600">{activeTenants}</h3>
-            </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-              <span className="text-lg">👥</span>
-            </div>
-          </div>
-        </div>
-
+        {/* Total Beds */}
         <div className="bg-white rounded-xl shadow-lg border border-purple-500 p-3 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Beds</p>
-              <h3 className="text-xl lg:text-3xl font-black text-purple-600">{totalBeds - occupiedBeds}/{totalBeds}</h3>
+              <h3 className="text-xl lg:text-3xl font-black text-purple-600">{totalBeds}</h3>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg flex items-center justify-center">
               <span className="text-lg">🛏️</span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Rooms Section */}
-      <div>
-        <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3">Rooms</h2>
-        {rooms.length > 0 ? (
-          <div className="grid grid-cols-5 gap-2 sm:gap-3">
-              {rooms.sort((a, b) => {
-                const numA = parseInt(a.roomNumber) || 0;
-                const numB = parseInt(b.roomNumber) || 0;
-                return numA - numB;
-              }).map((room) => {
-                const isAvailable = room.status === 'AVAILABLE';
-                const occupiedBeds = room.rentType === 'PER_BED'
-                  ? room.beds?.filter(b => b.status === 'OCCUPIED').length || 0
-                  : (room.status === 'OCCUPIED' ? 1 : 0);
-                const totalBeds = room.rentType === 'PER_BED'
-                  ? room.beds?.length || 1
-                  : 1;
-                return (
-                  <div
-                    key={room._id}
-                    className={`${isAvailable
-                      ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-300 hover:border-green-500'
-                      : 'bg-gradient-to-br from-red-50 to-red-100 border-red-300 hover:border-red-500'
-                    } border-2 rounded-xl p-2 sm:p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105`}
-                  >
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className={`w-7 h-7 rounded flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-md ${
-                        isAvailable ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'
-                      }`}>
-                        {room.roomNumber}
-                      </div>
-                      <div className="mt-0.5 text-[9px] font-semibold text-gray-700">
-                        {room.rentType === 'PER_BED' ? `${occupiedBeds}/${totalBeds}` : (isAvailable ? 'Free' : 'Full')}
-                      </div>
-                      <div className="text-[8px] text-gray-500 mt-0.5">
-                        Rs.{room.rentAmount}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+        {/* Pending Payments */}
+        <div className="bg-white rounded-xl shadow-lg border border-red-500 p-3 lg:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Pending</p>
+              <h3 className="text-xl lg:text-3xl font-black text-red-600">Rs.{pendingPayments.toLocaleString()}</h3>
             </div>
-        ) : (
-          <div className="text-center py-8">
-            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+              <span className="text-lg">💰</span>
             </div>
-            <p className="text-sm text-gray-500">No rooms added yet</p>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Tenants Section */}

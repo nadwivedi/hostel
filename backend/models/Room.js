@@ -57,8 +57,8 @@ const roomSchema = new mongoose.Schema(
   }
 );
 
-// Compound index to ensure roomNumber is unique per user
-roomSchema.index({ userId: 1, roomNumber: 1 }, { unique: true });
+// Compound index to ensure roomNumber is unique per property per user
+roomSchema.index({ userId: 1, propertyId: 1, roomNumber: 1 }, { unique: true });
 
 const Room = mongoose.model('Room', roomSchema);
 
