@@ -24,9 +24,9 @@ const roomSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    locationId: {
+    propertyId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Location',
+      ref: 'Property',
     },
     roomNumber: {
       type: String,

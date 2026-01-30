@@ -5,19 +5,21 @@ import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-
 function Tenants() {
   const { user } = useAuth();
   const [tenants, setTenants] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterLocation, setFilterLocation] = useState('ALL');
   const [editingTenant, setEditingTenant] = useState(null);
   const [aadharFile, setAadharFile] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [aadharPreview, setAadharPreview] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [selectedTenant, setSelectedTenant] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -28,10 +30,19 @@ function Tenants() {
     photo: '',
     dob: '',
     gender: '',
+    locationId: '',
+    roomId: '',
+    bedNumber: '',
+    rentAmount: '',
+    advanceAmount: '',
+    joiningDate: new Date().toISOString().split('T')[0],
+    notes: '',
   });
 
   useEffect(() => {
     fetchTenants();
+    fetchLocations();
+    fetchRooms();
   }, []);
 
   const fetchTenants = async () => {
@@ -45,34 +56,55 @@ function Tenants() {
     }
   };
 
+  const fetchLocations = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/locations`, {
+        withCredentials: true,
+      });
+      setLocations(response.data);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+    }
+  };
+
+  const fetchRooms = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/rooms`, {
+        withCredentials: true,
+      });
+      setRooms(response.data);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // For mobile field, only allow numbers and limit to 10 digits
     if (name === 'mobile') {
       const numericValue = value.replace(/\D/g, '').slice(0, 10);
-      setFormData({
-        ...formData,
-        [name]: numericValue,
-      });
+      setFormData({ ...formData, [name]: numericValue });
     } else if (name === 'adharNo') {
-      // For Aadhar number, only allow numbers and limit to 12 digits
       const numericValue = value.replace(/\D/g, '').slice(0, 12);
+      setFormData({ ...formData, [name]: numericValue });
+    } else if (name === 'locationId') {
+      setFormData({ ...formData, locationId: value, roomId: '', bedNumber: '', rentAmount: '' });
+    } else if (name === 'roomId') {
+      const selectedRoom = rooms.find(r => r._id === value);
       setFormData({
         ...formData,
-        [name]: numericValue,
+        roomId: value,
+        bedNumber: '',
+        rentAmount: selectedRoom ? selectedRoom.rentAmount : '',
       });
     } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
+      setFormData({ ...formData, [name]: value });
     }
   };
 
   const handleFileUpload = async (file, type, tenantName) => {
     if (!file) return null;
-    
+
     const userId = user?.id || user?._id;
     if (!userId) {
       toast.error('User not authenticated. Please log in again.');
@@ -87,9 +119,7 @@ function Tenants() {
     try {
       setUploading(true);
       const response = await axios.post(`${BACKEND_URL}/api/uploads/${type}`, formDataUpload, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true,
       });
       setUploading(false);
@@ -106,11 +136,8 @@ function Tenants() {
     const file = e.target.files[0];
     if (file) {
       setAadharFile(file);
-      // Create preview URL
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAadharPreview(reader.result);
-      };
+      reader.onloadend = () => setAadharPreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -119,11 +146,8 @@ function Tenants() {
     const file = e.target.files[0];
     if (file) {
       setPhotoFile(file);
-      // Create preview URL
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-      };
+      reader.onloadend = () => setPhotoPreview(reader.result);
       reader.readAsDataURL(file);
     }
   };
@@ -143,21 +167,27 @@ function Tenants() {
       photo: tenant.photo || '',
       dob: tenant.dob ? new Date(tenant.dob).toISOString().split('T')[0] : '',
       gender: tenant.gender || '',
+      locationId: tenant.locationId?._id || tenant.locationId || '',
+      roomId: tenant.roomId?._id || tenant.roomId || '',
+      bedNumber: tenant.bedNumber || '',
+      rentAmount: tenant.rentAmount || '',
+      advanceAmount: tenant.advanceAmount || '',
+      joiningDate: tenant.joiningDate ? new Date(tenant.joiningDate).toISOString().split('T')[0] : '',
+      notes: tenant.notes || '',
     });
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const userId = user?.id || user?._id;
     if (!userId) {
       toast.error('User not authenticated. Please log in again.');
       return;
     }
-    
+
     try {
-      // Upload files if selected
       let aadharUrl = formData.adharImg;
       let photoUrl = formData.photo;
 
@@ -178,6 +208,13 @@ function Tenants() {
         photo: photoUrl || undefined,
         dob: formData.dob || undefined,
         ...(formData.gender && { gender: formData.gender }),
+        locationId: formData.locationId || undefined,
+        roomId: formData.roomId || undefined,
+        bedNumber: formData.bedNumber || undefined,
+        rentAmount: formData.rentAmount ? parseFloat(formData.rentAmount) : undefined,
+        advanceAmount: formData.advanceAmount ? parseFloat(formData.advanceAmount) : 0,
+        joiningDate: formData.joiningDate || undefined,
+        notes: formData.notes || '',
       };
 
       if (editingTenant) {
@@ -192,38 +229,24 @@ function Tenants() {
         toast.success('Tenant registered successfully!');
       }
 
-      setShowForm(false);
-      setEditingTenant(null);
-      setAadharFile(null);
-      setPhotoFile(null);
-      setAadharPreview(null);
-      setPhotoPreview(null);
-      setFormData({
-        name: '',
-        mobile: '',
-        email: '',
-        adharNo: '',
-        adharImg: '',
-        photo: '',
-        dob: '',
-        gender: '',
-      });
+      handleCancel();
       fetchTenants();
+      fetchRooms();
     } catch (error) {
       console.error('Error saving tenant:', error);
-      toast.error(error.response?.data?.message || error.response?.data?.error || 'Error saving tenant');
+      toast.error(error.response?.data?.message || 'Error saving tenant');
     }
   };
 
   const handleDelete = async (tenant) => {
     if (!window.confirm(`Are you sure you want to delete ${tenant.name}?`)) return;
-    
+
     const userId = user?.id || user?._id;
     if (!userId) {
       toast.error('User not authenticated. Please log in again.');
       return;
     }
-    
+
     try {
       await axios.delete(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
         data: { userId },
@@ -231,9 +254,29 @@ function Tenants() {
       });
       toast.success('Tenant deleted successfully!');
       fetchTenants();
+      fetchRooms();
     } catch (error) {
       console.error('Error deleting tenant:', error);
-      toast.error(error.response?.data?.message || error.response?.data?.error || 'Error deleting tenant');
+      toast.error(error.response?.data?.message || 'Error deleting tenant');
+    }
+  };
+
+  const handleMarkAsLeft = async (tenant) => {
+    if (!window.confirm(`Mark ${tenant.name} as left?`)) return;
+
+    const userId = user?.id || user?._id;
+    try {
+      await axios.patch(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
+        userId,
+        status: 'COMPLETED',
+        leaveDate: new Date(),
+      }, { withCredentials: true });
+      toast.success('Tenant marked as left');
+      fetchTenants();
+      fetchRooms();
+    } catch (error) {
+      console.error('Error updating tenant:', error);
+      toast.error('Error updating tenant status');
     }
   };
 
@@ -253,33 +296,81 @@ function Tenants() {
       photo: '',
       dob: '',
       gender: '',
+      locationId: '',
+      roomId: '',
+      bedNumber: '',
+      rentAmount: '',
+      advanceAmount: '',
+      joiningDate: new Date().toISOString().split('T')[0],
+      notes: '',
     });
   };
 
-  const filteredTenants = tenants.filter((tenant) =>
-    tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tenant.mobile.includes(searchTerm) ||
-    (tenant.email && tenant.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredTenants = tenants
+    .filter((tenant) => {
+      if (filterStatus === 'ALL') return true;
+      return tenant.status === filterStatus;
+    })
+    .filter((tenant) => {
+      if (filterLocation === 'ALL') return true;
+      const tenantLocId = tenant.locationId?._id || tenant.locationId;
+      return tenantLocId === filterLocation;
+    })
+    .filter((tenant) =>
+      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.mobile.includes(searchTerm) ||
+      (tenant.email && tenant.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+  const filteredRooms = formData.locationId
+    ? rooms.filter(r => (r.locationId?._id || r.locationId) === formData.locationId)
+    : rooms;
+
+  const selectedRoom = rooms.find(r => r._id === formData.roomId);
+
+  const activeTenants = tenants.filter(t => t.status === 'ACTIVE').length;
+  const completedTenants = tenants.filter(t => t.status === 'COMPLETED').length;
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3 mt-2 sm:mt-0">
-        <div
-          className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 transform"
-        >
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2 lg:gap-3 mt-2 sm:mt-0">
+        <div className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 lg:mb-1 whitespace-nowrap">Total Tenants</p>
+              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Total</p>
               <h3 className="text-xl lg:text-3xl font-black text-gray-800">{tenants.length}</h3>
             </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-              <span className="text-lg lg:text-xl">👥</span>
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <span className="text-lg">👥</span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg border border-green-500 p-3 lg:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Active</p>
+              <h3 className="text-xl lg:text-3xl font-black text-green-600">{activeTenants}</h3>
+            </div>
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <span className="text-lg">✓</span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-400 p-3 lg:p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase">Left</p>
+              <h3 className="text-xl lg:text-3xl font-black text-gray-600">{completedTenants}</h3>
+            </div>
+            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center">
+              <span className="text-lg">→</span>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Search and Filters */}
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-5 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b border-gray-200">
           <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
@@ -291,43 +382,58 @@ function Tenants() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-400 transition-all bg-white shadow-sm"
               />
-              <svg
-                className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-4 lg:px-6 py-3 bg-gray-700 text-white rounded-xl hover:shadow-xl font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="hidden lg:inline">Add Tenant</span>
-              <span className="lg:hidden">Add</span>
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              {locations.length > 0 && (
+                <select
+                  value={filterLocation}
+                  onChange={(e) => setFilterLocation(e.target.value)}
+                  className="px-3 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 bg-white shadow-sm font-medium"
+                >
+                  <option value="ALL">All Locations</option>
+                  {locations.map((loc) => (
+                    <option key={loc._id} value={loc._id}>{loc.propertyName || loc.location}</option>
+                  ))}
+                </select>
+              )}
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 bg-white shadow-sm font-medium"
+              >
+                <option value="ALL">All Status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="COMPLETED">Left</option>
+              </select>
+              <button
+                onClick={() => setShowForm(true)}
+                className="px-4 lg:px-6 py-3 bg-gray-700 text-white rounded-xl hover:shadow-xl font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="hidden lg:inline">Add Tenant</span>
+                <span className="lg:hidden">Add</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Tenant Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
           <div className="bg-gray-50 rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
-            {/* Header */}
             <div className="bg-gray-800 p-3 sm:p-4 text-white flex-shrink-0">
               <div className="flex justify-between items-center gap-2">
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base sm:text-xl font-bold truncate">{editingTenant ? 'Edit Tenant' : 'Register New Tenant'}</h2>
                   <p className="text-gray-400 text-xs sm:text-sm">Enter the details for the tenant.</p>
                 </div>
-                <button
-                  onClick={handleCancel}
-                  className="text-gray-400 hover:bg-gray-700 rounded-full p-1.5 sm:p-2 transition flex-shrink-0"
-                >
+                <button onClick={handleCancel} className="text-gray-400 hover:bg-gray-700 rounded-full p-1.5 sm:p-2 transition flex-shrink-0">
                   <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -335,9 +441,8 @@ function Tenants() {
               </div>
             </div>
 
-            {/* Form Content */}
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
-              {/* Section 1: Personal Information */}
+              {/* Personal Information */}
               <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Personal Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -355,7 +460,6 @@ function Tenants() {
                       placeholder="Enter full name"
                     />
                   </div>
-
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
                       Mobile <span className="text-red-500">*</span>
@@ -372,11 +476,8 @@ function Tenants() {
                       placeholder="10-digit mobile number"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Email
-                    </label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
                     <input
                       type="email"
                       name="email"
@@ -386,11 +487,8 @@ function Tenants() {
                       placeholder="email@example.com"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Aadhar Number
-                    </label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Aadhar Number</label>
                     <input
                       type="text"
                       name="adharNo"
@@ -405,140 +503,173 @@ function Tenants() {
                 </div>
               </div>
 
-              {/* Section 2: Document Uploads */}
+              {/* Room Assignment */}
               <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Document Uploads</h3>
-                <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
-                  {/* Aadhar Upload */}
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Room Assignment</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                      Aadhar Card
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        id="aadharUpload"
-                        accept="image/*,application/pdf"
-                        onChange={handleAadharChange}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="aadharUpload"
-                        className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                          aadharPreview || formData.adharImg ? 'border-green-400 bg-green-50 p-1 sm:p-2' : 'border-gray-300 hover:bg-gray-50 p-3 sm:p-4 lg:p-6'
-                        }`}
-                      >
-                        {aadharPreview ? (
-                          <div className="relative w-full">
-                            <img src={aadharPreview} alt="Aadhar Preview" className="w-full h-24 sm:h-32 lg:h-48 object-contain rounded" />
-                            <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 text-center">
-                              <span className="bg-green-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                                Click to change
-                              </span>
-                            </div>
-                          </div>
-                        ) : formData.adharImg ? (
-                          <div className="relative w-full">
-                            <img src={`${BACKEND_URL}${formData.adharImg}`} alt="Aadhar" className="w-full h-24 sm:h-32 lg:h-48 object-contain rounded" />
-                            <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 text-center">
-                              <span className="bg-blue-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                                Click to change
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-400 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 text-center">Upload Aadhar</span>
-                            <span className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 mt-0.5 sm:mt-1 hidden sm:block text-center">PNG, JPG, PDF</span>
-                          </>
-                        )}
-                      </label>
-                    </div>
-                    {aadharFile && (
-                      <div className="mt-1 sm:mt-2 p-1 sm:p-2 bg-green-50 border border-green-200 rounded-md">
-                        <p className="text-[9px] sm:text-xs text-green-700 font-medium flex items-center truncate">
-                          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          <span className="truncate">{aadharFile.name}</span>
-                        </p>
-                      </div>
-                    )}
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Location</label>
+                    <select
+                      name="locationId"
+                      value={formData.locationId}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    >
+                      <option value="">Select Location (optional)</option>
+                      {locations.map((loc) => (
+                        <option key={loc._id} value={loc._id}>
+                          {loc.propertyName || loc.location}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Room</label>
+                    <select
+                      name="roomId"
+                      value={formData.roomId}
+                      onChange={handleChange}
+                      disabled={!formData.locationId}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 disabled:bg-gray-100"
+                    >
+                      <option value="">Select Room (optional)</option>
+                      {filteredRooms.map((room) => {
+                        const availableCount = room.rentType === 'PER_BED'
+                          ? room.beds?.filter(b => b.status === 'AVAILABLE').length || 0
+                          : room.status === 'AVAILABLE' ? 1 : 0;
+                        const isAvailable = availableCount > 0 || (editingTenant && editingTenant.roomId?._id === room._id);
+                        return (
+                          <option key={room._id} value={room._id} disabled={!isAvailable}>
+                            Room {room.roomNumber} - Rs.{room.rentAmount}
+                            {room.rentType === 'PER_BED' ? ` (${availableCount} beds)` : ''}
+                            {!isAvailable ? ' (Full)' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
                   </div>
 
-                  {/* Photo Upload */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                      Tenant Photo
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        id="photoUpload"
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        onChange={handlePhotoChange}
-                        className="hidden"
-                      />
-                      <label
-                        htmlFor="photoUpload"
-                        className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                          photoPreview || formData.photo ? 'border-green-400 bg-green-50 p-1 sm:p-2' : 'border-gray-300 hover:bg-gray-50 p-3 sm:p-4 lg:p-6'
-                        }`}
+                  {selectedRoom?.rentType === 'PER_BED' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Bed</label>
+                      <select
+                        name="bedNumber"
+                        value={formData.bedNumber}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
                       >
-                        {photoPreview ? (
-                          <div className="relative w-full">
-                            <img src={photoPreview} alt="Photo Preview" className="w-full h-24 sm:h-32 lg:h-48 object-cover rounded" />
-                            <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 text-center">
-                              <span className="bg-green-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                                Click to change
-                              </span>
-                            </div>
-                          </div>
-                        ) : formData.photo ? (
-                          <div className="relative w-full">
-                            <img src={`${BACKEND_URL}${formData.photo}`} alt="Photo" className="w-full h-24 sm:h-32 lg:h-48 object-cover rounded" />
-                            <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 text-center">
-                              <span className="bg-blue-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                                Click to change
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-400 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 text-center">Upload Photo</span>
-                            <span className="text-[8px] sm:text-[10px] lg:text-xs text-gray-500 mt-0.5 sm:mt-1 hidden sm:block text-center">Auto-optimized to WebP</span>
-                          </>
-                        )}
-                      </label>
+                        <option value="">Select Bed</option>
+                        {selectedRoom.beds?.map((bed) => {
+                          const isCurrentBed = editingTenant?.bedNumber === bed.bedNumber;
+                          const isAvailable = bed.status === 'AVAILABLE' || isCurrentBed;
+                          return (
+                            <option key={bed.bedNumber} value={bed.bedNumber} disabled={!isAvailable}>
+                              Bed {bed.bedNumber} {!isAvailable ? '(Occupied)' : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
                     </div>
-                    {photoFile && (
-                      <div className="mt-1 sm:mt-2 p-1 sm:p-2 bg-green-50 border border-green-200 rounded-md">
-                        <p className="text-[9px] sm:text-xs text-green-700 font-medium flex items-center truncate">
-                          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-0.5 sm:mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          <span className="truncate">{photoFile.name}</span>
-                        </p>
-                      </div>
-                    )}
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Rent Amount (Rs.)</label>
+                    <input
+                      type="number"
+                      name="rentAmount"
+                      value={formData.rentAmount}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                      placeholder="Monthly rent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Advance Amount (Rs.)</label>
+                    <input
+                      type="number"
+                      name="advanceAmount"
+                      value={formData.advanceAmount}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
+                      placeholder="Security deposit"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Joining Date</label>
+                    <input
+                      type="date"
+                      name="joiningDate"
+                      value={formData.joiningDate}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Section 3: Additional Details */}
+              {/* Document Uploads */}
+              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Document Uploads</h3>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:gap-6">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Aadhar Card</label>
+                    <input type="file" id="aadharUpload" accept="image/*,application/pdf" onChange={handleAadharChange} className="hidden" />
+                    <label
+                      htmlFor="aadharUpload"
+                      className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
+                        aadharPreview || formData.adharImg ? 'border-green-400 bg-green-50 p-1 sm:p-2' : 'border-gray-300 hover:bg-gray-50 p-3 sm:p-4 lg:p-6'
+                      }`}
+                    >
+                      {aadharPreview ? (
+                        <img src={aadharPreview} alt="Aadhar" className="w-full h-24 sm:h-32 lg:h-48 object-contain rounded" />
+                      ) : formData.adharImg ? (
+                        <img src={`${BACKEND_URL}${formData.adharImg}`} alt="Aadhar" className="w-full h-24 sm:h-32 lg:h-48 object-contain rounded" />
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-400 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 text-center">Upload Aadhar</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Tenant Photo</label>
+                    <input type="file" id="photoUpload" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                    <label
+                      htmlFor="photoUpload"
+                      className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
+                        photoPreview || formData.photo ? 'border-green-400 bg-green-50 p-1 sm:p-2' : 'border-gray-300 hover:bg-gray-50 p-3 sm:p-4 lg:p-6'
+                      }`}
+                    >
+                      {photoPreview ? (
+                        <img src={photoPreview} alt="Photo" className="w-full h-24 sm:h-32 lg:h-48 object-cover rounded" />
+                      ) : formData.photo ? (
+                        <img src={`${BACKEND_URL}${formData.photo}`} alt="Photo" className="w-full h-24 sm:h-32 lg:h-48 object-cover rounded" />
+                      ) : (
+                        <>
+                          <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-400 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 text-center">Upload Photo</span>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Details */}
               <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Additional Details</h3>
                 <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-                      Date of Birth
-                    </label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Date of Birth</label>
                     <input
                       type="date"
                       name="dob"
@@ -547,11 +678,8 @@ function Tenants() {
                       className="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 text-xs sm:text-base"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-                      Gender
-                    </label>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Gender</label>
                     <select
                       name="gender"
                       value={formData.gender}
@@ -564,10 +692,20 @@ function Tenants() {
                     </select>
                   </div>
                 </div>
+                <div className="mt-4">
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">Notes</label>
+                  <textarea
+                    name="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows="2"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    placeholder="Any additional notes..."
+                  />
+                </div>
               </div>
             </form>
 
-            {/* Footer Actions */}
             <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-100 flex flex-row justify-end items-center gap-2 sm:gap-3 flex-shrink-0">
               <button
                 type="button"
@@ -576,7 +714,6 @@ function Tenants() {
               >
                 Cancel
               </button>
-
               <button
                 type="submit"
                 onClick={(e) => {
@@ -586,51 +723,28 @@ function Tenants() {
                 disabled={uploading}
                 className={`px-4 sm:px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {uploading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {editingTenant ? 'Update Tenant' : 'Add Tenant'}
-                  </>
-                )}
+                {uploading ? 'Uploading...' : editingTenant ? 'Update Tenant' : 'Add Tenant'}
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Photo Preview Modal */}
       {previewPhoto && (
-        <div 
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={() => setPreviewPhoto(null)}
-        >
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setPreviewPhoto(null)}>
           <div className="relative max-w-3xl w-full max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setPreviewPhoto(null)}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition"
-            >
+            <button onClick={() => setPreviewPhoto(null)} className="absolute -top-12 right-0 text-white hover:text-gray-300 transition">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <img
-              src={previewPhoto}
-              alt="Tenant Photo"
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
-            />
+            <img src={previewPhoto} alt="Tenant Photo" className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl" />
           </div>
         </div>
       )}
 
+      {/* Tenants List */}
       <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
         {/* Mobile Card View */}
         <div className="block lg:hidden">
@@ -645,11 +759,7 @@ function Tenants() {
                           onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
                           className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
                         >
-                          <img
-                            src={`${BACKEND_URL}${tenant.photo}`}
-                            alt={tenant.name}
-                            className="w-full h-full object-cover rounded-full"
-                          />
+                          <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
                         </button>
                       ) : (
                         <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
@@ -667,46 +777,43 @@ function Tenants() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleEdit(tenant)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
-                        title="Edit"
-                      >
+                      <button onClick={() => handleEdit(tenant)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Edit">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
-                      <button
-                        onClick={() => handleDelete(tenant)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
-                        title="Delete"
-                      >
+                      {tenant.status === 'ACTIVE' && (
+                        <button onClick={() => handleMarkAsLeft(tenant)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer" title="Mark as Left">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                        </button>
+                      )}
+                      <button onClick={() => handleDelete(tenant)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
                     </div>
                   </div>
-                    <div className="mt-2 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-3">
-                        {tenant.email && (
-                          <span className="text-gray-600">{tenant.email}</span>
-                        )}
-                        {tenant.gender && (
-                          <span className="text-gray-600">{tenant.gender}</span>
-                        )}
-                      </div>
-                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-green-100 text-green-700 font-semibold border border-green-200">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {new Date(tenant.joiningDate).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric',
-                        })}
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                    {tenant.locationId && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                        {tenant.locationId.propertyName || tenant.locationId.location}
                       </span>
-                    </div>
+                    )}
+                    {tenant.roomId && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-semibold">
+                        Room {tenant.roomId.roomNumber || tenant.roomId}
+                        {tenant.bedNumber && ` - Bed ${tenant.bedNumber}`}
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-lg font-semibold ${
+                      tenant.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {tenant.status === 'ACTIVE' ? 'Active' : 'Left'}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -730,30 +837,18 @@ function Tenants() {
           <table className="w-full">
             <thead className="bg-gray-700">
               <tr>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                  Mobile
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                  Gender
-                </th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                  Joining Date
-                </th>
-                <th className="px-4 py-4 text-center text-sm font-bold text-white uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Name</th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Mobile</th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Location</th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Room</th>
+                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Status</th>
+                <th className="px-4 py-4 text-center text-sm font-bold text-white uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredTenants.length > 0 ? (
                 filteredTenants.map((tenant) => (
-                  <tr key={tenant._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 group">
+                  <tr key={tenant._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
                     <td className="px-4 py-4">
                       <div className="flex items-center">
                         {tenant.photo ? (
@@ -761,11 +856,7 @@ function Tenants() {
                             onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
                             className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
                           >
-                            <img
-                              src={`${BACKEND_URL}${tenant.photo}`}
-                              alt={tenant.name}
-                              className="w-full h-full object-cover rounded-full"
-                            />
+                            <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
                           </button>
                         ) : (
                           <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
@@ -777,45 +868,40 @@ function Tenants() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-gray-700 font-medium">
-                      {tenant.mobile}
+                    <td className="px-4 py-4 text-sm text-gray-700 font-medium">{tenant.mobile}</td>
+                    <td className="px-4 py-4 text-sm text-gray-600">
+                      {tenant.locationId?.propertyName || tenant.locationId?.location || '-'}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-600">
-                      {tenant.email || '-'}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600">
-                      {tenant.gender || '-'}
+                      {tenant.roomId ? (
+                        <span>
+                          Room {tenant.roomId.roomNumber || tenant.roomId}
+                          {tenant.bedNumber && ` - Bed ${tenant.bedNumber}`}
+                        </span>
+                      ) : '-'}
                     </td>
                     <td className="px-4 py-4">
-                      <div className="flex items-center text-sm">
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-green-100 text-green-700 font-semibold border border-green-200">
-                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {new Date(tenant.joiningDate).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-lg font-semibold text-xs ${
+                        tenant.status === 'ACTIVE' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'
+                      }`}>
+                        {tenant.status === 'ACTIVE' ? 'Active' : 'Left'}
+                      </span>
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleEdit(tenant)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer"
-                          title="Edit"
-                        >
+                        <button onClick={() => handleEdit(tenant)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Edit">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>
                         </button>
-                        <button
-                          onClick={() => handleDelete(tenant)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer"
-                          title="Delete"
-                        >
+                        {tenant.status === 'ACTIVE' && (
+                          <button onClick={() => handleMarkAsLeft(tenant)} className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer" title="Mark as Left">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                          </button>
+                        )}
+                        <button onClick={() => handleDelete(tenant)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>

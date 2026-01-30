@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const Payment = require('../models/Payment');
-const Occupancy = require('../models/Occupancy');
+const Tenant = require('../models/Tenant');
 
 // ========================================
-// HELPER FUNCTIONS (moved from paymentService)
+// HELPER FUNCTIONS
 // ========================================
 
 /**
@@ -12,14 +12,14 @@ const Occupancy = require('../models/Occupancy');
  */
 const createNextMonthPayment = async (currentPayment) => {
   try {
-    const occupancy = await Occupancy.findById(currentPayment.occupancyId);
-    if (!occupancy) {
-      throw new Error('Occupancy not found');
+    const tenant = await Tenant.findById(currentPayment.tenantId);
+    if (!tenant) {
+      throw new Error('Tenant not found');
     }
 
-    // Only create next payment if occupancy is still active
-    if (occupancy.status !== 'ACTIVE') {
-      console.log(`Occupancy ${occupancy._id} is not active. Skipping next payment creation.`);
+    // Only create next payment if tenant is still active
+    if (tenant.status !== 'ACTIVE') {
+      console.log(`Tenant ${tenant._id} is not active. Skipping next payment creation.`);
       return null;
     }
 
@@ -34,7 +34,7 @@ const createNextMonthPayment = async (currentPayment) => {
 
     // Check if payment already exists for next month
     const existingPayment = await Payment.findOne({
-      occupancyId: occupancy._id,
+      tenantId: tenant._id,
       month: nextMonth,
       year: nextYear,
     });
@@ -45,26 +45,26 @@ const createNextMonthPayment = async (currentPayment) => {
     }
 
     // Get joining date to determine due day
-    const joinDate = new Date(occupancy.joinDate);
+    const joinDate = new Date(tenant.joiningDate);
     const dueDay = joinDate.getDate();
 
     // Calculate due date for next month
     const dueDate = new Date(nextYear, nextMonth - 1, dueDay);
 
     const paymentData = {
-      userId: occupancy.userId,
-      occupancyId: occupancy._id,
-      tenantId: occupancy.tenantId,
+      userId: tenant.userId,
+      occupancyId: tenant._id, // Using tenantId as occupancyId for backwards compatibility
+      tenantId: tenant._id,
       month: nextMonth,
       year: nextYear,
-      rentAmount: occupancy.rentAmount,
+      rentAmount: tenant.rentAmount,
       amountPaid: 0,
       dueDate: dueDate,
       status: 'PENDING',
     };
 
     const payment = await Payment.create(paymentData);
-    console.log(`✓ Next payment created for occupancy ${occupancy._id}, Due: ${dueDate.toLocaleDateString()}`);
+    console.log(`Next payment created for tenant ${tenant._id}, Due: ${dueDate.toLocaleDateString()}`);
     return payment;
   } catch (error) {
     console.error('Error creating next month payment:', error);
@@ -87,14 +87,13 @@ const markAsPaidHelper = async (paymentId, paymentDate = new Date()) => {
   payment.paymentDate = paymentDate;
   await payment.save();
 
-  console.log(`✓ Payment ${paymentId} marked as PAID`);
+  console.log(`Payment ${paymentId} marked as PAID`);
 
   // Auto-create next month's payment
   try {
     await createNextMonthPayment(payment);
   } catch (error) {
     console.error('Failed to create next month payment:', error.message);
-    // Don't throw error - current payment is already marked as paid
   }
 
   return payment;
@@ -119,7 +118,6 @@ const getUpcomingPaymentsHelper = async (daysAhead = 7) => {
     },
   })
     .populate('tenantId')
-    .populate('occupancyId')
     .sort({ dueDate: 1 });
 
   return upcomingPayments;
@@ -137,7 +135,6 @@ const getOverduePaymentsHelper = async () => {
     dueDate: { $lt: today },
   })
     .populate('tenantId')
-    .populate('occupancyId')
     .sort({ dueDate: 1 });
 
   return overduePayments;
@@ -158,7 +155,6 @@ exports.getAllPayments = async (req, res) => {
 
     const payments = await Payment.find(filter)
       .populate('tenantId')
-      .populate('occupancyId')
       .sort({ year: -1, month: -1 });
     res.status(200).json(payments);
   } catch (error) {
@@ -170,8 +166,7 @@ exports.getAllPayments = async (req, res) => {
 exports.getPaymentById = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
-      .populate('tenantId')
-      .populate('occupancyId');
+      .populate('tenantId');
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
     }
@@ -199,7 +194,6 @@ exports.getPaymentsByTenant = async (req, res) => {
 
     const payments = await Payment.find(filter)
       .populate('tenantId')
-      .populate('occupancyId')
       .sort({ year: -1, month: -1 });
     res.status(200).json(payments);
   } catch (error) {
@@ -207,10 +201,10 @@ exports.getPaymentsByTenant = async (req, res) => {
   }
 };
 
-// Get payments by occupancy
+// Get payments by occupancy (kept for backwards compatibility)
 exports.getPaymentsByOccupancy = async (req, res) => {
   try {
-    const filter = { occupancyId: req.params.occupancyId };
+    const filter = { tenantId: req.params.occupancyId };
 
     // For non-admin users, also filter by userId
     if (!req.isAdmin) {
@@ -219,7 +213,6 @@ exports.getPaymentsByOccupancy = async (req, res) => {
 
     const payments = await Payment.find(filter)
       .populate('tenantId')
-      .populate('occupancyId')
       .sort({ year: -1, month: -1 });
     res.status(200).json(payments);
   } catch (error) {
@@ -230,11 +223,7 @@ exports.getPaymentsByOccupancy = async (req, res) => {
 // Create payment
 exports.createPayment = async (req, res) => {
   try {
-    const { occupancyId, tenantId, month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
-
-    if (!occupancyId || occupancyId.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Please provide occupancy ID' });
-    }
+    const { tenantId, month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
 
     if (!tenantId || tenantId.trim() === '') {
       return res.status(400).json({ success: false, message: 'Please provide tenant ID' });
@@ -268,7 +257,7 @@ exports.createPayment = async (req, res) => {
     const dueDate = req.body.dueDate || new Date(year, month - 1, 5);
 
     const paymentData = {
-      occupancyId,
+      occupancyId: tenantId, // Using tenantId as occupancyId for backwards compatibility
       tenantId,
       month,
       year,
@@ -286,8 +275,7 @@ exports.createPayment = async (req, res) => {
 
     const payment = await Payment.create(paymentData);
     const populatedPayment = await Payment.findById(payment._id)
-      .populate('tenantId')
-      .populate('occupancyId');
+      .populate('tenantId');
     res.status(201).json({ success: true, data: populatedPayment });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -351,9 +339,7 @@ exports.updatePayment = async (req, res) => {
     const updatedPayment = await Payment.findByIdAndUpdate(paymentId, updateData, {
       new: true,
       runValidators: true,
-    })
-      .populate('tenantId')
-      .populate('occupancyId');
+    }).populate('tenantId');
 
     res.status(200).json({ success: true, data: updatedPayment });
   } catch (error) {
@@ -410,8 +396,7 @@ exports.markAsPaid = async (req, res) => {
     const updatedPayment = await markAsPaidHelper(paymentId, paymentDate || new Date());
 
     const populatedPayment = await Payment.findById(updatedPayment._id)
-      .populate('tenantId')
-      .populate('occupancyId');
+      .populate('tenantId');
 
     res.status(200).json({
       success: true,

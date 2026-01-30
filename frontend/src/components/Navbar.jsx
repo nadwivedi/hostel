@@ -8,12 +8,10 @@ function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { path: '/', label: 'Dashboard', icon: '📊', description: 'Overview & Stats' },
-    { path: '/tenants', label: 'Tenants', icon: '👥', description: 'Manage Tenants' },
-    { path: '/rooms', label: 'Rooms', icon: '🏠', description: 'Room Management' },
-    { path: '/occupancy', label: 'Occupancy', icon: '🔑', description: 'Occupancy Status' },
+    { path: '/', label: 'Properties', icon: '🏢', description: 'Your Properties' },
+    { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
     { path: '/payments', label: 'Payments', icon: '💰', description: 'Payment History' },
-    { path: '/settings', label: 'Settings', icon: '⚙️', description: 'App Settings' },
+    { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
   ];
 
   const isActive = (path) => {

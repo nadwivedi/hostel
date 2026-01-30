@@ -6,8 +6,9 @@ const fs = require('fs');
 const uploadsDir = path.join(__dirname, '../uploads');
 const aadharDir = path.join(uploadsDir, 'aadhar');
 const photosDir = path.join(uploadsDir, 'photos');
+const propertiesDir = path.join(uploadsDir, 'properties');
 
-[uploadsDir, aadharDir, photosDir].forEach(dir => {
+[uploadsDir, aadharDir, photosDir, propertiesDir].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -43,6 +44,21 @@ const photoStorage = multer.diskStorage({
   }
 });
 
+// Storage configuration for Property Images
+const propertyStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, propertiesDir);
+  },
+  filename: (req, file, cb) => {
+    const propertyName = req.body.propertyName || 'property';
+    // Clean property name: remove spaces, special chars, and limit length
+    const cleanName = propertyName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
+    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const uniqueSuffix = Date.now();
+    cb(null, `property-${cleanName}-${date}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
 // File filter for images
 const imageFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|pdf|webp/;
@@ -69,7 +85,14 @@ const uploadPhoto = multer({
   fileFilter: imageFilter
 });
 
+const uploadProperty = multer({
+  storage: propertyStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit for property images
+  fileFilter: imageFilter
+});
+
 module.exports = {
   uploadAadhar,
-  uploadPhoto
+  uploadPhoto,
+  uploadProperty
 };

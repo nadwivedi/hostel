@@ -4,13 +4,13 @@ const Room = require('../models/Room');
 // Get all rooms (filtered by user, all for admin)
 exports.getAllRooms = async (req, res) => {
   try {
-    const { status, locationId } = req.query;
+    const { status, propertyId } = req.query;
     const filter = req.isAdmin ? {} : { userId: req.user._id };
     if (status) filter.status = status;
-    if (locationId) filter.locationId = locationId;
+    if (propertyId) filter.propertyId = propertyId;
 
     const rooms = await Room.find(filter)
-      .populate('locationId', 'location propertyName')
+      .populate('propertyId', 'name location propertyType')
       .sort({ roomNumber: 1 });
     res.status(200).json(rooms);
   } catch (error) {
@@ -40,7 +40,7 @@ exports.getRoomById = async (req, res) => {
 // Create room
 exports.createRoom = async (req, res) => {
   try {
-    const { roomNumber, floor, rentType, rentAmount, beds, locationId } = req.body;
+    const { roomNumber, floor, rentType, rentAmount, beds, propertyId } = req.body;
 
     if (!roomNumber || roomNumber.trim() === '') {
       return res.status(400).json({ success: false, message: 'Please provide room number' });
@@ -58,8 +58,8 @@ exports.createRoom = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide beds for PER_BED room type' });
     }
 
-    if (locationId && !mongoose.Types.ObjectId.isValid(locationId)) {
-      return res.status(400).json({ success: false, message: 'Invalid location ID format' });
+    if (propertyId && !mongoose.Types.ObjectId.isValid(propertyId)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
     }
 
     const roomData = {
@@ -70,7 +70,7 @@ exports.createRoom = async (req, res) => {
       beds: rentType === 'PER_BED' ? beds : [],
       status: 'AVAILABLE',
       userId: req.isAdmin ? req.body.userId : req.user._id,
-      ...(locationId && { locationId }),
+      ...(propertyId && { propertyId }),
     };
 
     if (req.isAdmin && !req.body.userId) {
@@ -78,7 +78,7 @@ exports.createRoom = async (req, res) => {
     }
 
     const room = await Room.create(roomData);
-    const populatedRoom = await Room.findById(room._id).populate('locationId', 'location propertyName');
+    const populatedRoom = await Room.findById(room._id).populate('propertyId', 'name location propertyType');
     res.status(201).json({ success: true, data: populatedRoom });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -88,7 +88,7 @@ exports.createRoom = async (req, res) => {
 // Update room
 exports.updateRoom = async (req, res) => {
   try {
-    const { userId, roomNumber, floor, rentType, rentAmount, status, locationId } = req.body;
+    const { userId, roomNumber, floor, rentType, rentAmount, status, propertyId } = req.body;
     const roomId = req.params.id;
 
     if (!userId || userId.trim() === '') {
@@ -128,8 +128,8 @@ exports.updateRoom = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Status must be AVAILABLE or OCCUPIED' });
     }
 
-    if (locationId !== undefined && locationId && !mongoose.Types.ObjectId.isValid(locationId)) {
-      return res.status(400).json({ success: false, message: 'Invalid location ID format' });
+    if (propertyId !== undefined && propertyId && !mongoose.Types.ObjectId.isValid(propertyId)) {
+      return res.status(400).json({ success: false, message: 'Invalid property ID format' });
     }
 
     const updateData = {
@@ -138,13 +138,13 @@ exports.updateRoom = async (req, res) => {
       ...(rentType !== undefined && { rentType }),
       ...(rentAmount !== undefined && { rentAmount }),
       ...(status !== undefined && { status }),
-      ...(locationId !== undefined && { locationId: locationId || null }),
+      ...(propertyId !== undefined && { propertyId: propertyId || null }),
     };
 
     const updatedRoom = await Room.findByIdAndUpdate(roomId, updateData, {
       new: true,
       runValidators: true,
-    }).populate('locationId', 'location propertyName');
+    }).populate('propertyId', 'name location propertyType');
 
     res.status(200).json({ success: true, data: updatedRoom });
   } catch (error) {

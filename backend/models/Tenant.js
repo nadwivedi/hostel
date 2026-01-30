@@ -42,6 +42,43 @@ const tenantSchema = new mongoose.Schema(
       type: String,
       enum: ['Male', 'Female'],
     },
+    // Occupancy fields (merged from Occupancy model)
+    propertyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Property',
+    },
+    roomId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Room',
+    },
+    bedNumber: {
+      type: String,
+      default: null,
+    },
+    rentAmount: {
+      type: Number,
+    },
+    advanceAmount: {
+      type: Number,
+      default: 0,
+    },
+    advanceLeft: {
+      type: Number,
+      default: 0,
+    },
+    leaveDate: {
+      type: Date,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ['ACTIVE', 'COMPLETED'],
+      default: 'ACTIVE',
+    },
+    notes: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,

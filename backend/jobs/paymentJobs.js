@@ -1,21 +1,20 @@
 const cron = require('node-cron');
-const Occupancy = require('../models/Occupancy');
+const Tenant = require('../models/Tenant');
 const Payment = require('../models/Payment');
 
 /**
- * Auto-create missing payment records for all active occupancies
+ * Auto-create missing payment records for all active tenants
  * Runs daily at 2:00 AM
  */
 const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
   try {
-    console.log('🔄 Running auto-create payments cron job...');
+    console.log('Running auto-create payments cron job...');
 
-    // Get all active occupancies
-    const activeOccupancies = await Occupancy.find({ status: 'ACTIVE' })
-      .populate('tenantId')
+    // Get all active tenants with room assignments
+    const activeTenants = await Tenant.find({ status: 'ACTIVE', roomId: { $ne: null } })
       .populate('roomId');
 
-    console.log(`📋 Found ${activeOccupancies.length} active occupancies`);
+    console.log(`Found ${activeTenants.length} active tenants with rooms`);
 
     const today = new Date();
     const currentMonth = today.getMonth() + 1; // 1-12
@@ -23,19 +22,19 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
 
     let createdCount = 0;
 
-    for (const occupancy of activeOccupancies) {
+    for (const tenant of activeTenants) {
       try {
         // Get the join date to determine payment cycle
-        const joinDate = new Date(occupancy.joinDate);
+        const joinDate = new Date(tenant.joiningDate);
         const dueDay = joinDate.getDate();
 
-        // Find the latest payment for this occupancy
+        // Find the latest payment for this tenant
         const latestPayment = await Payment.findOne({
-          occupancyId: occupancy._id,
+          tenantId: tenant._id,
         }).sort({ year: -1, month: -1 });
 
         if (!latestPayment) {
-          console.log(`⚠️ No payments found for occupancy ${occupancy._id}. Skipping.`);
+          console.log(`No payments found for tenant ${tenant._id}. Skipping.`);
           continue;
         }
 
@@ -49,24 +48,20 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
         }
 
         // Check if we need to create payments for current month and beyond
-        // We'll create up to 2 months ahead to ensure we don't miss any
         const monthsToCreate = [];
 
-        // Start from the month after the latest payment
         let checkMonth = nextMonth;
         let checkYear = nextYear;
 
         // Check up to 3 months ahead
         for (let i = 0; i < 3; i++) {
-          // Only create if this month is <= current month + 1 (current month or next month)
           const monthDate = new Date(checkYear, checkMonth - 1, 1);
-          const currentDate = new Date(currentYear, currentMonth - 1, 1);
           const oneMonthAhead = new Date(currentYear, currentMonth, 1);
 
           if (monthDate <= oneMonthAhead) {
             // Check if payment already exists
             const existingPayment = await Payment.findOne({
-              occupancyId: occupancy._id,
+              tenantId: tenant._id,
               month: checkMonth,
               year: checkYear,
             });
@@ -76,7 +71,6 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
             }
           }
 
-          // Move to next month
           checkMonth += 1;
           if (checkMonth > 12) {
             checkMonth = 1;
@@ -89,30 +83,30 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
           const dueDate = new Date(year, month - 1, dueDay);
 
           await Payment.create({
-            userId: occupancy.userId,
-            occupancyId: occupancy._id,
-            tenantId: occupancy.tenantId._id,
+            userId: tenant.userId,
+            occupancyId: tenant._id, // Using tenantId as occupancyId for backwards compatibility
+            tenantId: tenant._id,
             month: month,
             year: year,
-            rentAmount: occupancy.rentAmount,
+            rentAmount: tenant.rentAmount,
             amountPaid: 0,
             dueDate: dueDate,
             status: 'PENDING',
           });
 
           createdCount++;
-          console.log(`✓ Created payment for ${occupancy.tenantId?.name || 'Unknown'} - ${month}/${year} (Due: ${dueDate.toLocaleDateString()})`);
+          console.log(`Created payment for ${tenant.name} - ${month}/${year}`);
         }
 
       } catch (error) {
-        console.error(`❌ Error processing occupancy ${occupancy._id}:`, error.message);
+        console.error(`Error processing tenant ${tenant._id}:`, error.message);
       }
     }
 
-    console.log(`✅ Auto-create payments complete. Created ${createdCount} new payment(s).`);
+    console.log(`Auto-create payments complete. Created ${createdCount} new payment(s).`);
 
   } catch (error) {
-    console.error('❌ Error in auto-create payments cron job:', error);
+    console.error('Error in auto-create payments cron job:', error);
   }
 });
 
@@ -122,7 +116,7 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
  */
 const sendPaymentReminders = cron.schedule('0 9 * * *', async () => {
   try {
-    console.log('📧 Running payment reminders cron job...');
+    console.log('Running payment reminders cron job...');
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -138,20 +132,17 @@ const sendPaymentReminders = cron.schedule('0 9 * * *', async () => {
         $gte: today,
         $lte: threeDaysFromNow,
       },
-    })
-      .populate('tenantId')
-      .populate('occupancyId');
+    }).populate('tenantId');
 
-    console.log(`📋 Found ${upcomingPayments.length} upcoming payment(s) in next 3 days`);
+    console.log(`Found ${upcomingPayments.length} upcoming payment(s) in next 3 days`);
 
-    // Here you can integrate with email/SMS service to send reminders
     upcomingPayments.forEach(payment => {
       const daysUntilDue = Math.ceil((payment.dueDate - today) / (1000 * 60 * 60 * 24));
-      console.log(`⏰ Reminder: ${payment.tenantId?.name || 'Unknown'} - Payment due in ${daysUntilDue} day(s)`);
+      console.log(`Reminder: ${payment.tenantId?.name || 'Unknown'} - Payment due in ${daysUntilDue} day(s)`);
     });
 
   } catch (error) {
-    console.error('❌ Error in payment reminders cron job:', error);
+    console.error('Error in payment reminders cron job:', error);
   }
 });
 
@@ -159,15 +150,13 @@ const sendPaymentReminders = cron.schedule('0 9 * * *', async () => {
  * Start all payment-related cron jobs
  */
 const startPaymentJobs = () => {
-  console.log('🚀 Starting payment cron jobs...');
+  console.log('Starting payment cron jobs...');
 
-  // Start the auto-create payments job
   autoCreatePayments.start();
-  console.log('✓ Auto-create payments cron job scheduled (daily at 2:00 AM)');
+  console.log('Auto-create payments cron job scheduled (daily at 2:00 AM)');
 
-  // Start the payment reminders job
   sendPaymentReminders.start();
-  console.log('✓ Payment reminders cron job scheduled (daily at 9:00 AM)');
+  console.log('Payment reminders cron job scheduled (daily at 9:00 AM)');
 };
 
 module.exports = {

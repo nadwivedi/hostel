@@ -2,7 +2,6 @@ const User = require('../models/User');
 const Tenant = require('../models/Tenant');
 const Room = require('../models/Room');
 const Payment = require('../models/Payment');
-const Occupancy = require('../models/Occupancy');
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -11,8 +10,8 @@ exports.getDashboardStats = async (req, res) => {
     const filter = req.isAdmin ? {} : { userId: req.user._id };
 
     const totalTenants = await Tenant.countDocuments(filter);
+    const activeTenants = await Tenant.countDocuments({ ...filter, status: 'ACTIVE' });
     const totalRooms = await Room.countDocuments(filter);
-    const totalOccupancies = await Occupancy.countDocuments({ ...filter, status: 'ACTIVE' });
 
     // Get payments for revenue calculation
     const payments = await Payment.find({ ...filter, status: 'PAID' });
@@ -26,8 +25,8 @@ exports.getDashboardStats = async (req, res) => {
 
     const stats = {
       totalTenants,
+      activeTenants,
       totalRooms,
-      totalOccupancies,
       totalRevenue,
       pendingPayments,
       availableRooms,

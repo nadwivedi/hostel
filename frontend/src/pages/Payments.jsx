@@ -8,12 +8,11 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 function Payments() {
   const { user } = useAuth();
   const [payments, setPayments] = useState([]);
-  const [occupancies, setOccupancies] = useState([]);
+  const [tenants, setTenants] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
-    occupancyId: "",
     tenantId: "",
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
@@ -25,7 +24,7 @@ function Payments() {
 
   useEffect(() => {
     fetchPayments();
-    fetchActiveOccupancies();
+    fetchActiveTenants();
   }, []);
 
   const fetchPayments = async () => {
@@ -39,17 +38,17 @@ function Payments() {
     }
   };
 
-  const fetchActiveOccupancies = async () => {
+  const fetchActiveTenants = async () => {
     try {
       const response = await axios.get(
-        `${BACKEND_URL}/api/occupancies?status=ACTIVE`,
+        `${BACKEND_URL}/api/tenants?status=ACTIVE`,
         {
           withCredentials: true,
         }
       );
-      setOccupancies(response.data);
+      setTenants(response.data);
     } catch (error) {
-      console.error("Error fetching occupancies:", error);
+      console.error("Error fetching tenants:", error);
     }
   };
 
@@ -60,14 +59,13 @@ function Payments() {
       [name]: value,
     });
 
-    if (name === "occupancyId") {
-      const occupancy = occupancies.find((occ) => occ._id === value);
-      if (occupancy) {
+    if (name === "tenantId") {
+      const tenant = tenants.find((t) => t._id === value);
+      if (tenant) {
         setFormData({
           ...formData,
-          occupancyId: value,
-          tenantId: occupancy.tenantId._id,
-          rentAmount: occupancy.rentAmount,
+          tenantId: value,
+          rentAmount: tenant.rentAmount || "",
         });
       }
     }
@@ -97,7 +95,6 @@ function Payments() {
     try {
       const paymentData = {
         userId: user?._id,
-        occupancyId: formData.occupancyId,
         tenantId: formData.tenantId,
         month: parseInt(formData.month),
         year: parseInt(formData.year),
@@ -113,7 +110,6 @@ function Payments() {
       toast.success("Payment record created successfully!");
       setShowForm(false);
       setFormData({
-        occupancyId: "",
         tenantId: "",
         month: new Date().getMonth() + 1,
         year: new Date().getFullYear(),
@@ -231,10 +227,10 @@ function Payments() {
 
   let rentsDueIn2Days = 0;
 
-  occupancies.forEach((occ) => {
-    if (!occ.joinDate) return;
+  tenants.forEach((tenant) => {
+    if (!tenant.joiningDate) return;
 
-    const joinDateObj = new Date(occ.joinDate);
+    const joinDateObj = new Date(tenant.joiningDate);
     const dueDay = joinDateObj.getDate();
     const reminderDay = dueDay - 2;
 
@@ -252,8 +248,7 @@ function Payments() {
     if (isWithinDuePeriod) {
       const currentMonthPayment = payments.find(
         (p) =>
-          (p.occupancyId?._id?.toString() === occ._id?.toString() ||
-            p.occupancyId?.toString() === occ._id?.toString()) &&
+          p.tenantId?._id?.toString() === tenant._id?.toString() &&
           p.month === currentMonth + 1 &&
           p.year === currentYear
       );
@@ -279,7 +274,7 @@ function Payments() {
               </h3>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
-              <span className="text-lg lg:text-xl">⚠️</span>
+              <span className="text-lg lg:text-xl">!</span>
             </div>
           </div>
         </div>
@@ -295,7 +290,7 @@ function Payments() {
               </h3>
             </div>
             <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-              <span className="text-lg lg:text-xl">📅</span>
+              <span className="text-lg lg:text-xl">~</span>
             </div>
           </div>
         </div>
@@ -448,16 +443,16 @@ function Payments() {
                       Select Tenant <span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="occupancyId"
-                      value={formData.occupancyId}
+                      name="tenantId"
+                      value={formData.tenantId}
                       onChange={handleChange}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
                     >
                       <option value="">Choose Tenant</option>
-                      {occupancies.map((occ) => (
-                        <option key={occ._id} value={occ._id}>
-                          {occ.tenantId?.name} - Room {occ.roomId?.roomNumber}
+                      {tenants.map((tenant) => (
+                        <option key={tenant._id} value={tenant._id}>
+                          {tenant.name} {tenant.roomId ? `- Room ${tenant.roomId.roomNumber || tenant.roomId}` : ''}
                         </option>
                       ))}
                     </select>
@@ -508,7 +503,7 @@ function Payments() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Rent Amount (₹) <span className="text-red-500">*</span>
+                      Rent Amount (Rs.) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -523,7 +518,7 @@ function Payments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Amount Paid (₹)
+                      Amount Paid (Rs.)
                     </label>
                     <input
                       type="number"
@@ -661,19 +656,19 @@ function Payments() {
                     <div className="text-center p-2 bg-gray-50 rounded-lg">
                       <div className="text-gray-500">Rent</div>
                       <div className="font-bold text-gray-800">
-                        ₹{payment.rentAmount}
+                        Rs.{payment.rentAmount}
                       </div>
                     </div>
                     <div className="text-center p-2 bg-green-50 rounded-lg">
                       <div className="text-gray-500">Paid</div>
                       <div className="font-bold text-green-600">
-                        ₹{payment.amountPaid}
+                        Rs.{payment.amountPaid}
                       </div>
                     </div>
                     <div className="text-center p-2 bg-red-50 rounded-lg">
                       <div className="text-gray-500">Balance</div>
                       <div className="font-bold text-red-600">
-                        ₹{payment.rentAmount - payment.amountPaid}
+                        Rs.{payment.rentAmount - payment.amountPaid}
                       </div>
                     </div>
                   </div>
@@ -811,13 +806,13 @@ function Payments() {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-sm font-medium text-gray-700">
-                      ₹{payment.rentAmount}
+                      Rs.{payment.rentAmount}
                     </td>
                     <td className="px-4 py-4 text-sm font-medium text-green-600">
-                      ₹{payment.amountPaid}
+                      Rs.{payment.amountPaid}
                     </td>
                     <td className="px-4 py-4 text-sm font-medium text-red-600">
-                      ₹{payment.rentAmount - payment.amountPaid}
+                      Rs.{payment.rentAmount - payment.amountPaid}
                     </td>
                     <td className="px-4 py-4 text-sm text-gray-600">
                       {payment.paymentDate
