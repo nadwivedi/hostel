@@ -18,6 +18,15 @@ function PropertyDetail() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ACTIVE');
   const [showForm, setShowForm] = useState(false);
+  const [showRoomForm, setShowRoomForm] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [roomFormData, setRoomFormData] = useState({
+    roomNumber: '',
+    floor: '',
+    rentType: 'PER_ROOM',
+    rentAmount: '',
+    numberOfBeds: 0,
+  });
   const [editingTenant, setEditingTenant] = useState(null);
   const [aadharFile, setAadharFile] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -309,23 +318,9 @@ function PropertyDetail() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Back Button & Property Name */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate('/')}
-          className="p-2 hover:bg-gray-100 rounded-lg transition"
-        >
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-          {location.propertyName || location.location}
-        </h1>
-      </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-2 lg:gap-4">
+      <div className="grid grid-cols-3 gap-2 lg:gap-4 mt-4">
         <div className="bg-white rounded-xl shadow-lg border border-blue-500 p-3 lg:p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -363,7 +358,61 @@ function PropertyDetail() {
         </div>
       </div>
 
-      {/* Search and Filter Bar */}
+      {/* Rooms Section */}
+      <div>
+        <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-3">Rooms</h2>
+        {rooms.length > 0 ? (
+          <div className="grid grid-cols-5 gap-2 sm:gap-3">
+              {rooms.sort((a, b) => {
+                const numA = parseInt(a.roomNumber) || 0;
+                const numB = parseInt(b.roomNumber) || 0;
+                return numA - numB;
+              }).map((room) => {
+                const isAvailable = room.status === 'AVAILABLE';
+                const occupiedBeds = room.rentType === 'PER_BED'
+                  ? room.beds?.filter(b => b.status === 'OCCUPIED').length || 0
+                  : (room.status === 'OCCUPIED' ? 1 : 0);
+                const totalBeds = room.rentType === 'PER_BED'
+                  ? room.beds?.length || 1
+                  : 1;
+                return (
+                  <div
+                    key={room._id}
+                    className={`${isAvailable
+                      ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-300 hover:border-green-500'
+                      : 'bg-gradient-to-br from-red-50 to-red-100 border-red-300 hover:border-red-500'
+                    } border-2 rounded-xl p-2 sm:p-3 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105`}
+                  >
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className={`w-7 h-7 rounded flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-md ${
+                        isAvailable ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-red-500 to-red-600'
+                      }`}>
+                        {room.roomNumber}
+                      </div>
+                      <div className="mt-0.5 text-[9px] font-semibold text-gray-700">
+                        {room.rentType === 'PER_BED' ? `${occupiedBeds}/${totalBeds}` : (isAvailable ? 'Free' : 'Full')}
+                      </div>
+                      <div className="text-[8px] text-gray-500 mt-0.5">
+                        Rs.{room.rentAmount}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <p className="text-sm text-gray-500">No rooms added yet</p>
+          </div>
+        )}
+      </div>
+
+      {/* Tenants Section */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
         <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b border-gray-200">
           <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
@@ -738,6 +787,19 @@ function PropertyDetail() {
 
       {/* Tenants List */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-green-50 via-teal-50 to-emerald-50 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">Tenants</h2>
+              <p className="text-xs text-gray-500">{filteredTenants.length} tenant(s)</p>
+            </div>
+          </div>
+        </div>
         {filteredTenants.length > 0 ? (
           <div className="divide-y divide-gray-100">
             {filteredTenants.map((tenant) => (
