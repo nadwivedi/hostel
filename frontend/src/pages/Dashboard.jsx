@@ -191,7 +191,7 @@ Thank you!`;
             {Object.entries(groupedByProperty).map(([propertyId, propertyData]) => (
               <div key={propertyId} className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
 
-                {/* Property Header */}
+                {/* Property Header with Room Details */}
                 <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 p-2 sm:p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-3">
@@ -202,13 +202,20 @@ Thank you!`;
                         <h2 className="text-sm sm:text-xl font-black text-white drop-shadow-lg">
                           {propertyData.name}
                         </h2>
-                        <span className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-white font-bold text-[8px] sm:text-xs border border-white/30">
-                          {propertyData.payments.length} Pending
-                        </span>
+                        <div className="text-[9px] sm:text-xs text-white/80 font-semibold mt-0.5">
+                          {(() => {
+                            const roomBedList = propertyData.payments.map(p => {
+                              const room = p.tenant?.roomId?.roomNumber;
+                              const bed = p.tenant?.bedNumber;
+                              return room ? `Room ${room}${bed ? ` - Bed ${bed}` : ''}` : null;
+                            }).filter(Boolean);
+                            const unique = [...new Set(roomBedList)];
+                            return unique.slice(0, 2).join(', ') + (unique.length > 2 ? ` +${unique.length - 2} more` : '');
+                          })()}
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-white/80 text-[8px] sm:text-xs font-semibold">Total</div>
                       <div className="text-base sm:text-xl font-black text-white drop-shadow-lg">
                         ₹{propertyData.totalPending.toLocaleString()}
                       </div>
@@ -231,7 +238,7 @@ Thank you!`;
                           className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 p-2 sm:p-4 hover:shadow-md transition-all cursor-pointer"
                           onClick={() => navigate(`/tenant/${tenant?._id}`)}
                         >
-                          {/* Tenant Header with Room */}
+                          {/* Tenant Header with Pending Status */}
                           <div className="flex items-center justify-between mb-1.5 sm:mb-3">
                             <div className="flex items-center gap-2 sm:gap-3">
                               {tenant?.photo ? (
@@ -260,29 +267,19 @@ Thank you!`;
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-0.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
-                              {/* Room Badge */}
-                              <div className="px-1.5 py-0.5 sm:px-3 sm:py-1.5 bg-blue-100 rounded-md sm:rounded-xl text-center">
-                                <div className="text-[7px] sm:text-xs text-blue-600 font-bold">ROOM</div>
-                                <div className="text-sm sm:text-xl font-black text-blue-700">{tenant?.roomId?.roomNumber || '-'}</div>
-                              </div>
-                              {tenant?.bedNumber && (
-                                <div className="px-1.5 py-0.5 sm:px-2 sm:py-1.5 bg-purple-100 rounded-md sm:rounded-xl text-center">
-                                  <div className="text-[7px] sm:text-xs text-purple-600 font-bold">BED</div>
-                                  <div className="text-sm sm:text-xl font-black text-purple-700">{tenant.bedNumber}</div>
-                                </div>
-                              )}
+                            {/* Pending Badge */}
+                            <div className="px-2 py-1 sm:px-3 sm:py-1.5 bg-red-100 rounded-md sm:rounded-xl text-center">
+                              <div className="text-[7px] sm:text-xs text-red-600 font-bold uppercase">Pending</div>
+                              <div className="text-sm sm:text-lg font-black text-red-700">{monthYear}</div>
                             </div>
                           </div>
 
                           {/* Payment Info */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 sm:gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
-                              <span className="text-[8px] sm:text-xs font-bold text-red-700 uppercase">{monthYear}</span>
                               {payment.reminderCount > 0 && (
                                 <span className="text-[8px] sm:text-[10px] text-gray-400">
-                                  • {payment.reminderCount} reminder{payment.reminderCount > 1 ? 's' : ''}
+                                  {payment.reminderCount} reminder{payment.reminderCount > 1 ? 's' : ''} sent
                                 </span>
                               )}
                             </div>
