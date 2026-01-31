@@ -348,7 +348,9 @@ function PropertyDetail() {
     // Check for pending payments first
     const pendingPayment = tenantPayments.find(p => p.status === 'PENDING' || p.status === 'PARTIAL');
     if (pendingPayment) {
-      const monthYear = new Date(pendingPayment.year, pendingPayment.month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const pendingDateSource = pendingPayment.dueDate || new Date(pendingPayment.year, pendingPayment.month - 1, 1);
+      const pendingDate = new Date(pendingDateSource);
+      const monthYear = pendingDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       const pending = pendingPayment.rentAmount - (pendingPayment.amountPaid || 0);
       return {
         type: 'pending',
