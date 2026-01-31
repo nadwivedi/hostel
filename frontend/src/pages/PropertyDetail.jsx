@@ -27,6 +27,7 @@ function PropertyDetail() {
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
+  const [expandedRooms, setExpandedRooms] = useState({});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -314,6 +315,13 @@ function PropertyDetail() {
       joiningDate: new Date().toISOString().split('T')[0],
       notes: '',
     });
+  };
+
+  const toggleRoomExpanded = (roomId) => {
+    setExpandedRooms((prev) => ({
+      ...prev,
+      [roomId]: !prev[roomId],
+    }));
   };
 
   const activeTenants = tenants.filter(t => t.status === 'ACTIVE').length;
@@ -843,6 +851,12 @@ function PropertyDetail() {
           const roomTenants = getTenantsForRoom(room._id);
           if (roomTenants.length === 0) return null;
 
+          const isPerBed = room.rentType === 'PER_BED';
+          const isExpanded = !!expandedRooms[room._id];
+          const totalBedsInRoom = room.beds?.length || roomTenants.length;
+          const remainingBeds = Math.max(totalBedsInRoom - 1, 0);
+          const visibleTenants = isPerBed && !isExpanded ? roomTenants.slice(0, 1) : roomTenants;
+
           const roomPending = roomTenants.reduce((acc, tenant) => {
             const paymentInfo = getTenantPaymentInfo(tenant._id);
             return acc + (paymentInfo?.type === 'pending' ? paymentInfo.amount : 0);
@@ -884,7 +898,7 @@ function PropertyDetail() {
               {/* TENANTS LIST - SECONDARY DOMINANCE */}
               <div className="p-1.5 sm:p-4 bg-gradient-to-br from-gray-50 to-white">
                 <div className="space-y-1.5 sm:space-y-3">
-                  {roomTenants.map((tenant) => {
+                  {visibleTenants.map((tenant, index) => {
                     const paymentInfo = getTenantPaymentInfo(tenant._id);
 
                     return (
@@ -951,6 +965,29 @@ function PropertyDetail() {
                             </div>
                           </div>
                         </div>
+
+                        {isPerBed && !isExpanded && remainingBeds > 0 && index === 0 && (
+                          <div className="flex items-center justify-center mb-1.5 sm:mb-3">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleRoomExpanded(room._id);
+                              }}
+                              className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold text-gray-600 hover:text-gray-800 transition"
+                            >
+                              <span>2 more beds</span>
+                              <svg
+                                className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
 
                         {/* PENDING PAYMENT - BOTTOM SMALLER SECTION */}
                         {paymentInfo && paymentInfo.type === 'pending' && (
