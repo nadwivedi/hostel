@@ -42,6 +42,13 @@ const paymentSchema = new mongoose.Schema(
       enum: ['PENDING', 'PAID', 'PARTIAL'],
       default: 'PENDING',
     },
+    reminderCount: {
+      type: Number,
+      default: 0,
+    },
+    lastReminderDate: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

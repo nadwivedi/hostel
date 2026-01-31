@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Properties from './pages/Properties';
 import Tenants from './pages/Tenants';
 import PropertyDetail from './pages/PropertyDetail';
 import TenantDetail from './pages/TenantDetail';
@@ -30,6 +31,7 @@ function App() {
             }
           >
             <Route index element={<Dashboard />} />
+            <Route path="properties" element={<Properties />} />
             <Route path="tenants" element={<Tenants />} />
             <Route path="property/:locationId" element={<PropertyDetail />} />
             <Route path="tenant/:tenantId" element={<TenantDetail />} />

@@ -365,3 +365,39 @@ exports.getOverduePayments = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Track WhatsApp reminder sent
+exports.trackReminder = async (req, res) => {
+  try {
+    const paymentId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+      return res.status(400).json({ success: false, message: 'Invalid payment ID format' });
+    }
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment not found' });
+    }
+
+    // Check ownership for non-admin users
+    if (!req.isAdmin && payment.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this payment' });
+    }
+
+    // Increment reminder count and update last reminder date
+    payment.reminderCount = (payment.reminderCount || 0) + 1;
+    payment.lastReminderDate = new Date();
+    await payment.save();
+
+    const populatedPayment = await Payment.findById(paymentId).populate('tenantId');
+
+    res.status(200).json({
+      success: true,
+      message: 'Reminder tracked successfully',
+      data: populatedPayment,
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

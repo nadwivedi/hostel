@@ -11,6 +11,7 @@ const {
   markAsPaid,
   getUpcomingPayments,
   getOverduePayments,
+  trackReminder,
 } = require('../controllers/paymentController');
 
 // All routes use protectAll - authorization is handled in controllers
@@ -21,6 +22,7 @@ router.get('/tenant/:tenantId', protectAll, getPaymentsByTenant);
 router.get('/:id', protectAll, getPaymentById);
 router.post('/', protectAll, createPayment);
 router.post('/:id/mark-paid', protectAll, markAsPaid);
+router.post('/:id/track-reminder', protectAll, trackReminder);
 router.patch('/:id', protectAll, updatePayment);
 router.delete('/:id', protectAll, deletePayment);
 

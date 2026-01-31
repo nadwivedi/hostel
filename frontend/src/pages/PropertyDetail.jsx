@@ -272,8 +272,19 @@ function PropertyDetail() {
     }
   };
 
-  const openWhatsAppReminder = (e, tenant, amount, month) => {
+  const openWhatsAppReminder = async (e, tenant, amount, month, paymentId) => {
     e.stopPropagation();
+
+    // Track the reminder
+    if (paymentId) {
+      try {
+        await axios.post(`${BACKEND_URL}/api/payments/${paymentId}/track-reminder`, {}, { withCredentials: true });
+        fetchData(); // Refresh to show updated reminder count
+      } catch (error) {
+        console.error('Error tracking reminder:', error);
+      }
+    }
+
     const message = `Hello ${tenant.name},\n\nThis is a friendly reminder that your rent payment of ₹${amount.toLocaleString()} for ${month} is pending.\n\nProperty: ${location?.name || 'Our Property'}\nRoom: ${tenant.roomId?.roomNumber ? `Room ${tenant.roomId.roomNumber}` : 'N/A'}${tenant.bedNumber ? ` - Bed ${tenant.bedNumber}` : ''}\n\nPlease make the payment at your earliest convenience.\n\nThank you!`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/91${tenant.mobile}?text=${encodedMessage}`;
@@ -927,7 +938,7 @@ function PropertyDetail() {
                           </svg>
                         </button>
                         <button
-                          onClick={(e) => openWhatsAppReminder(e, tenant, paymentInfo.amount, paymentInfo.month)}
+                          onClick={(e) => openWhatsAppReminder(e, tenant, paymentInfo.amount, paymentInfo.month, paymentInfo.paymentId)}
                           className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
                           title="Send WhatsApp Reminder"
                         >

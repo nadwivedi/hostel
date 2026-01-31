@@ -6,7 +6,8 @@ function Navbar() {
   const { user } = useAuth();
 
   const navLinks = [
-    { path: '/', label: 'Properties', icon: '🏢', description: 'Your Properties' },
+    { path: '/', label: 'Dashboard', icon: '📊', description: 'Pending Payments' },
+    { path: '/properties', label: 'Properties', icon: '🏢', description: 'Your Properties' },
     { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
   ];
 
