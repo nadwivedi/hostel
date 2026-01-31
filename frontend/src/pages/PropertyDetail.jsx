@@ -420,7 +420,7 @@ function PropertyDetail() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-1 sm:gap-4">
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border-2 border-blue-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
+          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-blue-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">Rooms</p>
@@ -432,7 +432,7 @@ function PropertyDetail() {
             </div>
           </div>
 
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border-2 border-purple-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
+          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-purple-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">Beds</p>
@@ -444,7 +444,7 @@ function PropertyDetail() {
             </div>
           </div>
 
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border-2 border-red-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
+          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-red-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">Pending</p>
@@ -1025,7 +1025,7 @@ function PropertyDetail() {
               </div>
 
               {/* ROOM TOTAL PENDING - BOTTOM SUMMARY */}
-              {roomPending > 0 && (
+              {roomPending > 0 && room.rentType !== 'PER_BED' && (
                 <div className="bg-gradient-to-r from-red-100 to-orange-100 border-t border-red-300 p-2 sm:p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1 sm:gap-2">
