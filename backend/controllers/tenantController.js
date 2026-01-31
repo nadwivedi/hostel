@@ -6,10 +6,11 @@ const Payment = require('../models/Payment');
 // Get all tenants (filtered by user, all for admin)
 exports.getAllTenants = async (req, res) => {
   try {
-    const { propertyId, status } = req.query;
+    const { propertyId, locationId, status } = req.query;
     const filter = req.isAdmin ? {} : { userId: req.user._id };
 
-    if (propertyId) filter.propertyId = propertyId;
+    // Accept both propertyId and locationId as aliases
+    if (propertyId || locationId) filter.propertyId = propertyId || locationId;
     if (status) filter.status = status;
 
     const tenants = await Tenant.find(filter)

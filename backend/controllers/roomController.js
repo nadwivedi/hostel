@@ -4,10 +4,11 @@ const Room = require('../models/Room');
 // Get all rooms (filtered by user, all for admin)
 exports.getAllRooms = async (req, res) => {
   try {
-    const { status, propertyId } = req.query;
+    const { status, propertyId, locationId } = req.query;
     const filter = req.isAdmin ? {} : { userId: req.user._id };
     if (status) filter.status = status;
-    if (propertyId) filter.propertyId = propertyId;
+    // Accept both propertyId and locationId as aliases
+    if (propertyId || locationId) filter.propertyId = propertyId || locationId;
 
     const rooms = await Room.find(filter)
       .populate('propertyId', 'name location propertyType')

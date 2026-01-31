@@ -76,11 +76,20 @@ const getOverduePaymentsHelper = async () => {
 // Get all payments (filtered by user, all for admin)
 exports.getAllPayments = async (req, res) => {
   try {
-    const { status, month, year } = req.query;
+    const { status, month, year, propertyId, locationId } = req.query;
     const filter = req.isAdmin ? {} : { userId: req.user._id };
     if (status) filter.status = status;
     if (month) filter.month = parseInt(month);
     if (year) filter.year = parseInt(year);
+
+    // If filtering by property, first get tenant IDs for that property
+    const propertyFilter = propertyId || locationId;
+    if (propertyFilter) {
+      const tenantFilter = req.isAdmin ? { propertyId: propertyFilter } : { propertyId: propertyFilter, userId: req.user._id };
+      const tenants = await Tenant.find(tenantFilter).select('_id');
+      const tenantIds = tenants.map(t => t._id);
+      filter.tenantId = { $in: tenantIds };
+    }
 
     const payments = await Payment.find(filter)
       .populate('tenantId')
