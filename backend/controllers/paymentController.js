@@ -53,7 +53,6 @@ const createNextMonthPayment = async (currentPayment) => {
 
     const paymentData = {
       userId: tenant.userId,
-      occupancyId: tenant._id, // Using tenantId as occupancyId for backwards compatibility
       tenantId: tenant._id,
       month: nextMonth,
       year: nextYear,
@@ -201,24 +200,7 @@ exports.getPaymentsByTenant = async (req, res) => {
   }
 };
 
-// Get payments by occupancy (kept for backwards compatibility)
-exports.getPaymentsByOccupancy = async (req, res) => {
-  try {
-    const filter = { tenantId: req.params.occupancyId };
 
-    // For non-admin users, also filter by userId
-    if (!req.isAdmin) {
-      filter.userId = req.user._id;
-    }
-
-    const payments = await Payment.find(filter)
-      .populate('tenantId')
-      .sort({ year: -1, month: -1 });
-    res.status(200).json(payments);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
 // Create payment
 exports.createPayment = async (req, res) => {
@@ -257,7 +239,6 @@ exports.createPayment = async (req, res) => {
     const dueDate = req.body.dueDate || new Date(year, month - 1, 5);
 
     const paymentData = {
-      occupancyId: tenantId, // Using tenantId as occupancyId for backwards compatibility
       tenantId,
       month,
       year,

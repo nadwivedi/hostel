@@ -7,11 +7,6 @@ const paymentSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    occupancyId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Occupancy',
-      required: true,
-    },
     tenantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Tenant',
@@ -53,8 +48,8 @@ const paymentSchema = new mongoose.Schema(
   }
 );
 
-// Prevent duplicate payments for same month/year
-paymentSchema.index({ occupancyId: 1, year: 1, month: 1 }, { unique: true });
+// Prevent duplicate payments for same tenant/month/year
+paymentSchema.index({ tenantId: 1, year: 1, month: 1 }, { unique: true });
 
 const Payment = mongoose.model('Payment', paymentSchema);
 

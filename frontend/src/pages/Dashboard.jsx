@@ -80,27 +80,13 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Properties</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-            Manage your properties
-          </p>
-        </div>
-        <button
-          onClick={fetchData}
-          className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105 font-medium cursor-pointer text-sm sm:text-base self-start sm:self-auto"
-        >
-          Refresh
-        </button>
-      </div>
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
         </div>
       ) : properties.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-2">
           {properties.map((property) => {
             const propStats = stats[property._id] || { rooms: 0, tenants: 0, totalBeds: 0, availableBeds: 0 };
             const occupancyRate = propStats.totalBeds > 0

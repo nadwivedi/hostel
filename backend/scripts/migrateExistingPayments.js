@@ -28,15 +28,15 @@ const migratePayments = async () => {
       new mongoose.Schema({}, { strict: false })
     );
 
-    const Occupancy = mongoose.model(
-      'Occupancy',
+    const Tenant = mongoose.model(
+      'Tenant',
       new mongoose.Schema({}, { strict: false })
     );
 
     // Find all payments without dueDate
     const paymentsWithoutDueDate = await Payment.find({
       dueDate: { $exists: false },
-    }).populate('occupancyId');
+    }).populate('tenantId');
 
     console.log(`\nFound ${paymentsWithoutDueDate.length} payments without dueDate\n`);
 
@@ -52,9 +52,9 @@ const migratePayments = async () => {
       try {
         let dueDay = 5; // Default to 5th
 
-        // Try to get the joining day from occupancy
-        if (payment.occupancyId && payment.occupancyId.joinDate) {
-          const joinDate = new Date(payment.occupancyId.joinDate);
+        // Try to get the joining day from tenant
+        if (payment.tenantId && payment.tenantId.joiningDate) {
+          const joinDate = new Date(payment.tenantId.joiningDate);
           dueDay = joinDate.getDate();
         }
 

@@ -84,7 +84,6 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
 
           await Payment.create({
             userId: tenant.userId,
-            occupancyId: tenant._id, // Using tenantId as occupancyId for backwards compatibility
             tenantId: tenant._id,
             month: month,
             year: year,

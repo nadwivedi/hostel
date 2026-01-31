@@ -5,7 +5,6 @@ const {
   getAllPayments,
   getPaymentById,
   getPaymentsByTenant,
-  getPaymentsByOccupancy,
   createPayment,
   updatePayment,
   deletePayment,
@@ -19,7 +18,6 @@ router.get('/', protectAll, getAllPayments);
 router.get('/upcoming', protectAll, getUpcomingPayments);
 router.get('/overdue', protectAll, getOverduePayments);
 router.get('/tenant/:tenantId', protectAll, getPaymentsByTenant);
-router.get('/occupancy/:occupancyId', protectAll, getPaymentsByOccupancy);
 router.get('/:id', protectAll, getPaymentById);
 router.post('/', protectAll, createPayment);
 router.post('/:id/mark-paid', protectAll, markAsPaid);

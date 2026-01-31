@@ -141,7 +141,6 @@ exports.createTenant = async (req, res) => {
 
         await Payment.create({
           userId: tenantData.userId,
-          occupancyId: tenant._id, // Using tenantId as occupancyId for backwards compatibility
           tenantId: tenant._id,
           month: paymentMonth,
           year: paymentYear,
@@ -165,7 +164,6 @@ exports.createTenant = async (req, res) => {
 
         await Payment.create({
           userId: tenantData.userId,
-          occupancyId: tenant._id,
           tenantId: tenant._id,
           month: nextMonth,
           year: nextYear,
