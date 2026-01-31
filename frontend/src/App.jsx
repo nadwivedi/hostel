@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tenants from './pages/Tenants';
 import PropertyDetail from './pages/PropertyDetail';
+import TenantDetail from './pages/TenantDetail';
 import Payments from './pages/Payments';
 import Settings from './pages/Settings';
 import { ToastContainer, toast } from 'react-toastify';
@@ -31,6 +32,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="tenants" element={<Tenants />} />
             <Route path="property/:locationId" element={<PropertyDetail />} />
+            <Route path="tenant/:tenantId" element={<TenantDetail />} />
             <Route path="payments" element={<Payments />} />
             <Route path="settings" element={<Settings />} />
           </Route>

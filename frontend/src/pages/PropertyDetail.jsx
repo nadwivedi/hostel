@@ -961,7 +961,7 @@ function PropertyDetail() {
             <div
               key={tenant._id}
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 hover:shadow-md transition-all cursor-pointer active:scale-[0.99]"
-              onClick={() => setSelectedTenant(tenant)}
+              onClick={() => navigate(`/tenant/${tenant._id}`, { state: { from: `/property/${locationId}` } })}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
