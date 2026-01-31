@@ -458,30 +458,28 @@ function PropertyDetail() {
 
         {/* Search & Filter */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-md border border-gray-200 p-2 sm:p-4">
-          <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+          <div className="flex flex-row gap-1.5 sm:gap-2 items-center">
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Search by name or mobile..."
+                placeholder="Search name or mobile..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 sm:pl-10 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm border-2 border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all bg-white font-medium"
+                className="w-full pl-7 sm:pl-10 pr-2 py-2 sm:py-2.5 text-xs sm:text-sm border-2 border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all bg-white font-medium"
               />
-              <svg className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <div className="flex gap-1.5 sm:gap-2">
-              <button
-                onClick={() => setShowForm(true)}
-                className="px-2.5 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-indigo-700 hover:to-purple-700 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-1 sm:gap-2 shadow-md"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add</span>
-              </button>
-            </div>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-2.5 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg sm:rounded-xl hover:from-indigo-700 hover:to-purple-700 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-1 sm:gap-2 shadow-md whitespace-nowrap"
+            >
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Add</span>
+            </button>
           </div>
         </div>
 
