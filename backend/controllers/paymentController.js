@@ -83,9 +83,17 @@ exports.getAllPayments = async (req, res) => {
     if (year) filter.year = parseInt(year);
 
     // If filtering by property, first get tenant IDs for that property
-    const propertyFilter = propertyId || locationId;
-    if (propertyFilter) {
-      const tenantFilter = req.isAdmin ? { propertyId: propertyFilter } : { propertyId: propertyFilter, userId: req.user._id };
+    const propId = propertyId || locationId;
+    if (propId) {
+      // Find rooms belonging to this property
+      const Room = require('../models/Room');
+      const propertyRooms = await Room.find({ propertyId: propId }).select('_id');
+      const roomIds = propertyRooms.map(r => r._id);
+
+      // Find tenants by propertyId OR by roomId belonging to this property
+      const tenantFilter = req.isAdmin
+        ? { $or: [{ propertyId: propId }, { roomId: { $in: roomIds } }] }
+        : { $or: [{ propertyId: propId }, { roomId: { $in: roomIds } }], userId: req.user._id };
       const tenants = await Tenant.find(tenantFilter).select('_id');
       const tenantIds = tenants.map(t => t._id);
       filter.tenantId = { $in: tenantIds };

@@ -10,7 +10,18 @@ exports.getAllTenants = async (req, res) => {
     const filter = req.isAdmin ? {} : { userId: req.user._id };
 
     // Accept both propertyId and locationId as aliases
-    if (propertyId || locationId) filter.propertyId = propertyId || locationId;
+    const propId = propertyId || locationId;
+    if (propId) {
+      // Find rooms belonging to this property to also match tenants by roomId
+      const propertyRooms = await Room.find({ propertyId: propId }).select('_id');
+      const roomIds = propertyRooms.map(r => r._id);
+
+      // Match tenants by propertyId OR by roomId belonging to this property
+      filter.$or = [
+        { propertyId: propId },
+        { roomId: { $in: roomIds } }
+      ];
+    }
     if (status) filter.status = status;
 
     const tenants = await Tenant.find(filter)
@@ -49,8 +60,11 @@ exports.createTenant = async (req, res) => {
   try {
     const {
       name, mobile, email, adharNo, adharImg, photo, dob, gender,
-      propertyId, roomId, bedNumber, rentAmount, advanceAmount, joiningDate, notes
+      propertyId, locationId, roomId, bedNumber, rentAmount, advanceAmount, joiningDate, notes
     } = req.body;
+
+    // Accept both propertyId and locationId
+    const actualPropertyId = propertyId || locationId;
 
     if (!name || name.trim() === '') {
       return res.status(400).json({ success: false, message: 'Please provide tenant name' });
@@ -92,7 +106,7 @@ exports.createTenant = async (req, res) => {
       joiningDate: joiningDate || new Date(),
       userId: req.isAdmin ? req.body.userId : req.user._id,
       // Occupancy fields
-      propertyId: propertyId || undefined,
+      propertyId: actualPropertyId || undefined,
       roomId: roomId || undefined,
       bedNumber: bedNumber || null,
       rentAmount: rent || undefined,
