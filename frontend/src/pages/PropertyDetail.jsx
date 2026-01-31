@@ -953,7 +953,7 @@ function PropertyDetail() {
                         </div>
 
                         {/* PENDING PAYMENT - BOTTOM SMALLER SECTION */}
-                        {paymentInfo && (
+                        {paymentInfo && paymentInfo.type === 'pending' && (
                           <div className={`rounded-md sm:rounded-xl p-1.5 sm:p-3 border ${
                             paymentInfo.type === 'pending'
                               ? 'bg-red-50 border-red-200'
