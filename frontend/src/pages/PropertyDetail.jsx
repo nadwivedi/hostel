@@ -27,6 +27,7 @@ function PropertyDetail() {
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
+  const [selectedTenant, setSelectedTenant] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -361,43 +362,40 @@ function PropertyDetail() {
         </div>
       </div>
 
-      {/* Tenants Section */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b border-gray-200">
-          <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
-            <div className="relative flex-1 lg:max-w-md">
-              <input
-                type="text"
-                placeholder="Search by name or mobile..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-400 transition-all bg-white shadow-sm"
-              />
-              <svg className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      {/* Tenants Section - Search & Filter */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-3 sm:p-4">
+        <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
+          <div className="relative flex-1 lg:max-w-md">
+            <input
+              type="text"
+              placeholder="Search by name or mobile..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-400 transition-all bg-white"
+            />
+            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 bg-white font-medium"
+            >
+              <option value="ALL">All</option>
+              <option value="ACTIVE">Active</option>
+              <option value="COMPLETED">Left</option>
+            </select>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2.5 bg-gray-800 text-white rounded-lg hover:bg-gray-700 font-semibold text-sm transition-all flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 bg-white shadow-sm font-medium"
-              >
-                <option value="ALL">All Status</option>
-                <option value="ACTIVE">Active</option>
-                <option value="COMPLETED">Left</option>
-              </select>
-              <button
-                onClick={() => setShowForm(true)}
-                className="px-4 lg:px-6 py-3 bg-gray-700 text-white rounded-xl hover:shadow-xl font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="hidden lg:inline">Add Tenant</span>
-                <span className="lg:hidden">Add</span>
-              </button>
-            </div>
+              <span>Add</span>
+            </button>
           </div>
         </div>
       </div>
@@ -755,100 +753,287 @@ function PropertyDetail() {
         </div>
       )}
 
-      {/* Tenants List */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-green-50 via-teal-50 to-emerald-50 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+      {/* Tenant Detail Modal */}
+      {selectedTenant && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4" onClick={() => setSelectedTenant(null)}>
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {selectedTenant.photo ? (
+                    <img
+                      src={`${BACKEND_URL}${selectedTenant.photo}`}
+                      alt={selectedTenant.name}
+                      className="w-14 h-14 rounded-full object-cover border-2 border-white/30"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold">
+                      {selectedTenant.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-lg font-bold">{selectedTenant.name}</h2>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      selectedTenant.status === 'ACTIVE' ? 'bg-green-400/30 text-green-100' : 'bg-gray-400/30 text-gray-200'
+                    }`}>
+                      {selectedTenant.status === 'ACTIVE' ? 'Active' : 'Left'}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedTenant(null)} className="p-1.5 hover:bg-white/20 rounded-full transition">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-800">Tenants</h2>
-              <p className="text-xs text-gray-500">{filteredTenants.length} tenant(s)</p>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Personal Information */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Personal Information</h3>
+                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Mobile</span>
+                    <a href={`tel:${selectedTenant.mobile}`} className="text-sm font-semibold text-blue-600">{selectedTenant.mobile}</a>
+                  </div>
+                  {selectedTenant.email && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Email</span>
+                      <span className="text-sm font-semibold text-gray-800">{selectedTenant.email}</span>
+                    </div>
+                  )}
+                  {selectedTenant.adharNo && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Aadhar No.</span>
+                      <span className="text-sm font-semibold text-gray-800">{selectedTenant.adharNo}</span>
+                    </div>
+                  )}
+                  {selectedTenant.dob && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Date of Birth</span>
+                      <span className="text-sm font-semibold text-gray-800">{new Date(selectedTenant.dob).toLocaleDateString('en-GB')}</span>
+                    </div>
+                  )}
+                  {selectedTenant.gender && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Gender</span>
+                      <span className="text-sm font-semibold text-gray-800">{selectedTenant.gender}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Room Details */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Room Details</h3>
+                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  {selectedTenant.roomId && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Room</span>
+                      <span className="text-sm font-semibold text-gray-800">Room {selectedTenant.roomId.roomNumber || selectedTenant.roomId}</span>
+                    </div>
+                  )}
+                  {selectedTenant.bedNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Bed</span>
+                      <span className="text-sm font-semibold text-gray-800">Bed {selectedTenant.bedNumber}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Join Date</span>
+                    <span className="text-sm font-semibold text-gray-800">{new Date(selectedTenant.joiningDate).toLocaleDateString('en-GB')}</span>
+                  </div>
+                  {selectedTenant.leaveDate && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Leave Date</span>
+                      <span className="text-sm font-semibold text-gray-800">{new Date(selectedTenant.leaveDate).toLocaleDateString('en-GB')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Payment Details</h3>
+                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Monthly Rent</span>
+                    <span className="text-sm font-bold text-green-600">₹{selectedTenant.rentAmount?.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Advance Paid</span>
+                    <span className="text-sm font-semibold text-gray-800">₹{selectedTenant.advanceAmount?.toLocaleString() || 0}</span>
+                  </div>
+                  {(() => {
+                    const tenantPayments = payments.filter(p => p.tenantId?._id === selectedTenant._id || p.tenantId === selectedTenant._id);
+                    const pendingAmount = tenantPayments.filter(p => p.status !== 'PAID').reduce((acc, p) => acc + (p.rentAmount - p.amountPaid), 0);
+                    const paidCount = tenantPayments.filter(p => p.status === 'PAID').length;
+                    return (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-500">Pending Amount</span>
+                          <span className={`text-sm font-bold ${pendingAmount > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                            ₹{pendingAmount.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-500">Payments Made</span>
+                          <span className="text-sm font-semibold text-gray-800">{paidCount} payment(s)</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Documents */}
+              {(selectedTenant.adharImg || selectedTenant.photo) && (
+                <div>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Documents</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedTenant.photo && (
+                      <button
+                        onClick={() => { setSelectedTenant(null); setPreviewPhoto(`${BACKEND_URL}${selectedTenant.photo}`); }}
+                        className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition"
+                      >
+                        <img src={`${BACKEND_URL}${selectedTenant.photo}`} alt="Photo" className="w-full h-20 object-cover rounded" />
+                        <p className="text-xs text-gray-500 mt-1 text-center">Photo</p>
+                      </button>
+                    )}
+                    {selectedTenant.adharImg && (
+                      <button
+                        onClick={() => { setSelectedTenant(null); setPreviewPhoto(`${BACKEND_URL}${selectedTenant.adharImg}`); }}
+                        className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition"
+                      >
+                        <img src={`${BACKEND_URL}${selectedTenant.adharImg}`} alt="Aadhar" className="w-full h-20 object-cover rounded" />
+                        <p className="text-xs text-gray-500 mt-1 text-center">Aadhar</p>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedTenant.notes && (
+                <div>
+                  <h3 className="text-xs font-bold text-gray-500 uppercase mb-2">Notes</h3>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm text-gray-700">{selectedTenant.notes}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="border-t border-gray-200 p-3 flex gap-2">
+              <button
+                onClick={() => { setSelectedTenant(null); handleEdit(selectedTenant); }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+              {selectedTenant.status === 'ACTIVE' && (
+                <button
+                  onClick={() => { setSelectedTenant(null); handleMarkAsLeft(selectedTenant); }}
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold text-sm hover:bg-orange-600 transition flex items-center justify-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Mark as Left
+                </button>
+              )}
             </div>
           </div>
         </div>
-        {filteredTenants.length > 0 ? (
-          <div className="divide-y divide-gray-100">
-            {filteredTenants.map((tenant) => (
-              <div key={tenant._id} className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    {tenant.photo ? (
-                      <button
-                        onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
-                        className="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
-                      >
-                        <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover" />
-                      </button>
-                    ) : (
-                      <div className="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-lg">
-                        {tenant.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="ml-3">
-                      <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
-                      <div className="text-xs text-gray-500 flex items-center mt-0.5">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        {tenant.mobile}
-                      </div>
+      )}
+
+      {/* Tenants List */}
+      {filteredTenants.length > 0 ? (
+        <div className="space-y-2">
+          {filteredTenants.map((tenant) => (
+            <div
+              key={tenant._id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 hover:shadow-md transition-all cursor-pointer active:scale-[0.99]"
+              onClick={() => setSelectedTenant(tenant)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {tenant.photo ? (
+                    <div className="flex-shrink-0 h-11 w-11 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm overflow-hidden">
+                      <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="flex-shrink-0 h-11 w-11 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm text-base">
+                      {tenant.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="ml-3">
+                    <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
+                    <div className="text-xs text-gray-500 flex items-center mt-0.5">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      {tenant.mobile}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => handleEdit(tenant)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
+                </div>
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={() => handleEdit(tenant)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  {tenant.status === 'ACTIVE' && (
+                    <button onClick={() => handleMarkAsLeft(tenant)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition" title="Mark as Left">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
                     </button>
-                    {tenant.status === 'ACTIVE' && (
-                      <button onClick={() => handleMarkAsLeft(tenant)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition" title="Mark as Left">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  {tenant.roomId && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-semibold">
-                      Room {tenant.roomId.roomNumber || tenant.roomId}
-                      {tenant.bedNumber && ` - Bed ${tenant.bedNumber}`}
-                    </span>
                   )}
-                  <span className="inline-flex items-center px-2 py-1 rounded-lg bg-green-100 text-green-700 font-semibold">
-                    Rs.{tenant.rentAmount}/mo
-                  </span>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-lg font-semibold ${
-                    tenant.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {tenant.status === 'ACTIVE' ? 'Active' : 'Left'}
-                  </span>
-                  <span className="text-gray-500">
-                    Joined: {new Date(tenant.joiningDate).toLocaleDateString('en-GB')}
-                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                {tenant.roomId && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 font-semibold">
+                    Room {tenant.roomId.roomNumber || tenant.roomId}
+                    {tenant.bedNumber && ` - Bed ${tenant.bedNumber}`}
+                  </span>
+                )}
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 text-green-700 font-semibold">
+                  ₹{tenant.rentAmount}/mo
+                </span>
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-semibold ${
+                  tenant.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {tenant.status === 'ACTIVE' ? 'Active' : 'Left'}
+                </span>
+                <span className="text-gray-400">
+                  {new Date(tenant.joiningDate).toLocaleDateString('en-GB')}
+                </span>
+              </div>
             </div>
-            <h3 className="text-lg font-bold text-gray-700 mb-2">No Tenants Found</h3>
-            <p className="text-sm text-gray-500 text-center max-w-xs">
-              {searchTerm ? 'No tenants match your search.' : 'Add your first tenant to this property.'}
-            </p>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
           </div>
-        )}
-      </div>
+          <h3 className="text-base font-bold text-gray-700 mb-1">No Tenants Found</h3>
+          <p className="text-sm text-gray-500 text-center">
+            {searchTerm ? 'No tenants match your search.' : 'Add your first tenant.'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
