@@ -26,7 +26,14 @@ exports.getAllTenants = async (req, res) => {
 
     const tenants = await Tenant.find(filter)
       .populate('propertyId', 'name location propertyType')
-      .populate('roomId', 'roomNumber floor rentType rentAmount')
+      .populate({
+        path: 'roomId',
+        select: 'roomNumber floor rentType rentAmount propertyId',
+        populate: {
+          path: 'propertyId',
+          select: 'name location propertyType'
+        }
+      })
       .sort({ createdAt: -1 });
     res.status(200).json(tenants);
   } catch (error) {
