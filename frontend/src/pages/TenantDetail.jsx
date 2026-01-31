@@ -92,8 +92,13 @@ function TenantDetail() {
               {tenant.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="min-w-0">
-            <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">{tenant.name}</h1>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-sm sm:text-xl font-bold text-gray-900">{tenant.name}</h1>
+              <a href={`tel:${tenant.mobile}`} className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700">
+                {tenant.mobile}
+              </a>
+            </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ${
@@ -108,74 +113,36 @@ function TenantDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
-          <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-2">Personal</h3>
-          <div className="space-y-2 text-xs sm:text-sm">
-            <div className="flex justify-between gap-2">
-              <span className="text-gray-500">Mobile</span>
-              <a href={`tel:${tenant.mobile}`} className="font-semibold text-blue-600">
-                {tenant.mobile}
-              </a>
-            </div>
-            {tenant.email && (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">Email</span>
-                <span className="font-semibold text-gray-800 truncate">{tenant.email}</span>
-              </div>
-            )}
-            {tenant.adharNo && (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">Aadhar</span>
-                <span className="font-semibold text-gray-800">{tenant.adharNo}</span>
-              </div>
-            )}
-            {tenant.dob && (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">DOB</span>
-                <span className="font-semibold text-gray-800">{formatDate(tenant.dob)}</span>
-              </div>
-            )}
-            {tenant.gender && (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">Gender</span>
-                <span className="font-semibold text-gray-800">{tenant.gender}</span>
-              </div>
-            )}
+      <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
+        <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-2">Room Details</h3>
+        <div className="space-y-2 text-xs sm:text-sm">
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-500">Room</span>
+            <span className="font-semibold text-gray-800">{roomLabel}</span>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
-          <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-2">Room Details</h3>
-          <div className="space-y-2 text-xs sm:text-sm">
+          {tenant.bedNumber && (
             <div className="flex justify-between gap-2">
-              <span className="text-gray-500">Room</span>
-              <span className="font-semibold text-gray-800">{roomLabel}</span>
+              <span className="text-gray-500">Bed</span>
+              <span className="font-semibold text-gray-800">Bed {tenant.bedNumber}</span>
             </div>
-            {tenant.bedNumber && (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">Bed</span>
-                <span className="font-semibold text-gray-800">Bed {tenant.bedNumber}</span>
-              </div>
-            )}
+          )}
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-500">Join Date</span>
+            <span className="font-semibold text-gray-800">{formatDate(tenant.joiningDate)}</span>
+          </div>
+          {tenant.leaveDate && (
             <div className="flex justify-between gap-2">
-              <span className="text-gray-500">Join Date</span>
-              <span className="font-semibold text-gray-800">{formatDate(tenant.joiningDate)}</span>
+              <span className="text-gray-500">Leave Date</span>
+              <span className="font-semibold text-gray-800">{formatDate(tenant.leaveDate)}</span>
             </div>
-            {tenant.leaveDate && (
-              <div className="flex justify-between gap-2">
-                <span className="text-gray-500">Leave Date</span>
-                <span className="font-semibold text-gray-800">{formatDate(tenant.leaveDate)}</span>
-              </div>
-            )}
-            <div className="flex justify-between gap-2">
-              <span className="text-gray-500">Monthly Rent</span>
-              <span className="font-bold text-green-600">₹{Number(tenant.rentAmount || 0).toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between gap-2">
-              <span className="text-gray-500">Advance</span>
-              <span className="font-semibold text-gray-800">₹{Number(tenant.advanceAmount || 0).toLocaleString()}</span>
-            </div>
+          )}
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-500">Monthly Rent</span>
+            <span className="font-bold text-green-600">₹{Number(tenant.rentAmount || 0).toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-gray-500">Advance</span>
+            <span className="font-semibold text-gray-800">₹{Number(tenant.advanceAmount || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -186,7 +153,7 @@ function TenantDetail() {
         {payments.length > 0 ? (
           <div className="space-y-2">
             {payments.map((payment) => {
-              const paymentDate = new Date(payment.month);
+              const paymentDate = new Date(payment.year, payment.month - 1);
               const monthYear = paymentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
               const isPaid = payment.status === 'PAID';
 

@@ -6,73 +6,9 @@ const Tenant = require('../models/Tenant');
 // HELPER FUNCTIONS
 // ========================================
 
-/**
- * Creates next month's payment based on a given payment
- * Used when marking payment as paid to auto-create next month
- */
-const createNextMonthPayment = async (currentPayment) => {
-  try {
-    const tenant = await Tenant.findById(currentPayment.tenantId);
-    if (!tenant) {
-      throw new Error('Tenant not found');
-    }
-
-    // Only create next payment if tenant is still active
-    if (tenant.status !== 'ACTIVE') {
-      console.log(`Tenant ${tenant._id} is not active. Skipping next payment creation.`);
-      return null;
-    }
-
-    // Calculate next month
-    let nextMonth = currentPayment.month + 1;
-    let nextYear = currentPayment.year;
-
-    if (nextMonth > 12) {
-      nextMonth = 1;
-      nextYear += 1;
-    }
-
-    // Check if payment already exists for next month
-    const existingPayment = await Payment.findOne({
-      tenantId: tenant._id,
-      month: nextMonth,
-      year: nextYear,
-    });
-
-    if (existingPayment) {
-      console.log(`Payment for ${nextMonth}/${nextYear} already exists`);
-      return existingPayment;
-    }
-
-    // Get joining date to determine due day
-    const joinDate = new Date(tenant.joiningDate);
-    const dueDay = joinDate.getDate();
-
-    // Calculate due date for next month
-    const dueDate = new Date(nextYear, nextMonth - 1, dueDay);
-
-    const paymentData = {
-      userId: tenant.userId,
-      tenantId: tenant._id,
-      month: nextMonth,
-      year: nextYear,
-      rentAmount: tenant.rentAmount,
-      amountPaid: 0,
-      dueDate: dueDate,
-      status: 'PENDING',
-    };
-
-    const payment = await Payment.create(paymentData);
-    console.log(`Next payment created for tenant ${tenant._id}, Due: ${dueDate.toLocaleDateString()}`);
-    return payment;
-  } catch (error) {
-    console.error('Error creating next month payment:', error);
-    throw error;
-  }
-};
 
 /**
- * Mark payment as paid and auto-create next month's payment
+ * Mark payment as paid (next month payment will be created by cron job 4 days before due)
  */
 const markAsPaidHelper = async (paymentId, paymentDate = new Date()) => {
   const payment = await Payment.findById(paymentId);
@@ -88,13 +24,7 @@ const markAsPaidHelper = async (paymentId, paymentDate = new Date()) => {
 
   console.log(`Payment ${paymentId} marked as PAID`);
 
-  // Auto-create next month's payment
-  try {
-    await createNextMonthPayment(payment);
-  } catch (error) {
-    console.error('Failed to create next month payment:', error.message);
-  }
-
+  // Next month's payment will be auto-created by cron job 4 days before due date
   return payment;
 };
 

@@ -151,29 +151,8 @@ exports.createTenant = async (req, res) => {
           status: 'PAID',
         });
 
-        // Create second month payment (next month) - PENDING
-        let nextMonth = paymentMonth + 1;
-        let nextYear = paymentYear;
-
-        if (nextMonth > 12) {
-          nextMonth = 1;
-          nextYear += 1;
-        }
-
-        const nextMonthDueDate = new Date(nextYear, nextMonth - 1, dueDay);
-
-        await Payment.create({
-          userId: tenantData.userId,
-          tenantId: tenant._id,
-          month: nextMonth,
-          year: nextYear,
-          rentAmount: rent,
-          amountPaid: 0,
-          dueDate: nextMonthDueDate,
-          status: 'PENDING',
-        });
-
-        console.log(`Created payments for tenant ${tenant.name}`);
+        // Next month payment will be auto-created by cron job 4 days before due date
+        console.log(`Created first month payment for tenant ${tenant.name}. Next payment will be created by cron job.`);
       }
     }
 
@@ -192,7 +171,7 @@ exports.updateTenant = async (req, res) => {
   try {
     const {
       userId, name, mobile, email, adharNo, adharImg, photo, dob, gender,
-      propertyId, roomId, bedNumber, rentAmount, advanceAmount, leaveDate, status, notes
+      propertyId, roomId, bedNumber, rentAmount, advanceAmount, joiningDate, leaveDate, status, notes
     } = req.body;
     const tenantId = req.params.id;
 
@@ -274,6 +253,7 @@ exports.updateTenant = async (req, res) => {
       ...(bedNumber !== undefined && { bedNumber: bedNumber || null }),
       ...(rentAmount !== undefined && { rentAmount }),
       ...(advanceAmount !== undefined && { advanceAmount }),
+      ...(joiningDate !== undefined && { joiningDate }),
       ...(leaveDate !== undefined && { leaveDate }),
       ...(status !== undefined && { status }),
       ...(notes !== undefined && { notes }),

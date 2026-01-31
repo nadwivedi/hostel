@@ -86,11 +86,20 @@ function PropertyDetail() {
       setFormData({ ...formData, [name]: numericValue });
     } else if (name === 'roomId') {
       const selectedRoom = rooms.find(r => r._id === value);
+      const rent = selectedRoom ? selectedRoom.rentAmount : '';
       setFormData({
         ...formData,
         roomId: value,
         bedNumber: '',
-        rentAmount: selectedRoom ? selectedRoom.rentAmount : '',
+        rentAmount: rent,
+        advanceAmount: rent ? rent * 2 : '',
+      });
+    } else if (name === 'rentAmount') {
+      const rent = value ? parseFloat(value) : '';
+      setFormData({
+        ...formData,
+        rentAmount: value,
+        advanceAmount: rent ? rent * 2 : '',
       });
     } else {
       setFormData({ ...formData, [name]: value });
