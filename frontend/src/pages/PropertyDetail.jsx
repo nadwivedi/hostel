@@ -1344,7 +1344,7 @@ function PropertyDetail() {
                                       {paymentInfo.month}
                                      </div>
                                    </div>
-                                   <div className="flex items-center gap-0.5 sm:gap-1" onClick={(e) => e.stopPropagation()}>
+                                   <div className="flex items-center gap-2 sm:gap-1" onClick={(e) => e.stopPropagation()}>
                                      <button
                                        onClick={(e) =>
                                          handleMarkPaymentAsPaid(
