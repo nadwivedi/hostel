@@ -215,9 +215,12 @@ Thank you!`;
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-base sm:text-xl font-black text-white drop-shadow-lg">
+                    <div className="bg-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-xl text-center">
+                      <div className="text-xs sm:text-base font-black text-red-600">
                         ₹{propertyData.totalPending.toLocaleString()}
+                      </div>
+                      <div className="text-[8px] sm:text-xs text-red-500 font-medium">
+                        Due: {formatDate(propertyData.payments[0]?.dueDate)}
                       </div>
                     </div>
                   </div>
