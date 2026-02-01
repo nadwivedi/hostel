@@ -190,7 +190,7 @@ Thank you!`;
       <div className="w-full sm:max-w-7xl mx-auto space-y-1.5 sm:space-y-4">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-1 sm:gap-4">
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border-2 border-blue-500 p-1.5 sm:p-5">
+          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-blue-500 p-1.5 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">
@@ -206,7 +206,7 @@ Thank you!`;
             </div>
           </div>
 
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border-2 border-red-500 p-1.5 sm:p-5">
+          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-red-500 p-1.5 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">
