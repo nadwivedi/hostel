@@ -548,15 +548,28 @@ function PropertyDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-1 py-1.5 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-1 pt-1 pb-1.5 sm:p-4">
       <div className="w-full sm:max-w-7xl mx-auto space-y-1.5 sm:space-y-4">
         {/* Header */}
         <div className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 p-2 sm:p-5">
-          <h1 className="text-sm sm:text-2xl font-black text-gray-800">
-            {location.propertyName || location.name}{" "}
-            <span className="text-gray-400 font-bold">-</span>{" "}
-            <span className="font-bold text-gray-500">{location.location}</span>
-          </h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {location.image ? (
+              <img
+                src={`${BACKEND_URL}${location.image}`}
+                alt={location.propertyName || location.name || "Property"}
+                className="w-6 h-6 sm:w-8 sm:h-8 rounded-md object-cover"
+              />
+            ) : (
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-bold">
+                {String(location.propertyName || location.name || "P").charAt(0).toUpperCase()}
+              </div>
+            )}
+            <h1 className="text-sm sm:text-2xl font-black text-gray-800">
+              {location.propertyName || location.name}{" "}
+              <span className="text-gray-400 font-bold">-</span>{" "}
+              <span className="font-bold text-gray-500">{location.location}</span>
+            </h1>
+          </div>
         </div>
 
         {/* Stats Cards */}
