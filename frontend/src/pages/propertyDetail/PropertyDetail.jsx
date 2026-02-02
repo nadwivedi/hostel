@@ -526,6 +526,12 @@ function PropertyDetail() {
     if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
     return String(a.roomNumber).localeCompare(String(b.roomNumber));
   });
+  const overviewRooms = [...rooms].sort((a, b) => {
+    const aNum = Number(a.roomNumber);
+    const bNum = Number(b.roomNumber);
+    if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+    return String(a.roomNumber).localeCompare(String(b.roomNumber));
+  });
 
   if (loading) {
     return (
@@ -769,13 +775,13 @@ function PropertyDetail() {
                   );
 
                   if (sortedBuildings.length === 0) {
-                    return renderRoomGrid(sortedRooms);
+                    return renderRoomGrid(overviewRooms);
                   }
 
                   return (
                     <>
                       {sortedBuildings.map((building) => {
-                        const buildingRooms = sortedRooms.filter((room) => {
+                        const buildingRooms = overviewRooms.filter((room) => {
                           const roomBuildingId = room.buildingId?._id || room.buildingId;
                           return roomBuildingId === building._id;
                         });
@@ -793,10 +799,10 @@ function PropertyDetail() {
                         );
                       })}
 
-                      {sortedRooms.some((room) => !room.buildingId) && (
+                      {overviewRooms.some((room) => !room.buildingId) && (
                         <div className="space-y-2">
                           <div className="text-xs sm:text-sm font-bold text-gray-700">No Building</div>
-                          {renderRoomGrid(sortedRooms.filter((room) => !room.buildingId))}
+                          {renderRoomGrid(overviewRooms.filter((room) => !room.buildingId))}
                         </div>
                       )}
                     </>
