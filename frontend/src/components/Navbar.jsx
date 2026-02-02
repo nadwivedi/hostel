@@ -145,9 +145,7 @@ function Navbar() {
         <div className="p-4 sm:p-5 border-b border-gray-700/50 bg-gradient-to-r from-indigo-900/50 to-purple-900/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-xl sm:text-2xl">🏠</span>
-              </div>
+              <img src="/logo.svg" alt="Hostel Manager" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg" />
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-white">Hostel Manager</h2>
                 <p className="text-xs text-purple-300">Menu</p>
