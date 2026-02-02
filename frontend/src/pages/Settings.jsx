@@ -439,19 +439,19 @@ function Settings() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="space-y-2 sm:space-y-4">
       {/* Properties Management */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 sm:p-6">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg flex items-center justify-center text-white text-xl">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border border-gray-200 p-2.5 sm:p-5">
+        <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-md sm:rounded-lg flex items-center justify-center text-white">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-800">Properties</h2>
-              <p className="text-xs text-gray-500">Manage your properties</p>
+              <h2 className="text-sm sm:text-base font-bold text-gray-800">Properties</h2>
+              <p className="text-[10px] sm:text-xs text-gray-500">Manage your properties</p>
             </div>
           </div>
           <button
@@ -464,13 +464,12 @@ function Settings() {
               setNewBuildingName('');
               setShowPropertyForm(true);
             }}
-            className="px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 text-white rounded-md sm:rounded-lg hover:bg-gray-800 font-semibold text-[11px] sm:text-sm transition flex items-center gap-1"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span className="hidden sm:inline">Add Property</span>
-            <span className="sm:hidden">Add</span>
+            <span>Add</span>
           </button>
         </div>
 
@@ -672,65 +671,60 @@ function Settings() {
         )}
 
         {/* Properties List */}
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           {properties.length > 0 ? (
             properties.map((loc) => {
               const propertyRooms = rooms.filter(r => (r.propertyId?._id || r.propertyId) === loc._id);
               const isExpanded = expandedPropertyId === loc._id;
 
               return (
-                <div key={loc._id} className="border border-gray-200 rounded-lg overflow-hidden">
+                <div key={loc._id} className="border border-gray-200 rounded-md sm:rounded-lg overflow-hidden">
                   {/* Property Header - Clickable to expand/collapse */}
                   <div
-                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 cursor-pointer transition"
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 hover:bg-gray-100 cursor-pointer transition"
                     onClick={() => setExpandedPropertyId(isExpanded ? null : loc._id)}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                       {loc.image ? (
                         <img
                           src={`${BACKEND_URL}${loc.image}`}
                           alt={loc.name || loc.location}
-                          className="w-10 h-10 rounded-lg object-cover"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-blue-100 text-blue-600">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg flex items-center justify-center bg-blue-100 text-blue-600 flex-shrink-0">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                         </div>
                       )}
-                      <div>
-                        <div className="font-semibold text-gray-800 text-sm">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-gray-800 text-xs sm:text-sm truncate">
                           {loc.name || loc.location}
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
+                        <div className="text-[10px] sm:text-xs text-gray-500 flex items-center gap-1 sm:gap-2 mt-0.5">
                           {loc.name && loc.location && (
-                            <>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              </svg>
-                              {loc.location}
-                            </>
+                            <span className="truncate max-w-[100px] sm:max-w-none">{loc.location}</span>
                           )}
-                          <span className="text-blue-600 font-medium">• {propertyRooms.length} rooms</span>
+                          <span className="text-blue-600 font-medium flex-shrink-0">• {propertyRooms.length} rooms</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditProperty(loc);
                         }}
-                        className="px-2 py-1 text-blue-600 hover:bg-blue-100 rounded-lg transition"
+                        className="p-1 sm:p-1.5 text-blue-600 hover:bg-blue-100 rounded-md transition"
                         title="Edit Property"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <svg
-                        className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -744,7 +738,7 @@ function Settings() {
                   {isExpanded && (
                     <div className="border-t border-gray-200 bg-white">
                       {/* Add Room Button */}
-                      <div className="p-3 border-b border-gray-100">
+                      <div className="p-2 sm:p-3 border-b border-gray-100">
                         <button
                           onClick={async () => {
                             setEditingRoom(null);
@@ -762,9 +756,9 @@ function Settings() {
                             });
                             setShowRoomForm(true);
                           }}
-                          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition font-medium text-sm"
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-2 bg-gray-700 text-white rounded-md sm:rounded-lg hover:bg-gray-800 transition font-medium text-xs sm:text-sm"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                           </svg>
                           Add Room
@@ -784,40 +778,34 @@ function Settings() {
                             const renderRooms = (roomsForBuilding) => (
                               <div className="divide-y divide-gray-100">
                                 {roomsForBuilding.map((room) => (
-                                  <div key={room._id} className="p-3 flex items-center justify-between hover:bg-gray-50">
-                                    <div className="flex items-center gap-3">
-                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                  <div key={room._id} className="p-2 sm:p-3 flex items-center justify-between hover:bg-gray-50">
+                                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0 ${
                                         room.status === 'AVAILABLE' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                                       }`}>
-                                        <span className="font-bold">{room.roomNumber}</span>
+                                        <span className="font-bold text-xs sm:text-sm">{room.roomNumber}</span>
                                       </div>
-                                      <div>
-                                        <div className="text-sm font-medium text-gray-800">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-xs sm:text-sm font-medium text-gray-800">
                                           Room {room.roomNumber}
-                                          {room.floor !== undefined && <span className="text-gray-500"> - Floor {room.floor}</span>}
                                         </div>
-                                        <div className="text-xs text-gray-500 flex items-center gap-2">
+                                        <div className="text-[10px] sm:text-xs text-gray-500 flex items-center gap-1 sm:gap-2 flex-wrap">
                                           <span>Rs.{room.rentAmount}</span>
                                           <span className="text-gray-300">|</span>
-                                          <span>{room.rentType === 'PER_BED' ? `${room.beds?.length || 0} beds` : 'Per Room'}</span>
-                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                            room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                          }`}>
-                                            {room.status}
-                                          </span>
+                                          <span>{room.rentType === 'PER_BED' ? `${room.beds?.length || 0} beds` : 'Room'}</span>
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleEditRoom(room);
                                         }}
-                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                        className="p-1 sm:p-1.5 text-blue-600 hover:bg-blue-50 rounded-md transition"
                                         title="Edit"
                                       >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                       </button>
@@ -826,10 +814,10 @@ function Settings() {
                                           e.stopPropagation();
                                           handleDeleteRoom(room);
                                         }}
-                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                        className="p-1 sm:p-1.5 text-red-600 hover:bg-red-50 rounded-md transition"
                                         title="Delete"
                                       >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                       </button>
@@ -840,11 +828,11 @@ function Settings() {
                             );
 
                             if (propertyBuildings.length === 0) {
-                              return <div className="p-3">{renderRooms(propertyRooms)}</div>;
+                              return <div className="p-2 sm:p-3">{renderRooms(propertyRooms)}</div>;
                             }
 
                             return (
-                              <div className="space-y-2 p-3">
+                              <div className="space-y-1.5 sm:space-y-2 p-2 sm:p-3">
                                 {propertyBuildings.map((building) => {
                                   const buildingRooms = propertyRooms.filter((r) => {
                                     const roomBuildingId = r.buildingId?._id || r.buildingId;
@@ -853,22 +841,22 @@ function Settings() {
                                   const key = `${loc._id}:${building._id}`;
                                   const isBuildingExpanded = !!expandedBuildingIds[key];
                                   return (
-                                    <div key={building._id} className="border border-gray-100 rounded-lg overflow-hidden">
+                                    <div key={building._id} className="border border-gray-100 rounded-md sm:rounded-lg overflow-hidden">
                                       <button
                                         type="button"
                                         onClick={() => toggleBuildingExpanded(loc._id, building._id)}
-                                        className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 transition"
+                                        className="w-full flex items-center justify-between p-1.5 sm:p-2 bg-gray-50 hover:bg-gray-100 transition"
                                       >
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-semibold text-gray-700">
+                                        <div className="flex items-center gap-1.5 sm:gap-2">
+                                          <span className="text-[10px] sm:text-xs font-semibold text-gray-700">
                                             {building.name || building.buildingName || 'Building'}
                                           </span>
-                                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                                          <span className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
                                             {buildingRooms.length} rooms
                                           </span>
                                         </div>
                                         <svg
-                                          className={`w-4 h-4 text-gray-400 transition-transform ${isBuildingExpanded ? 'rotate-180' : ''}`}
+                                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 transition-transform ${isBuildingExpanded ? 'rotate-180' : ''}`}
                                           fill="none"
                                           stroke="currentColor"
                                           viewBox="0 0 24 24"
@@ -882,20 +870,20 @@ function Settings() {
                                 })}
 
                                 {roomsWithoutBuilding.length > 0 && (
-                                  <div className="border border-gray-100 rounded-lg overflow-hidden">
+                                  <div className="border border-gray-100 rounded-md sm:rounded-lg overflow-hidden">
                                     <button
                                       type="button"
                                       onClick={() => toggleBuildingExpanded(loc._id, 'no-building')}
-                                      className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 transition"
+                                      className="w-full flex items-center justify-between p-1.5 sm:p-2 bg-gray-50 hover:bg-gray-100 transition"
                                     >
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-xs font-semibold text-gray-700">No Building</span>
-                                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                                      <div className="flex items-center gap-1.5 sm:gap-2">
+                                        <span className="text-[10px] sm:text-xs font-semibold text-gray-700">No Building</span>
+                                        <span className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
                                           {roomsWithoutBuilding.length} rooms
                                         </span>
                                       </div>
                                       <svg
-                                        className={`w-4 h-4 text-gray-400 transition-transform ${expandedBuildingIds[`${loc._id}:no-building`] ? 'rotate-180' : ''}`}
+                                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 transition-transform ${expandedBuildingIds[`${loc._id}:no-building`] ? 'rotate-180' : ''}`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -911,14 +899,13 @@ function Settings() {
                           })()}
                         </div>
                       ) : (
-                        <div className="p-6 text-center">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="p-4 sm:p-6 text-center">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
                           </div>
-                          <p className="text-sm text-gray-500">No rooms added yet</p>
-                          <p className="text-xs text-gray-400 mt-1">Add your first room to this property</p>
+                          <p className="text-xs sm:text-sm text-gray-500">No rooms added yet</p>
                         </div>
                       )}
                     </div>
@@ -927,15 +914,15 @@ function Settings() {
               );
             })
           ) : (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-6 sm:py-8">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-500">No properties added yet</p>
-              <p className="text-xs text-gray-400 mt-1">Add your first property to get started</p>
+              <p className="text-xs sm:text-sm text-gray-500">No properties added yet</p>
+              <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">Add your first property to get started</p>
             </div>
           )}
         </div>
@@ -1110,24 +1097,24 @@ function Settings() {
       )}
 
       {/* Notification Settings */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 sm:p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center text-white text-xl">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border border-gray-200 p-2.5 sm:p-5">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2.5 sm:mb-4">
+          <div className="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-md sm:rounded-lg flex items-center justify-center text-white">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-800">Notification Settings</h2>
-            <p className="text-xs text-gray-500">Manage your notification preferences</p>
+            <h2 className="text-sm sm:text-base font-bold text-gray-800">Notifications</h2>
+            <p className="text-[10px] sm:text-xs text-gray-500">Notification preferences</p>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-md sm:rounded-lg hover:bg-gray-100 transition">
             <div>
-              <div className="font-semibold text-gray-800 text-sm">Email Notifications</div>
-              <div className="text-xs text-gray-500">Receive email updates</div>
+              <div className="font-semibold text-gray-800 text-xs sm:text-sm">Email Notifications</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">Receive email updates</div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1136,14 +1123,14 @@ function Settings() {
                 onChange={(e) => setNotifications({ ...notifications, email: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
             </label>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+          <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-md sm:rounded-lg hover:bg-gray-100 transition">
             <div>
-              <div className="font-semibold text-gray-800 text-sm">Payment Reminders</div>
-              <div className="text-xs text-gray-500">Get reminded about pending payments</div>
+              <div className="font-semibold text-gray-800 text-xs sm:text-sm">Payment Reminders</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">Pending payment alerts</div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1152,14 +1139,14 @@ function Settings() {
                 onChange={(e) => setNotifications({ ...notifications, payment: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
             </label>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+          <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-md sm:rounded-lg hover:bg-gray-100 transition">
             <div>
-              <div className="font-semibold text-gray-800 text-sm">Expiry Alerts</div>
-              <div className="text-xs text-gray-500">Get notified about expiring documents</div>
+              <div className="font-semibold text-gray-800 text-xs sm:text-sm">Expiry Alerts</div>
+              <div className="text-[10px] sm:text-xs text-gray-500">Document expiry notifications</div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1168,70 +1155,65 @@ function Settings() {
                 onChange={(e) => setNotifications({ ...notifications, expiry: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              <div className="w-9 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
             </label>
           </div>
         </div>
       </div>
 
       {/* About */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 sm:p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center text-white text-xl">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border border-gray-200 p-2.5 sm:p-5">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2.5 sm:mb-4">
+          <div className="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-green-500 to-teal-600 rounded-md sm:rounded-lg flex items-center justify-center text-white">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-800">About</h2>
-            <p className="text-xs text-gray-500">App information</p>
+            <h2 className="text-sm sm:text-base font-bold text-gray-800">About</h2>
+            <p className="text-[10px] sm:text-xs text-gray-500">App information</p>
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="text-sm text-gray-600">Version</span>
-            <span className="text-sm font-semibold text-gray-800">2.0.0</span>
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="flex justify-between p-2 sm:p-3 bg-gray-50 rounded-md sm:rounded-lg">
+            <span className="text-xs sm:text-sm text-gray-600">Version</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-800">2.0.0</span>
           </div>
-          <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="text-sm text-gray-600">App Name</span>
-            <span className="text-sm font-semibold text-gray-800">Hostel Manager</span>
+          <div className="flex justify-between p-2 sm:p-3 bg-gray-50 rounded-md sm:rounded-lg">
+            <span className="text-xs sm:text-sm text-gray-600">App Name</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-800">Hostel Manager</span>
           </div>
-          <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-            <span className="text-sm text-gray-600">Developer</span>
-            <span className="text-sm font-semibold text-gray-800">softwarebytes</span>
+          <div className="flex justify-between p-2 sm:p-3 bg-gray-50 rounded-md sm:rounded-lg">
+            <span className="text-xs sm:text-sm text-gray-600">Developer</span>
+            <span className="text-xs sm:text-sm font-semibold text-gray-800">softwarebytes</span>
           </div>
         </div>
       </div>
 
       {/* Logout */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-red-200 p-4 sm:p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-700 rounded-lg flex items-center justify-center text-white text-xl">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border border-red-200 p-2.5 sm:p-5">
+        <div className="flex items-center gap-2 sm:gap-3 mb-2.5 sm:mb-4">
+          <div className="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-red-500 to-red-700 rounded-md sm:rounded-lg flex items-center justify-center text-white">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-800">Logout</h2>
-            <p className="text-xs text-gray-500">Sign out of your account</p>
+            <h2 className="text-sm sm:text-base font-bold text-gray-800">Logout</h2>
+            <p className="text-[10px] sm:text-xs text-gray-500">Sign out of your account</p>
           </div>
         </div>
 
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-xs text-red-800 mb-3">
-            You will be signed out of your account and redirected to the login page.
-          </p>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition font-semibold text-sm shadow-md hover:shadow-lg"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Logout</span>
-          </button>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-md sm:rounded-lg transition font-semibold text-xs sm:text-sm shadow-md"
+        >
+          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Logout</span>
+        </button>
       </div>
     </div>
   );
