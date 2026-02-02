@@ -46,6 +46,7 @@ function Settings() {
     buildingId: '',
   });
   const [expandedPropertyId, setExpandedPropertyId] = useState(null);
+  const [expandedBuildingIds, setExpandedBuildingIds] = useState({});
   const [roomPropertyBuildings, setRoomPropertyBuildings] = useState([]); // Buildings for selected property in room form
 
   useEffect(() => {
@@ -429,6 +430,14 @@ function Settings() {
     navigate('/login');
   };
 
+  const toggleBuildingExpanded = (propertyId, buildingId) => {
+    const key = `${propertyId}:${buildingId}`;
+    setExpandedBuildingIds(prev => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* Properties Management */}
@@ -762,65 +771,144 @@ function Settings() {
                         </button>
                       </div>
 
-                      {/* Rooms List */}
+                      {/* Rooms List - Grouped by Building */}
                       {propertyRooms.length > 0 ? (
                         <div className="divide-y divide-gray-100">
-                          {propertyRooms.map((room) => (
-                            <div key={room._id} className="p-3 flex items-center justify-between hover:bg-gray-50">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                  room.status === 'AVAILABLE' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                                }`}>
-                                  <span className="font-bold">{room.roomNumber}</span>
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium text-gray-800">
-                                    Room {room.roomNumber}
-                                    {room.floor !== undefined && <span className="text-gray-500"> - Floor {room.floor}</span>}
-                                    {room.buildingId && (
-                                      <span className="text-gray-400 text-xs ml-1">({room.buildingId?.name || 'Building'})</span>
-                                    )}
+                          {(() => {
+                            const propertyBuildings = buildings.filter(
+                              (b) => (b.propertyId?._id || b.propertyId) === loc._id,
+                            );
+                            const roomsWithoutBuilding = propertyRooms.filter(
+                              (r) => !r.buildingId,
+                            );
+                            const renderRooms = (roomsForBuilding) => (
+                              <div className="divide-y divide-gray-100">
+                                {roomsForBuilding.map((room) => (
+                                  <div key={room._id} className="p-3 flex items-center justify-between hover:bg-gray-50">
+                                    <div className="flex items-center gap-3">
+                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                        room.status === 'AVAILABLE' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                                      }`}>
+                                        <span className="font-bold">{room.roomNumber}</span>
+                                      </div>
+                                      <div>
+                                        <div className="text-sm font-medium text-gray-800">
+                                          Room {room.roomNumber}
+                                          {room.floor !== undefined && <span className="text-gray-500"> - Floor {room.floor}</span>}
+                                        </div>
+                                        <div className="text-xs text-gray-500 flex items-center gap-2">
+                                          <span>Rs.{room.rentAmount}</span>
+                                          <span className="text-gray-300">|</span>
+                                          <span>{room.rentType === 'PER_BED' ? `${room.beds?.length || 0} beds` : 'Per Room'}</span>
+                                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                            room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                          }`}>
+                                            {room.status}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditRoom(room);
+                                        }}
+                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                        title="Edit"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteRoom(room);
+                                        }}
+                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                        title="Delete"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="text-xs text-gray-500 flex items-center gap-2">
-                                    <span>Rs.{room.rentAmount}</span>
-                                    <span className="text-gray-300">|</span>
-                                    <span>{room.rentType === 'PER_BED' ? `${room.beds?.length || 0} beds` : 'Per Room'}</span>
-                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                      room.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                    }`}>
-                                      {room.status}
-                                    </span>
+                                ))}
+                              </div>
+                            );
+
+                            if (propertyBuildings.length === 0) {
+                              return <div className="p-3">{renderRooms(propertyRooms)}</div>;
+                            }
+
+                            return (
+                              <div className="space-y-2 p-3">
+                                {propertyBuildings.map((building) => {
+                                  const buildingRooms = propertyRooms.filter((r) => {
+                                    const roomBuildingId = r.buildingId?._id || r.buildingId;
+                                    return roomBuildingId === building._id;
+                                  });
+                                  const key = `${loc._id}:${building._id}`;
+                                  const isBuildingExpanded = !!expandedBuildingIds[key];
+                                  return (
+                                    <div key={building._id} className="border border-gray-100 rounded-lg overflow-hidden">
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleBuildingExpanded(loc._id, building._id)}
+                                        className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 transition"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-semibold text-gray-700">
+                                            {building.name || building.buildingName || 'Building'}
+                                          </span>
+                                          <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                                            {buildingRooms.length} rooms
+                                          </span>
+                                        </div>
+                                        <svg
+                                          className={`w-4 h-4 text-gray-400 transition-transform ${isBuildingExpanded ? 'rotate-180' : ''}`}
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                      </button>
+                                      {isBuildingExpanded && renderRooms(buildingRooms)}
+                                    </div>
+                                  );
+                                })}
+
+                                {roomsWithoutBuilding.length > 0 && (
+                                  <div className="border border-gray-100 rounded-lg overflow-hidden">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleBuildingExpanded(loc._id, 'no-building')}
+                                      className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 transition"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-gray-700">No Building</span>
+                                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+                                          {roomsWithoutBuilding.length} rooms
+                                        </span>
+                                      </div>
+                                      <svg
+                                        className={`w-4 h-4 text-gray-400 transition-transform ${expandedBuildingIds[`${loc._id}:no-building`] ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </button>
+                                    {expandedBuildingIds[`${loc._id}:no-building`] && renderRooms(roomsWithoutBuilding)}
                                   </div>
-                                </div>
+                                )}
                               </div>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditRoom(room);
-                                  }}
-                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                                  title="Edit"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteRoom(room);
-                                  }}
-                                  className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                  title="Delete"
-                                >
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })()}
                         </div>
                       ) : (
                         <div className="p-6 text-center">
