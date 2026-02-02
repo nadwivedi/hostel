@@ -16,6 +16,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
+const buildingRoutes = require("./routes/buildingRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,6 +51,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/properties", propertyRoutes);
+app.use("/api/buildings", buildingRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hostel Management API is running" });

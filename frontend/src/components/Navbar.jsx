@@ -24,6 +24,7 @@ function Navbar() {
   // Links shown in hamburger menu (mobile only)
   const hamburgerLinks = [
     { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
+    { path: '/payments', label: 'Payments', icon: '💰', description: 'All Payments' },
     { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
   ];
 

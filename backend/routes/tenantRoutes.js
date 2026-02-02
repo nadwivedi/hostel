@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protectAll } = require('../middleware/authAll');
+const { protect } = require('../middleware/auth');
 const {
   getAllTenants,
   getTenantById,
@@ -9,11 +9,11 @@ const {
   deleteTenant,
 } = require('../controllers/tenantController');
 
-// All routes use protectAll - authorization is handled in controllers
-router.get('/', protectAll, getAllTenants);
-router.get('/:id', protectAll, getTenantById);
-router.post('/', protectAll, createTenant);
-router.patch('/:id', protectAll, updateTenant);
-router.delete('/:id', protectAll, deleteTenant);
+// All routes use protect - authorization is handled in controllers
+router.get('/', protect, getAllTenants);
+router.get('/:id', protect, getTenantById);
+router.post('/', protect, createTenant);
+router.patch('/:id', protect, updateTenant);
+router.delete('/:id', protect, deleteTenant);
 
 module.exports = router;

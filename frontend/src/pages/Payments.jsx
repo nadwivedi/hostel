@@ -196,23 +196,33 @@ function Payments() {
     { value: 12, label: "December" },
   ];
 
-  // Filter payments based on status and search query
-  const filteredPayments = payments.filter((payment) => {
-    const matchesStatus =
-      filterStatus === "ALL" || payment.status === filterStatus;
+  // Filter and sort payments (latest first by _id)
+  const filteredPayments = payments
+    .filter((payment) => {
+      const matchesStatus =
+        filterStatus === "ALL" || payment.status === filterStatus;
 
-    if (!searchQuery) return matchesStatus;
+      if (!searchQuery) return matchesStatus;
 
-    const query = searchQuery.toLowerCase();
-    const tenantName = payment.tenantId?.name?.toLowerCase() || "";
-    const monthLabel =
-      months.find((m) => m.value === payment.month)?.label?.toLowerCase() || "";
+      const query = searchQuery.toLowerCase().trim();
+      const tenantName = payment.tenantId?.name?.toLowerCase() || "";
+      const tenantMobile = payment.tenantId?.mobile || "";
+      const monthLabel =
+        months.find((m) => m.value === payment.month)?.label?.toLowerCase() || "";
+      const rentAmount = payment.rentAmount?.toString() || "";
 
-    return (
-      matchesStatus &&
-      (tenantName.includes(query) || monthLabel.includes(query))
-    );
-  });
+      return (
+        matchesStatus &&
+        (tenantName.includes(query) ||
+         tenantMobile.includes(query) ||
+         monthLabel.includes(query) ||
+         rentAmount.includes(query))
+      );
+    })
+    .sort((a, b) => {
+      // Sort by _id descending (latest first) since MongoDB ObjectId contains timestamp
+      return b._id.localeCompare(a._id);
+    });
 
   // Calculate stats
   const pendingPayments = payments.filter(
@@ -303,7 +313,7 @@ function Payments() {
             <div className="relative flex-1 lg:max-w-md">
               <input
                 type="text"
-                placeholder="Search by tenant name or month..."
+                placeholder="Search name, mobile, month, rent..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-400 transition-all bg-white shadow-sm"
@@ -613,29 +623,18 @@ function Payments() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                      <div className="flex-shrink-0 h-10 w-10 bg-gray-700 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                         {payment.tenantId?.name?.charAt(0).toUpperCase() || "?"}
                       </div>
                       <div className="ml-3">
                         <div className="text-sm font-bold text-gray-900">
                           {payment.tenantId?.name || "N/A"}
                         </div>
-                        <div className="text-xs text-gray-500 flex items-center mt-0.5">
-                          <svg
-                            className="w-3 h-3 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          {months.find((m) => m.value === payment.month)?.label}{" "}
-                          {payment.year}
+                        <div className="text-[10px] text-gray-500 mt-0.5">
+                          {payment.tenantId?.propertyId?.name || "N/A"} • Room {payment.tenantId?.roomId?.roomNumber || "N/A"}
+                        </div>
+                        <div className="text-[10px] text-gray-400">
+                          {months.find((m) => m.value === payment.month)?.label} {payment.year}
                         </div>
                       </div>
                     </div>
@@ -652,56 +651,22 @@ function Payments() {
                     </span>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <div className="text-center p-2 bg-gray-50 rounded-lg">
-                      <div className="text-gray-500">Rent</div>
-                      <div className="font-bold text-gray-800">
-                        Rs.{payment.rentAmount}
-                      </div>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <div className="flex gap-3">
+                      <span className="text-gray-600">Rent: <span className="font-semibold text-gray-800">₹{payment.rentAmount}</span></span>
+                      <span className="text-gray-600">Paid: <span className="font-semibold text-green-600">₹{payment.amountPaid}</span></span>
+                      {payment.rentAmount - payment.amountPaid > 0 && (
+                        <span className="text-gray-600">Due: <span className="font-semibold text-red-600">₹{payment.rentAmount - payment.amountPaid}</span></span>
+                      )}
                     </div>
-                    <div className="text-center p-2 bg-green-50 rounded-lg">
-                      <div className="text-gray-500">Paid</div>
-                      <div className="font-bold text-green-600">
-                        Rs.{payment.amountPaid}
-                      </div>
-                    </div>
-                    <div className="text-center p-2 bg-red-50 rounded-lg">
-                      <div className="text-gray-500">Balance</div>
-                      <div className="font-bold text-red-600">
-                        Rs.{payment.rentAmount - payment.amountPaid}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex gap-2">
                     {payment.status !== "PAID" && (
                       <button
-                        onClick={() =>
-                          handleUpdatePayment(payment._id, payment.amountPaid)
-                        }
-                        className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition cursor-pointer"
+                        onClick={() => handleUpdatePayment(payment._id, payment.amountPaid)}
+                        className="px-2 py-1 bg-green-600 text-white rounded text-[10px] font-medium hover:bg-green-700 transition cursor-pointer"
                       >
-                        Record Payment
+                        Mark Paid
                       </button>
                     )}
-                    <button
-                      onClick={() => handleDelete(payment)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
                   </div>
                 </div>
               ))}

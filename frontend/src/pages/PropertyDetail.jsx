@@ -15,6 +15,8 @@ function PropertyDetail() {
   const [tenants, setTenants] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [selectedBuildingId, setSelectedBuildingId] = useState(null); // null = show all, 'no-building' = rooms without building
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -55,7 +57,7 @@ function PropertyDetail() {
       setLoading(true);
       const config = { withCredentials: true };
 
-      const [locationsRes, tenantsRes, roomsRes, paymentsRes] =
+      const [locationsRes, tenantsRes, roomsRes, paymentsRes, buildingsRes] =
         await Promise.all([
           axios.get(`${BACKEND_URL}/api/properties`, config),
           axios.get(
@@ -70,6 +72,10 @@ function PropertyDetail() {
             `${BACKEND_URL}/api/payments?locationId=${locationId}`,
             config,
           ),
+          axios.get(
+            `${BACKEND_URL}/api/buildings/property/${locationId}`,
+            config,
+          ),
         ]);
 
       const loc = locationsRes.data.find((l) => l._id === locationId);
@@ -77,6 +83,11 @@ function PropertyDetail() {
       setTenants(tenantsRes.data);
       setRooms(roomsRes.data);
       setPayments(paymentsRes.data);
+      setBuildings(buildingsRes.data);
+      // Set first building as default if buildings exist
+      if (buildingsRes.data.length > 0) {
+        setSelectedBuildingId(buildingsRes.data[0]._id);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Error loading property data");
@@ -448,8 +459,20 @@ function PropertyDetail() {
     );
   };
 
-  // Filter rooms based on search
+  // Filter rooms based on search and building
   const filteredRooms = rooms.filter((room) => {
+    // Filter by building first
+    if (selectedBuildingId) {
+      if (selectedBuildingId === 'no-building') {
+        // Show only rooms without a building
+        if (room.buildingId) return false;
+      } else {
+        // Show only rooms in selected building
+        const roomBuildingId = room.buildingId?._id || room.buildingId;
+        if (roomBuildingId !== selectedBuildingId) return false;
+      }
+    }
+
     const roomTenants = getTenantsForRoom(room._id);
     if (searchTerm) {
       const search = searchTerm.toLowerCase().trim();
@@ -1103,6 +1126,32 @@ function PropertyDetail() {
                 alt="Tenant Photo"
                 className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
               />
+            </div>
+          </div>
+        )}
+
+        {/* BUILDING TABS - Only show if property has buildings */}
+        {buildings.length > 0 && (
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-1.5">
+              {buildings.map((building) => {
+                const buildingRoomCount = rooms.filter(
+                  r => (r.buildingId?._id || r.buildingId) === building._id
+                ).length;
+                return (
+                  <button
+                    key={building._id}
+                    onClick={() => setSelectedBuildingId(building._id)}
+                    className={`px-2 py-1 rounded text-[11px] font-medium transition ${
+                      selectedBuildingId === building._id
+                        ? 'bg-gray-800 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {building.name} ({buildingRoomCount})
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

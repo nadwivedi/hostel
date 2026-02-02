@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protectAll } = require('../middleware/authAll');
+const { protect } = require('../middleware/auth');
 const {
   getAllProperties,
   getPropertyById,
@@ -10,12 +10,12 @@ const {
   getPropertyStats,
 } = require('../controllers/propertyController');
 
-// All routes use protectAll - authorization is handled in controllers
-router.get('/', protectAll, getAllProperties);
-router.get('/stats', protectAll, getPropertyStats);
-router.get('/:id', protectAll, getPropertyById);
-router.post('/', protectAll, createProperty);
-router.patch('/:id', protectAll, updateProperty);
-router.delete('/:id', protectAll, deleteProperty);
+// All routes use protect - authorization is handled in controllers
+router.get('/', protect, getAllProperties);
+router.get('/stats', protect, getPropertyStats);
+router.get('/:id', protect, getPropertyById);
+router.post('/', protect, createProperty);
+router.patch('/:id', protect, updateProperty);
+router.delete('/:id', protect, deleteProperty);
 
 module.exports = router;

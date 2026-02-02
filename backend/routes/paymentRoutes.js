@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protectAll } = require('../middleware/authAll');
+const { protect } = require('../middleware/auth');
 const {
   getAllPayments,
   getPaymentById,
@@ -14,16 +14,16 @@ const {
   trackReminder,
 } = require('../controllers/paymentController');
 
-// All routes use protectAll - authorization is handled in controllers
-router.get('/', protectAll, getAllPayments);
-router.get('/upcoming', protectAll, getUpcomingPayments);
-router.get('/overdue', protectAll, getOverduePayments);
-router.get('/tenant/:tenantId', protectAll, getPaymentsByTenant);
-router.get('/:id', protectAll, getPaymentById);
-router.post('/', protectAll, createPayment);
-router.post('/:id/mark-paid', protectAll, markAsPaid);
-router.post('/:id/track-reminder', protectAll, trackReminder);
-router.patch('/:id', protectAll, updatePayment);
-router.delete('/:id', protectAll, deletePayment);
+// All routes use protect - authorization is handled in controllers
+router.get('/', protect, getAllPayments);
+router.get('/upcoming', protect, getUpcomingPayments);
+router.get('/overdue', protect, getOverduePayments);
+router.get('/tenant/:tenantId', protect, getPaymentsByTenant);
+router.get('/:id', protect, getPaymentById);
+router.post('/', protect, createPayment);
+router.post('/:id/mark-paid', protect, markAsPaid);
+router.post('/:id/track-reminder', protect, trackReminder);
+router.patch('/:id', protect, updatePayment);
+router.delete('/:id', protect, deletePayment);
 
 module.exports = router;

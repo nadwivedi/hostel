@@ -33,9 +33,6 @@ const propertySchema = new mongoose.Schema(
   }
 );
 
-// Compound index to ensure property name is unique per user
-propertySchema.index({ userId: 1, name: 1 }, { unique: true });
-
 const Property = mongoose.model('Property', propertySchema);
 
 module.exports = Property;

@@ -28,6 +28,11 @@ const roomSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Property',
     },
+    buildingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Building',
+      default: null,
+    },
     roomNumber: {
       type: String,
       required: true,
@@ -57,8 +62,6 @@ const roomSchema = new mongoose.Schema(
   }
 );
 
-// Compound index to ensure roomNumber is unique per property per user
-roomSchema.index({ userId: 1, propertyId: 1, roomNumber: 1 }, { unique: true });
 
 const Room = mongoose.model('Room', roomSchema);
 

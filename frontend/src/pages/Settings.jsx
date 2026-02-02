@@ -27,6 +27,11 @@ function Settings() {
   const [propertyImage, setPropertyImage] = useState(null);
   const [propertyImagePreview, setPropertyImagePreview] = useState(null);
 
+  // Building state
+  const [buildings, setBuildings] = useState([]);
+  const [propertyBuildings, setPropertyBuildings] = useState([]); // Buildings for current property form
+  const [newBuildingName, setNewBuildingName] = useState('');
+
   // Room state
   const [rooms, setRooms] = useState([]);
   const [showRoomForm, setShowRoomForm] = useState(false);
@@ -38,12 +43,15 @@ function Settings() {
     rentAmount: '',
     numberOfBeds: 0,
     propertyId: '',
+    buildingId: '',
   });
   const [expandedPropertyId, setExpandedPropertyId] = useState(null);
+  const [roomPropertyBuildings, setRoomPropertyBuildings] = useState([]); // Buildings for selected property in room form
 
   useEffect(() => {
     fetchProperties();
     fetchRooms();
+    fetchAllBuildings();
   }, []);
 
   const fetchProperties = async () => {
@@ -68,6 +76,37 @@ function Settings() {
     }
   };
 
+  const fetchAllBuildings = async () => {
+    try {
+      // Fetch buildings for all properties
+      const propertiesRes = await axios.get(`${BACKEND_URL}/api/properties`, {
+        withCredentials: true,
+      });
+      const allBuildings = [];
+      for (const prop of propertiesRes.data) {
+        const buildingsRes = await axios.get(`${BACKEND_URL}/api/buildings/property/${prop._id}`, {
+          withCredentials: true,
+        });
+        allBuildings.push(...buildingsRes.data);
+      }
+      setBuildings(allBuildings);
+    } catch (error) {
+      console.error('Error fetching buildings:', error);
+    }
+  };
+
+  const fetchBuildingsForProperty = async (propertyId) => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/buildings/property/${propertyId}`, {
+        withCredentials: true,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching buildings:', error);
+      return [];
+    }
+  };
+
   // Property handlers
   const handlePropertyChange = (e) => {
     const { name, value } = e.target;
@@ -77,7 +116,7 @@ function Settings() {
     });
   };
 
-  const handleEditProperty = (prop) => {
+  const handleEditProperty = async (prop) => {
     setEditingProperty(prop);
     setPropertyFormData({
       name: prop.name,
@@ -86,6 +125,10 @@ function Settings() {
     });
     setPropertyImage(null);
     setPropertyImagePreview(prop.image ? `${BACKEND_URL}${prop.image}` : null);
+    // Fetch existing buildings for this property
+    const existingBuildings = await fetchBuildingsForProperty(prop._id);
+    setPropertyBuildings(existingBuildings);
+    setNewBuildingName('');
     setShowPropertyForm(true);
   };
 
@@ -138,16 +181,55 @@ function Settings() {
         image: imageUrl,
       };
 
+      let propertyId;
       if (editingProperty) {
         await axios.patch(`${BACKEND_URL}/api/properties/${editingProperty._id}`, propertyPayload, {
           withCredentials: true,
         });
+        propertyId = editingProperty._id;
         toast.success('Property updated successfully!');
       } else {
-        await axios.post(`${BACKEND_URL}/api/properties`, { userId, ...propertyPayload }, {
+        const res = await axios.post(`${BACKEND_URL}/api/properties`, { userId, ...propertyPayload }, {
           withCredentials: true,
         });
+        propertyId = res.data.data?._id || res.data._id;
         toast.success('Property added successfully!');
+      }
+
+      // Handle buildings - add new ones, delete removed ones
+      if (propertyId) {
+        // Get existing buildings for this property
+        const existingBuildings = editingProperty ? await fetchBuildingsForProperty(propertyId) : [];
+
+        // Delete buildings that were removed
+        for (const existing of existingBuildings) {
+          if (!propertyBuildings.some(b => b._id === existing._id)) {
+            try {
+              await axios.delete(`${BACKEND_URL}/api/buildings/${existing._id}`, {
+                withCredentials: true,
+              });
+            } catch (err) {
+              console.error('Error deleting building:', err);
+            }
+          }
+        }
+
+        // Add new buildings
+        for (const building of propertyBuildings) {
+          if (building.isNew) {
+            try {
+              await axios.post(`${BACKEND_URL}/api/buildings`, {
+                propertyId,
+                name: building.name,
+                userId,
+              }, {
+                withCredentials: true,
+              });
+            } catch (err) {
+              console.error('Error creating building:', err);
+            }
+          }
+        }
       }
 
       setShowPropertyForm(false);
@@ -155,7 +237,10 @@ function Settings() {
       setPropertyFormData({ name: '', location: '', propertyType: 'hostel' });
       setPropertyImage(null);
       setPropertyImagePreview(null);
+      setPropertyBuildings([]);
+      setNewBuildingName('');
       fetchProperties();
+      fetchAllBuildings();
     } catch (error) {
       console.error('Error saving property:', error);
       toast.error(error.response?.data?.message || 'Error saving property');
@@ -168,27 +253,71 @@ function Settings() {
     setPropertyFormData({ name: '', location: '', propertyType: 'hostel' });
     setPropertyImage(null);
     setPropertyImagePreview(null);
+    setPropertyBuildings([]);
+    setNewBuildingName('');
+  };
+
+  // Building handlers for property form
+  const handleAddBuildingToList = () => {
+    if (!newBuildingName.trim()) return;
+    // Check if building name already exists
+    if (propertyBuildings.some(b => b.name.toLowerCase() === newBuildingName.trim().toLowerCase())) {
+      toast.error('Building name already exists');
+      return;
+    }
+    setPropertyBuildings([...propertyBuildings, { name: newBuildingName.trim(), isNew: true }]);
+    setNewBuildingName('');
+  };
+
+  const handleRemoveBuildingFromList = (index) => {
+    const building = propertyBuildings[index];
+    // Check if building has rooms before removing
+    if (building._id) {
+      const buildingRooms = rooms.filter(r => r.buildingId?._id === building._id || r.buildingId === building._id);
+      if (buildingRooms.length > 0) {
+        toast.error(`Cannot remove ${building.name}. It has ${buildingRooms.length} room(s).`);
+        return;
+      }
+    }
+    setPropertyBuildings(propertyBuildings.filter((_, i) => i !== index));
   };
 
   // Room handlers
-  const handleRoomChange = (e) => {
+  const handleRoomChange = async (e) => {
     const { name, value } = e.target;
     setRoomFormData({
       ...roomFormData,
       [name]: value,
     });
+
+    // If property changed, fetch buildings for that property
+    if (name === 'propertyId' && value) {
+      const propBuildings = await fetchBuildingsForProperty(value);
+      setRoomPropertyBuildings(propBuildings);
+      // Reset buildingId if property changed
+      setRoomFormData(prev => ({ ...prev, propertyId: value, buildingId: '' }));
+    }
   };
 
-  const handleEditRoom = (room) => {
+  const handleEditRoom = async (room) => {
     setEditingRoom(room);
+    const propertyId = room.propertyId?._id || room.propertyId || '';
     setRoomFormData({
       roomNumber: room.roomNumber,
       floor: room.floor || '',
       rentType: room.rentType,
       rentAmount: room.rentAmount,
       numberOfBeds: room.beds?.length || 0,
-      propertyId: room.propertyId?._id || room.propertyId || '',
+      propertyId: propertyId,
+      buildingId: room.buildingId?._id || room.buildingId || '',
     });
+    // Fetch buildings for this property
+    if (propertyId) {
+      const propBuildings = await fetchBuildingsForProperty(propertyId);
+      setRoomPropertyBuildings(propBuildings);
+    } else {
+      setRoomPropertyBuildings([]);
+    }
     setShowRoomForm(true);
   };
 
@@ -240,6 +369,7 @@ function Settings() {
         rentAmount: parseFloat(roomFormData.rentAmount),
         beds: beds,
         propertyId: roomFormData.propertyId,
+        buildingId: roomFormData.buildingId || null,
       };
 
       if (editingRoom) {
@@ -289,7 +419,9 @@ function Settings() {
       rentAmount: '',
       numberOfBeds: 0,
       propertyId: '',
+      buildingId: '',
     });
+    setRoomPropertyBuildings([]);
   };
 
   const handleLogout = async () => {
@@ -319,6 +451,8 @@ function Settings() {
               setPropertyFormData({ name: '', location: '', propertyType: 'hostel' });
               setPropertyImage(null);
               setPropertyImagePreview(null);
+              setPropertyBuildings([]);
+              setNewBuildingName('');
               setShowPropertyForm(true);
             }}
             className="px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5"
@@ -448,6 +582,63 @@ function Settings() {
                     <option value="shop">🏪 Shop</option>
                   </select>
                 </div>
+
+                {/* Buildings Section */}
+                <div className="border-t border-gray-200 pt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Buildings <span className="text-gray-400 text-xs font-normal">(Optional - for large properties)</span>
+                  </label>
+
+                  {/* Add Building Input */}
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={newBuildingName}
+                      onChange={(e) => setNewBuildingName(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddBuildingToList())}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-sm"
+                      placeholder="e.g., Building A, Block 1"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddBuildingToList}
+                      className="px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition text-sm font-medium"
+                    >
+                      Add
+                    </button>
+                  </div>
+
+                  {/* Buildings List */}
+                  {propertyBuildings.length > 0 ? (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {propertyBuildings.map((building, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 bg-gray-700 text-white rounded flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </span>
+                            <span className="text-sm font-medium text-gray-700">{building.name}</span>
+                            {building.isNew && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-green-100 text-green-700 rounded">New</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBuildingFromList(index)}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-400 text-center py-2">No buildings added. Rooms will be directly under property.</p>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button
                     type="button"
@@ -546,8 +737,11 @@ function Settings() {
                       {/* Add Room Button */}
                       <div className="p-3 border-b border-gray-100">
                         <button
-                          onClick={() => {
+                          onClick={async () => {
                             setEditingRoom(null);
+                            // Fetch buildings for this property
+                            const propBuildings = await fetchBuildingsForProperty(loc._id);
+                            setRoomPropertyBuildings(propBuildings);
                             setRoomFormData({
                               roomNumber: '',
                               floor: '',
@@ -555,6 +749,7 @@ function Settings() {
                               rentAmount: '',
                               numberOfBeds: 0,
                               propertyId: loc._id,
+                              buildingId: '',
                             });
                             setShowRoomForm(true);
                           }}
@@ -582,6 +777,9 @@ function Settings() {
                                   <div className="text-sm font-medium text-gray-800">
                                     Room {room.roomNumber}
                                     {room.floor !== undefined && <span className="text-gray-500"> - Floor {room.floor}</span>}
+                                    {room.buildingId && (
+                                      <span className="text-gray-400 text-xs ml-1">({room.buildingId?.name || 'Building'})</span>
+                                    )}
                                   </div>
                                   <div className="text-xs text-gray-500 flex items-center gap-2">
                                     <span>Rs.{room.rentAmount}</span>
@@ -684,11 +882,35 @@ function Settings() {
                   <option value="">Select Property</option>
                   {properties.map((loc) => (
                     <option key={loc._id} value={loc._id}>
-                      {loc.propertyName || loc.location}
+                      {loc.name || loc.location}
                     </option>
                   ))}
                 </select>
               </div>
+
+              {/* Building Dropdown - Only show if property has buildings */}
+              {roomPropertyBuildings.length > 0 && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Building <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="buildingId"
+                    value={roomFormData.buildingId}
+                    onChange={handleRoomChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500"
+                  >
+                    <option value="">Select Building</option>
+                    {roomPropertyBuildings.map((building) => (
+                      <option key={building._id} value={building._id}>
+                        {building.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
