@@ -452,13 +452,16 @@ function PropertyDetail() {
   const filteredRooms = rooms.filter((room) => {
     const roomTenants = getTenantsForRoom(room._id);
     if (searchTerm) {
-      return roomTenants.some(
-        (t) =>
-          t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          t.mobile.includes(searchTerm),
+      // Search in tenant names/mobiles or room number
+      return (
+        roomTenants.some(
+          (t) =>
+            t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            t.mobile.includes(searchTerm),
+        ) || room.roomNumber?.toString().includes(searchTerm)
       );
     }
-    return roomTenants.length > 0;
+    return true; // Show all rooms including empty ones
   });
 
   if (loading) {
@@ -1104,12 +1107,11 @@ function PropertyDetail() {
         <div className="space-y-2 sm:space-y-5">
           {filteredRooms.map((room) => {
             const roomTenants = getTenantsForRoom(room._id);
-            if (roomTenants.length === 0) return null;
-
             const isPerBed = room.rentType === "PER_BED";
             const isExpanded = !!expandedRooms[room._id];
-            const totalBedsInRoom = room.beds?.length || roomTenants.length;
+            const totalBedsInRoom = room.beds?.length || 1;
             const remainingBeds = Math.max(totalBedsInRoom - 1, 0);
+            const isEmpty = roomTenants.length === 0;
             const visibleTenants =
               isPerBed && !isExpanded ? roomTenants.slice(0, 1) : roomTenants;
 
@@ -1126,7 +1128,7 @@ function PropertyDetail() {
                 className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
               >
                 {/* ROOM HEADER - DOMINANT */}
-                <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 p-2 sm:p-6">
+                <div className={`p-2 sm:p-6 ${isEmpty ? "bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500" : "bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-4">
                       <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-2xl flex items-center justify-center border border-white/30 shadow-md">
@@ -1160,7 +1162,19 @@ function PropertyDetail() {
                 {/* TENANTS LIST - SECONDARY DOMINANCE */}
                 <div className="p-1.5 sm:p-4 bg-gradient-to-br from-gray-50 to-white">
                   <div className="space-y-1.5 sm:space-y-3">
-                    {visibleTenants.map((tenant, index) => {
+                    {isEmpty ? (
+                      <div
+                        onClick={() => navigate(`/add-tenant?propertyId=${locationId}&roomId=${room._id}`)}
+                        className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-emerald-200 p-2 sm:p-3 flex items-center justify-between cursor-pointer hover:bg-emerald-100 transition-colors"
+                      >
+                        <div className="text-xs sm:text-sm font-bold text-emerald-700">Empty Room</div>
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-emerald-500 text-white rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </div>
+                      </div>
+                    ) : visibleTenants.map((tenant, index) => {
                       const paymentInfo = getTenantPaymentInfo(tenant._id);
 
                       return (
@@ -1404,7 +1418,7 @@ function PropertyDetail() {
             })}
           </div>
 
-        {filteredRooms.length === 0 && (
+        {filteredRooms.length === 0 && !searchTerm && (
           <div className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-12 flex flex-col items-center justify-center">
             <div className="w-12 h-12 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-4">
               <svg
