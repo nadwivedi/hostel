@@ -689,7 +689,7 @@ function Settings() {
                       {loc.image ? (
                         <img
                           src={`${BACKEND_URL}${loc.image}`}
-                          alt={loc.propertyName || loc.location}
+                          alt={loc.name || loc.location}
                           className="w-10 h-10 rounded-lg object-cover"
                         />
                       ) : (
@@ -701,10 +701,10 @@ function Settings() {
                       )}
                       <div>
                         <div className="font-semibold text-gray-800 text-sm">
-                          {loc.propertyName || loc.location}
+                          {loc.name || loc.location}
                         </div>
                         <div className="text-xs text-gray-500 flex items-center gap-2 mt-0.5">
-                          {loc.propertyName && (
+                          {loc.name && loc.location && (
                             <>
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -970,7 +970,7 @@ function Settings() {
                   <option value="">Select Property</option>
                   {properties.map((loc) => (
                     <option key={loc._id} value={loc._id}>
-                      {loc.name || loc.location}
+                      {loc.name}{loc.location ? ` - ${loc.location}` : ''}
                     </option>
                   ))}
                 </select>
