@@ -169,7 +169,14 @@ function TenantFormModal({
                       ? "Select Building First"
                       : "Select Room"}
                   </option>
-                  {formRooms.map((room) => {
+                  {[...formRooms]
+                    .sort((a, b) => {
+                      const aNum = Number(a.roomNumber);
+                      const bNum = Number(b.roomNumber);
+                      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+                      return String(a.roomNumber).localeCompare(String(b.roomNumber));
+                    })
+                    .map((room) => {
                     const availableCount =
                       room.rentType === "PER_BED"
                         ? room.beds?.filter((b) => b.status === "AVAILABLE")
