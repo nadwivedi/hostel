@@ -23,6 +23,7 @@ function PropertyDetail() {
   const [showForm, setShowForm] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
   const [showRoomsGrid, setShowRoomsGrid] = useState(false);
+  const [showBedsGrid, setShowBedsGrid] = useState(false);
   const [selectedFormBuildingId, setSelectedFormBuildingId] = useState("");
   const [aadharFile, setAadharFile] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -396,14 +397,14 @@ function PropertyDetail() {
   const activeTenants = tenants.filter((t) => t.status === "ACTIVE").length;
   const totalRooms = rooms.length;
   const totalBeds = rooms.reduce(
-    (acc, r) => acc + (r.beds?.length || (r.rentType === "PER_ROOM" ? 1 : 0)),
+    (acc, r) => acc + (r.rentType === "PER_BED" ? r.beds?.length || 0 : 0),
     0,
   );
   const occupiedBeds = rooms.reduce((acc, r) => {
     if (r.rentType === "PER_BED") {
       return acc + (r.beds?.filter((b) => b.status === "OCCUPIED").length || 0);
     }
-    return acc + (r.status === "OCCUPIED" ? 1 : 0);
+    return acc;
   }, 0);
   const pendingPayments = payments
     .filter((p) => p.status !== "PAID")
@@ -602,7 +603,11 @@ function PropertyDetail() {
             </div>
           </button>
 
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-purple-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
+          <button
+            type="button"
+            onClick={() => setShowBedsGrid(true)}
+            className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-purple-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform text-left"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">
@@ -616,7 +621,7 @@ function PropertyDetail() {
                 <span className="text-xs sm:text-2xl">🛏️</span>
               </div>
             </div>
-          </div>
+          </button>
 
           <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-red-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
@@ -803,6 +808,123 @@ function PropertyDetail() {
                         <div className="space-y-2">
                           <div className="text-xs sm:text-sm font-bold text-gray-700">No Building</div>
                           {renderRoomGrid(overviewRooms.filter((room) => !room.buildingId))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showBedsGrid && (
+          <div
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4"
+            onClick={() => setShowBedsGrid(false)}
+          >
+            <div
+              className="bg-white rounded-lg sm:rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gray-800 text-white p-3 sm:p-4 flex items-center justify-between">
+                <div className="text-sm sm:text-lg font-bold">Beds Overview</div>
+                <button
+                  onClick={() => setShowBedsGrid(false)}
+                  className="text-gray-300 hover:text-white transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-2 sm:p-4 overflow-y-auto max-h-[80vh] space-y-3 sm:space-y-4">
+                {(() => {
+                  const perBedRooms = overviewRooms.filter((r) => r.rentType === "PER_BED");
+                  const renderRoomBeds = (roomsList) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                      {roomsList.map((room) => {
+                        const occupiedCount =
+                          room.beds?.filter((b) => b.status === "OCCUPIED").length || 0;
+                        const totalCount = room.beds?.length || 0;
+                        const isFull = totalCount > 0 && occupiedCount === totalCount;
+                        return (
+                          <div
+                            key={room._id}
+                            className={`rounded-lg sm:rounded-xl border p-2.5 sm:p-3 shadow-sm ${
+                              isFull
+                                ? "bg-gradient-to-br from-red-50 via-white to-red-50 border-red-200"
+                                : occupiedCount === 0
+                                  ? "bg-gradient-to-br from-emerald-50 via-white to-emerald-50 border-emerald-200"
+                                  : "bg-gradient-to-br from-amber-50 via-white to-amber-50 border-amber-200"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-xs sm:text-sm font-black text-gray-800">
+                                Room {room.roomNumber}
+                              </div>
+                              <div className="text-[10px] sm:text-xs font-bold text-gray-600 bg-white/80 border border-gray-200 rounded-full px-2 py-0.5">
+                                {occupiedCount}/{totalCount} beds
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                              {(room.beds || []).map((bed) => (
+                                <div
+                                  key={bed.bedNumber}
+                                  className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-semibold border ${
+                                    bed.status === "OCCUPIED"
+                                      ? "bg-red-100 border-red-200 text-red-700"
+                                      : "bg-emerald-100 border-emerald-200 text-emerald-700"
+                                  }`}
+                                >
+                                  Bed {bed.bedNumber}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+
+                  const sortedBuildings = [...buildings].sort((a, b) =>
+                    (a.name || "").localeCompare(b.name || "", "en", {
+                      numeric: true,
+                      sensitivity: "base",
+                    }),
+                  );
+
+                  if (sortedBuildings.length === 0) {
+                    return perBedRooms.length > 0
+                      ? renderRoomBeds(perBedRooms)
+                      : <div className="text-sm text-gray-500">No bed-system rooms</div>;
+                  }
+
+                  return (
+                    <>
+                      {sortedBuildings.map((building) => {
+                        const buildingRooms = perBedRooms.filter((room) => {
+                          const roomBuildingId = room.buildingId?._id || room.buildingId;
+                          return roomBuildingId === building._id;
+                        });
+                        return (
+                          <div key={building._id} className="space-y-2">
+                            <div className="text-xs sm:text-sm font-bold text-gray-700">
+                              {building.name || building.buildingName || "Building"}
+                            </div>
+                            {buildingRooms.length > 0 ? (
+                              renderRoomBeds(buildingRooms)
+                            ) : (
+                              <div className="text-[11px] text-gray-400">No bed-system rooms</div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {perBedRooms.some((room) => !room.buildingId) && (
+                        <div className="space-y-2">
+                          <div className="text-xs sm:text-sm font-bold text-gray-700">No Building</div>
+                          {renderRoomBeds(perBedRooms.filter((room) => !room.buildingId))}
                         </div>
                       )}
                     </>
