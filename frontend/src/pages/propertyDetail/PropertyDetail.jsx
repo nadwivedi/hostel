@@ -22,6 +22,7 @@ function PropertyDetail() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [showRoomsGrid, setShowRoomsGrid] = useState(false);
   const [selectedFormBuildingId, setSelectedFormBuildingId] = useState("");
   const [aadharFile, setAadharFile] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
@@ -575,7 +576,11 @@ function PropertyDetail() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-1 sm:gap-4">
-          <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-blue-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
+          <button
+            type="button"
+            onClick={() => setShowRoomsGrid(true)}
+            className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-blue-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform text-left"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[7px] sm:text-xs font-bold text-gray-500 uppercase">
@@ -589,7 +594,7 @@ function PropertyDetail() {
                 <span className="text-xs sm:text-2xl">🏠</span>
               </div>
             </div>
-          </div>
+          </button>
 
           <div className="bg-white rounded-md sm:rounded-2xl shadow-sm border border-purple-500 p-1.5 sm:p-5 transform hover:scale-105 transition-transform">
             <div className="flex items-center justify-between">
@@ -694,6 +699,113 @@ function PropertyDetail() {
           photoPreview={photoPreview}
           BACKEND_URL={BACKEND_URL}
         />
+
+        {showRoomsGrid && (
+          <div
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4"
+            onClick={() => setShowRoomsGrid(false)}
+          >
+            <div
+              className="bg-white rounded-lg sm:rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-gray-800 text-white p-3 sm:p-4 flex items-center justify-between">
+                <div className="text-sm sm:text-lg font-bold">Rooms Overview</div>
+                <button
+                  onClick={() => setShowRoomsGrid(false)}
+                  className="text-gray-300 hover:text-white transition"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-2 sm:p-4 overflow-y-auto max-h-[80vh] space-y-3 sm:space-y-4">
+                {(() => {
+                  const renderRoomGrid = (roomsList) => (
+                    <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-1.5 sm:gap-2">
+                      {roomsList.map((room) => {
+                        const totalBedsInRoom = room.beds?.length || 1;
+                        const occupiedBedsInRoom = room.rentType === "PER_BED"
+                          ? (room.beds?.filter((b) => b.status === "OCCUPIED").length || 0)
+                          : room.status === "OCCUPIED"
+                            ? 1
+                            : 0;
+                        const isFull = room.rentType === "PER_BED"
+                          ? occupiedBedsInRoom >= totalBedsInRoom
+                          : room.status === "OCCUPIED";
+                        const isEmpty = room.rentType === "PER_BED"
+                          ? occupiedBedsInRoom === 0
+                          : room.status === "AVAILABLE";
+                        const statusLabel = room.rentType === "PER_BED"
+                          ? `${occupiedBedsInRoom}/${totalBedsInRoom}`
+                          : isFull
+                            ? "Full"
+                            : "Empty";
+                        return (
+                          <div
+                            key={room._id}
+                            className={`rounded-md sm:rounded-lg border p-1.5 sm:p-2 text-center ${
+                              isFull
+                                ? "bg-red-50 border-red-200 text-red-700"
+                                : isEmpty
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                  : "bg-yellow-50 border-yellow-200 text-yellow-700"
+                            }`}
+                          >
+                            <div className="text-[10px] sm:text-xs font-bold">Room {room.roomNumber}</div>
+                            <div className="text-[9px] sm:text-[11px] font-semibold mt-0.5">{statusLabel}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+
+                  const sortedBuildings = [...buildings].sort((a, b) =>
+                    (a.name || "").localeCompare(b.name || "", "en", {
+                      numeric: true,
+                      sensitivity: "base",
+                    }),
+                  );
+
+                  if (sortedBuildings.length === 0) {
+                    return renderRoomGrid(sortedRooms);
+                  }
+
+                  return (
+                    <>
+                      {sortedBuildings.map((building) => {
+                        const buildingRooms = sortedRooms.filter((room) => {
+                          const roomBuildingId = room.buildingId?._id || room.buildingId;
+                          return roomBuildingId === building._id;
+                        });
+                        return (
+                          <div key={building._id} className="space-y-2">
+                            <div className="text-xs sm:text-sm font-bold text-gray-700">
+                              {building.name || building.buildingName || "Building"}
+                            </div>
+                            {buildingRooms.length > 0 ? (
+                              renderRoomGrid(buildingRooms)
+                            ) : (
+                              <div className="text-[11px] text-gray-400">No rooms</div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {sortedRooms.some((room) => !room.buildingId) && (
+                        <div className="space-y-2">
+                          <div className="text-xs sm:text-sm font-bold text-gray-700">No Building</div>
+                          {renderRoomGrid(sortedRooms.filter((room) => !room.buildingId))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Photo Preview Modal */}
         {previewPhoto && (
