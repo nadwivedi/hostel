@@ -452,14 +452,18 @@ function PropertyDetail() {
   const filteredRooms = rooms.filter((room) => {
     const roomTenants = getTenantsForRoom(room._id);
     if (searchTerm) {
-      // Search in tenant names/mobiles or room number
-      return (
-        roomTenants.some(
-          (t) =>
-            t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.mobile.includes(searchTerm),
-        ) || room.roomNumber?.toString().includes(searchTerm)
+      const search = searchTerm.toLowerCase().trim();
+      // Search in tenant names/mobiles
+      const matchesTenant = roomTenants.some(
+        (t) =>
+          t.name.toLowerCase().includes(search) ||
+          t.mobile.includes(search),
       );
+      // Search by room number
+      const matchesRoomNumber = room.roomNumber?.toString().includes(search);
+      // Search by rent amount
+      const matchesRent = room.rentAmount?.toString().includes(search);
+      return matchesTenant || matchesRoomNumber || matchesRent;
     }
     return true; // Show all rooms including empty ones
   });
@@ -555,7 +559,7 @@ function PropertyDetail() {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Search name or mobile..."
+                placeholder="Search name, room, rent..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-7 sm:pl-10 pr-2 py-2 sm:py-2.5 text-xs sm:text-sm border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all bg-white font-medium"
