@@ -674,7 +674,14 @@ function Settings() {
         <div className="space-y-1.5 sm:space-y-2">
           {properties.length > 0 ? (
             properties.map((loc) => {
-              const propertyRooms = rooms.filter(r => (r.propertyId?._id || r.propertyId) === loc._id);
+              const propertyRooms = rooms
+                .filter(r => (r.propertyId?._id || r.propertyId) === loc._id)
+                .sort((a, b) => {
+                  // Extract numbers from room numbers for numerical sorting
+                  const numA = parseInt(a.roomNumber.replace(/\D/g, '')) || 0;
+                  const numB = parseInt(b.roomNumber.replace(/\D/g, '')) || 0;
+                  return numA - numB;
+                });
               const isExpanded = expandedPropertyId === loc._id;
 
               return (
