@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
 import Tenants from './pages/Tenants';
-import PropertyDetail from './pages/PropertyDetail';
+import PropertyDetail from './pages/propertyDetail/PropertyDetail';
 import TenantDetail from './pages/TenantDetail';
 import Payments from './pages/Payments';
 import Settings from './pages/Settings';
