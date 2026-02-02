@@ -148,63 +148,63 @@ function Properties() {
                 </div>
 
                 {/* Bottom Stats Strip */}
-                <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-3 sm:px-4 py-2 sm:py-3">
+                <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-2 sm:px-4 py-1.5 sm:py-3">
                   <div className="flex items-center justify-between text-white">
                     {/* Rooms */}
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-5 h-5 sm:w-8 sm:h-8 bg-blue-500/20 rounded-md sm:rounded-lg flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm sm:text-lg font-bold">{propStats.rooms}</div>
-                        <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Rooms</div>
+                        <div className="text-[10px] sm:text-lg font-bold">{propStats.rooms}</div>
+                        <div className="text-[7px] sm:text-[10px] text-gray-400 uppercase">Rooms</div>
                       </div>
                     </div>
 
                     {/* Divider */}
-                    <div className="w-px h-6 sm:h-10 bg-gray-600"></div>
+                    <div className="w-px h-5 sm:h-10 bg-gray-600"></div>
 
                     {/* Tenants */}
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-5 h-5 sm:w-8 sm:h-8 bg-green-500/20 rounded-md sm:rounded-lg flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm sm:text-lg font-bold">{propStats.tenants}</div>
-                        <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Tenants</div>
+                        <div className="text-[10px] sm:text-lg font-bold">{propStats.tenants}</div>
+                        <div className="text-[7px] sm:text-[10px] text-gray-400 uppercase">Tenants</div>
                       </div>
                     </div>
 
                     {/* Divider */}
-                    <div className="w-px h-6 sm:h-10 bg-gray-600"></div>
+                    <div className="w-px h-5 sm:h-10 bg-gray-600"></div>
 
                     {/* Available */}
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className="w-5 h-5 sm:w-8 sm:h-8 bg-purple-500/20 rounded-md sm:rounded-lg flex items-center justify-center">
+                        <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm sm:text-lg font-bold">{propStats.availableBeds}</div>
-                        <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Available</div>
+                        <div className="text-[10px] sm:text-lg font-bold">{propStats.availableBeds}</div>
+                        <div className="text-[7px] sm:text-[10px] text-gray-400 uppercase">Available</div>
                       </div>
                     </div>
 
                     {/* Divider */}
-                    <div className="w-px h-6 sm:h-10 bg-gray-600"></div>
+                    <div className="w-px h-5 sm:h-10 bg-gray-600"></div>
 
                     {/* Occupancy */}
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center ${
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <div className={`w-5 h-5 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center ${
                         occupancyRate >= 80 ? 'bg-green-500/20' :
                         occupancyRate >= 50 ? 'bg-yellow-500/20' : 'bg-red-500/20'
                       }`}>
-                        <svg className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                        <svg className={`w-2.5 h-2.5 sm:w-4 sm:h-4 ${
                           occupancyRate >= 80 ? 'text-green-400' :
                           occupancyRate >= 50 ? 'text-yellow-400' : 'text-red-400'
                         }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,11 +213,11 @@ function Properties() {
                         </svg>
                       </div>
                       <div>
-                        <div className={`text-sm sm:text-lg font-bold ${
+                        <div className={`text-[10px] sm:text-lg font-bold ${
                           occupancyRate >= 80 ? 'text-green-400' :
                           occupancyRate >= 50 ? 'text-yellow-400' : 'text-red-400'
                         }`}>{occupancyRate}%</div>
-                        <div className="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Occupancy</div>
+                        <div className="text-[7px] sm:text-[10px] text-gray-400 uppercase">Occupancy</div>
                       </div>
                     </div>
                   </div>
