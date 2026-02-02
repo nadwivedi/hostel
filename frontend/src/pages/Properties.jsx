@@ -119,18 +119,18 @@ function Properties() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
                   {/* Property Type Badge */}
-                  <div className={`absolute top-2 left-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-lg ${typeConfig.color} text-white flex items-center gap-1`}>
-                    <span className="text-xs sm:text-sm">{typeConfig.icon}</span>
+                  <div className={`absolute top-1.5 left-1.5 sm:top-2 sm:left-2 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-full text-[8px] sm:text-xs font-bold shadow-lg ${typeConfig.color} text-white flex items-center gap-0.5 sm:gap-1`}>
+                    <span className="text-[10px] sm:text-sm">{typeConfig.icon}</span>
                     <span>{typeConfig.label}</span>
                   </div>
 
                   {/* Property Name on Image */}
-                  <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4">
-                    <h3 className="text-base sm:text-xl sm:text-2xl font-bold text-white drop-shadow-lg truncate">
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-4">
+                    <h3 className="text-xs sm:text-2xl font-bold text-white drop-shadow-lg truncate">
                       {property.name}
                     </h3>
-                    <p className="text-[11px] sm:text-sm text-white/90 flex items-center mt-0.5 sm:mt-1 drop-shadow">
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <p className="text-[9px] sm:text-sm text-white/90 flex items-center mt-0.5 drop-shadow">
+                      <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -139,12 +139,11 @@ function Properties() {
                   </div>
 
                   {/* Occupancy Badge */}
-                  <div className={`absolute top-2 right-2 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-lg ${
+                  <div className={`absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-full text-[8px] sm:text-xs font-bold shadow-lg ${
                     occupancyRate >= 80 ? 'bg-green-500 text-white' :
                     occupancyRate >= 50 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
                   }`}>
-                    {occupancyRate}% Occupied
-                  </div>
+                    {occupancyRate}%</div>
                 </div>
 
                 {/* Bottom Stats Strip */}
