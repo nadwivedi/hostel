@@ -10,6 +10,7 @@ exports.getBuildingsByProperty = async (req, res) => {
 
     const buildings = await Building.find(filter)
       .populate('propertyId', 'name')
+      .collation({ locale: 'en', numericOrdering: true })
       .sort({ name: 1 });
 
     res.status(200).json(buildings);

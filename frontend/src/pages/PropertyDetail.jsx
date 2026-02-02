@@ -1198,7 +1198,14 @@ function PropertyDetail() {
         {buildings.length > 0 && (
           <div className="mb-3">
             <div className="flex flex-wrap gap-1.5">
-              {buildings.map((building) => {
+              {[...buildings]
+                .sort((a, b) =>
+                  (a.name || "").localeCompare(b.name || "", "en", {
+                    numeric: true,
+                    sensitivity: "base",
+                  }),
+                )
+                .map((building) => {
                 const buildingRoomCount = rooms.filter(
                   r => (r.buildingId?._id || r.buildingId) === building._id
                 ).length;
