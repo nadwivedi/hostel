@@ -1132,7 +1132,7 @@ function PropertyDetail() {
                 className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
               >
                 {/* ROOM HEADER - DOMINANT */}
-                <div className={`p-2 sm:p-6 ${isEmpty ? "bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500" : "bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600"}`}>
+                <div className={`p-2 sm:p-6 ${isEmpty ? "bg-gradient-to-r from-green-700 via-green-800 to-green-900" : "bg-gradient-to-r from-gray-700 via-gray-800 to-black"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 sm:gap-4">
                       <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-2xl flex items-center justify-center border border-white/30 shadow-md">
