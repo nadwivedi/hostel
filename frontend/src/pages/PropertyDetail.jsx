@@ -518,6 +518,13 @@ function PropertyDetail() {
     return true; // Show all rooms including empty ones
   });
 
+  const sortedRooms = [...filteredRooms].sort((a, b) => {
+    const aNum = Number(a.roomNumber);
+    const bNum = Number(b.roomNumber);
+    if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+    return String(a.roomNumber).localeCompare(String(b.roomNumber));
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
@@ -1213,41 +1220,9 @@ function PropertyDetail() {
           </div>
         )}
 
-        {/* ROOM LIST - QUICK NAV */}
-        {filteredRooms.length > 0 && (
-          <div className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 p-2 sm:p-4">
-            <div className="text-[11px] sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2">
-              Rooms
-            </div>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              {[...filteredRooms]
-                .sort((a, b) => {
-                  const aNum = Number(a.roomNumber);
-                  const bNum = Number(b.roomNumber);
-                  if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
-                  return String(a.roomNumber).localeCompare(String(b.roomNumber));
-                })
-                .map((room) => (
-                  <button
-                    key={room._id}
-                    type="button"
-                    onClick={() => {
-                      const el = document.getElementById(`room-${room._id}`);
-                      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
-                    className="px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-[10px] sm:text-xs font-semibold hover:bg-gray-200 transition"
-                    title={`Room ${room.roomNumber}`}
-                  >
-                    {room.roomNumber}
-                  </button>
-                ))}
-            </div>
-          </div>
-        )}
-
         {/* ROOM-WISE DISPLAY */}
         <div className="space-y-2 sm:space-y-5">
-          {filteredRooms.map((room) => {
+          {sortedRooms.map((room) => {
             const roomTenants = getTenantsForRoom(room._id);
             const isPerBed = room.rentType === "PER_BED";
             const isExpanded = !!expandedRooms[room._id];
@@ -1267,7 +1242,6 @@ function PropertyDetail() {
             return (
               <div
                 key={room._id}
-                id={`room-${room._id}`}
                 className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
               >
                 {/* ROOM HEADER - DOMINANT */}
