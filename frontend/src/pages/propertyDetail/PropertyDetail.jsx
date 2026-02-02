@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { toast } from "../App";
-import { useAuth } from "../context/AuthContext";
-import TenantFormModal from "./propertyDetail/components/TenantFormModal";
+import { toast } from "../../App";
+import { useAuth } from "../../context/AuthContext";
+import TenantFormModal from "./components/TenantFormModal";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
