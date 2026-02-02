@@ -21,6 +21,7 @@ function PropertyDetail() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
+  const [selectedFormBuildingId, setSelectedFormBuildingId] = useState("");
   const [aadharFile, setAadharFile] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [aadharPreview, setAadharPreview] = useState(null);
@@ -115,6 +116,15 @@ function PropertyDetail() {
         rentAmount: rent,
         advanceAmount: rent ? rent * 2 : "",
       });
+    } else if (name === "buildingId") {
+      setSelectedFormBuildingId(value);
+      setFormData({
+        ...formData,
+        roomId: "",
+        bedNumber: "",
+        rentAmount: "",
+        advanceAmount: "",
+      });
     } else if (name === "rentAmount") {
       const rent = value ? parseFloat(value) : "";
       setFormData({
@@ -182,11 +192,16 @@ function PropertyDetail() {
   };
 
   const handleEdit = (tenant) => {
+    const tenantRoomId = tenant.roomId?._id || tenant.roomId || "";
+    const tenantRoom = rooms.find((r) => r._id === tenantRoomId);
+    const tenantBuildingId =
+      tenantRoom?.buildingId?._id || tenantRoom?.buildingId || "";
     setEditingTenant(tenant);
     setAadharFile(null);
     setPhotoFile(null);
     setAadharPreview(null);
     setPhotoPreview(null);
+    setSelectedFormBuildingId(tenantBuildingId);
     setFormData({
       name: tenant.name,
       mobile: tenant.mobile,
@@ -196,7 +211,7 @@ function PropertyDetail() {
       photo: tenant.photo || "",
       dob: tenant.dob ? new Date(tenant.dob).toISOString().split("T")[0] : "",
       gender: tenant.gender || "",
-      roomId: tenant.roomId?._id || tenant.roomId || "",
+      roomId: tenantRoomId,
       bedNumber: tenant.bedNumber || "",
       rentAmount: tenant.rentAmount || "",
       advanceAmount: tenant.advanceAmount || "",
@@ -350,6 +365,7 @@ function PropertyDetail() {
     setAadharPreview(null);
     setPhotoPreview(null);
     setShowAdditionalDetails(false);
+    setSelectedFormBuildingId("");
     setFormData({
       name: "",
       mobile: "",
@@ -394,6 +410,17 @@ function PropertyDetail() {
   const selectedRoom = rooms.find((r) => r._id === formData.roomId);
   const availableBeds =
     selectedRoom?.beds?.filter((b) => b.status === "AVAILABLE") || [];
+  const hasBuildings = buildings.length > 0;
+  const roomsWithoutBuilding = rooms.filter((room) => !room.buildingId);
+  const formRooms = rooms.filter((room) => {
+    if (!hasBuildings) return true;
+    if (!selectedFormBuildingId) return false;
+    if (selectedFormBuildingId === "no-building") {
+      return !room.buildingId;
+    }
+    const roomBuildingId = room.buildingId?._id || room.buildingId;
+    return roomBuildingId === selectedFormBuildingId;
+  });
 
   // Get payment info for a tenant (pending or last paid)
   const getTenantPaymentInfo = (tenantId) => {
@@ -722,6 +749,31 @@ function PropertyDetail() {
                     Room Assignment
                   </h3>
                   <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                    {hasBuildings && (
+                      <div className="col-span-2">
+                        <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
+                          Building <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="buildingId"
+                          value={selectedFormBuildingId}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                        >
+                          <option value="">Select Building</option>
+                          {buildings.map((building) => (
+                            <option key={building._id} value={building._id}>
+                              {building.name || building.buildingName || "Building"}
+                            </option>
+                          ))}
+                          {roomsWithoutBuilding.length > 0 && (
+                            <option value="no-building">No Building</option>
+                          )}
+                        </select>
+                      </div>
+                    )}
+
                     {/* Room row - full width */}
                     <div className="col-span-2">
                       <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
@@ -732,10 +784,15 @@ function PropertyDetail() {
                         value={formData.roomId}
                         onChange={handleChange}
                         required
+                        disabled={hasBuildings && !selectedFormBuildingId}
                         className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
                       >
-                        <option value="">Select Room</option>
-                        {rooms.map((room) => {
+                        <option value="">
+                          {hasBuildings && !selectedFormBuildingId
+                            ? "Select Building First"
+                            : "Select Room"}
+                        </option>
+                        {formRooms.map((room) => {
                           const availableCount =
                             room.rentType === "PER_BED"
                               ? room.beds?.filter(
