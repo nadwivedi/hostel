@@ -2,6 +2,7 @@ function ConfirmModal({
   open,
   title = "Are you sure?",
   message = "",
+  details = [],
   confirmText = "Confirm",
   cancelText = "Cancel",
   loading = false,
@@ -24,6 +25,20 @@ function ConfirmModal({
 
         <div className="p-4 sm:p-5">
           <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{message}</p>
+
+          {details.length > 0 && (
+            <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-1.5">
+              {details.map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-3 text-sm"
+                >
+                  <span className="text-gray-500">{item.label}</span>
+                  <span className="font-semibold text-gray-800 text-right">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="mt-4 sm:mt-5 flex items-center justify-end gap-2">
             <button

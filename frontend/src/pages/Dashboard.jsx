@@ -379,12 +379,37 @@ Thank you!`;
       <ConfirmModal
         open={Boolean(confirmPayment)}
         title="Mark Payment as Done?"
-        message={
+        message="Are you sure you want to mark payment as done?"
+        details={
           confirmPayment
-            ? `Are you sure you want to mark ${
-                confirmPayment.tenant?.name || "this tenant"
-              }'s payment as done?`
-            : ""
+            ? [
+                {
+                  label: "Property",
+                  value:
+                    confirmPayment.tenant?.propertyId?.name ||
+                    confirmPayment.tenant?.roomId?.propertyId?.name ||
+                    "Unknown Property",
+                },
+                {
+                  label: "Room",
+                  value: confirmPayment.tenant?.roomId?.roomNumber
+                    ? `Room ${confirmPayment.tenant.roomId.roomNumber}${
+                        confirmPayment.tenant?.bedNumber
+                          ? ` - Bed ${confirmPayment.tenant.bedNumber}`
+                          : ""
+                      }`
+                    : "N/A",
+                },
+                {
+                  label: "Name",
+                  value: confirmPayment.tenant?.name || "Unknown",
+                },
+                {
+                  label: "Rent Amount",
+                  value: `Rs ${(confirmPayment.rentAmount || 0).toLocaleString()}`,
+                },
+              ]
+            : []
         }
         confirmText="Yes, Mark Done"
         cancelText="Cancel"
