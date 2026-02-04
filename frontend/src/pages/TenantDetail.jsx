@@ -154,7 +154,7 @@ function TenantDetail() {
           <div className="space-y-2">
             {payments.map((payment) => {
               const paymentDate = new Date(payment.year, payment.month - 1);
-              const monthYear = paymentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+              const monthYear = paymentDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
               const isPaid = payment.status === 'PAID';
 
               return (
