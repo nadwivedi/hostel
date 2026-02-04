@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from '../App';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Tenants() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [tenants, setTenants] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -408,16 +410,6 @@ function Tenants() {
                 <option value="ACTIVE">Active</option>
                 <option value="COMPLETED">Left</option>
               </select>
-              <button
-                onClick={() => setShowForm(true)}
-                className="px-4 lg:px-6 py-3 bg-gray-700 text-white rounded-xl hover:shadow-xl font-bold text-sm transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="hidden lg:inline">Add Tenant</span>
-                <span className="lg:hidden">Add</span>
-              </button>
             </div>
           </div>
         </div>
@@ -749,14 +741,21 @@ function Tenants() {
         {/* Mobile Card View */}
         <div className="block lg:hidden">
           {filteredTenants.length > 0 ? (
-            <div className="divide-y divide-gray-100">
+            <div className="p-3 space-y-3">
               {filteredTenants.map((tenant) => (
-                <div key={tenant._id} className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
+                <div
+                  key={tenant._id}
+                  onClick={() => navigate(`/tenant/${tenant._id}`, { state: { from: '/tenants' } })}
+                  className="p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 cursor-pointer"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {tenant.photo ? (
                         <button
-                          onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`);
+                          }}
                           className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
                         >
                           <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
@@ -777,19 +776,19 @@ function Tenants() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleEdit(tenant)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Edit">
+                      <button onClick={(e) => { e.stopPropagation(); handleEdit(tenant); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Edit">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       {tenant.status === 'ACTIVE' && (
-                        <button onClick={() => handleMarkAsLeft(tenant)} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer" title="Mark as Left">
+                        <button onClick={(e) => { e.stopPropagation(); handleMarkAsLeft(tenant); }} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer" title="Mark as Left">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                           </svg>
                         </button>
                       )}
-                      <button onClick={() => handleDelete(tenant)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(tenant); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -832,103 +831,92 @@ function Tenants() {
           )}
         </div>
 
-        {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Name</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Mobile</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Location</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Room</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase">Status</th>
-                <th className="px-4 py-4 text-center text-sm font-bold text-white uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredTenants.length > 0 ? (
-                filteredTenants.map((tenant) => (
-                  <tr key={tenant._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center">
-                        {tenant.photo ? (
-                          <button
-                            onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
-                            className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
-                          >
-                            <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
-                          </button>
-                        ) : (
-                          <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
-                            {tenant.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <div className="ml-4">
-                          <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
+        {/* Desktop Card View */}
+        <div className="hidden lg:block p-4">
+          {filteredTenants.length > 0 ? (
+            <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredTenants.map((tenant) => (
+                <div
+                  key={tenant._id}
+                  onClick={() => navigate(`/tenant/${tenant._id}`, { state: { from: '/tenants' } })}
+                  className="p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {tenant.photo ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`);
+                          }}
+                          className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
+                        >
+                          <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
+                        </button>
+                      ) : (
+                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                          {tenant.name.charAt(0).toUpperCase()}
                         </div>
+                      )}
+                      <div className="ml-3">
+                        <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
+                        <div className="text-xs text-gray-500">{tenant.mobile}</div>
                       </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-700 font-medium">{tenant.mobile}</td>
-                    <td className="px-4 py-4 text-sm text-gray-600">
-                      {tenant.locationId?.propertyName || tenant.locationId?.location || '-'}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600">
-                      {tenant.roomId ? (
-                        <span>
-                          Room {tenant.roomId.roomNumber || tenant.roomId}
-                          {tenant.bedNumber && ` - Bed ${tenant.bedNumber}`}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex items-center px-3 py-1.5 rounded-lg font-semibold text-xs ${
-                        tenant.status === 'ACTIVE' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'
-                      }`}>
-                        {tenant.status === 'ACTIVE' ? 'Active' : 'Left'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => handleEdit(tenant)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Edit">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        {tenant.status === 'ACTIVE' && (
-                          <button onClick={() => handleMarkAsLeft(tenant)} className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer" title="Mark as Left">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                          </button>
-                        )}
-                        <button onClick={() => handleDelete(tenant)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="px-6 py-16">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-700 mb-2">No Tenants Found</h3>
-                      <p className="text-sm text-gray-500 text-center max-w-xs">
-                        {searchTerm ? 'No tenants match your search criteria.' : 'Get started by adding your first tenant.'}
-                      </p>
                     </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <div className="flex items-center gap-1">
+                      <button onClick={(e) => { e.stopPropagation(); handleEdit(tenant); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Edit">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      {tenant.status === 'ACTIVE' && (
+                        <button onClick={(e) => { e.stopPropagation(); handleMarkAsLeft(tenant); }} className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200 cursor-pointer" title="Mark as Left">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                        </button>
+                      )}
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(tenant); }} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    {tenant.locationId && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                        {tenant.locationId.propertyName || tenant.locationId.location}
+                      </span>
+                    )}
+                    {tenant.roomId && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-lg bg-purple-100 text-purple-700 font-semibold">
+                        Room {tenant.roomId.roomNumber || tenant.roomId}
+                        {tenant.bedNumber && ` - Bed ${tenant.bedNumber}`}
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-lg font-semibold ${
+                      tenant.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {tenant.status === 'ACTIVE' ? 'Active' : 'Left'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">No Tenants Found</h3>
+              <p className="text-sm text-gray-500 text-center max-w-xs">
+                {searchTerm ? 'No tenants match your search criteria.' : 'Get started by adding your first tenant.'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
