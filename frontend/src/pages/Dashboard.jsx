@@ -4,8 +4,6 @@ import axios from "axios";
 import { toast } from "../App";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const DEFAULT_PROPERTY_IMAGE =
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3QgZmlsbD0iIzJlMmUyZSIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiLz48cGF0aCBmaWxsPSIjYjViNWI1IiBkPSJNNTAgOTBsNTAtNDAgNTAgNDB2NjBINTB6Ii8+PHBhdGggZmlsbD0iI2YyZjJmMiIgZD0iTTc1IDk1aDI1djU1SDc1eiIvPjwvc3ZnPg==";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -200,9 +198,6 @@ Thank you!`;
               const status = getPaymentStatus(payment);
               const propertyInfo = tenant?.propertyId || tenant?.roomId?.propertyId;
               const propertyName = propertyInfo?.name || "Unknown Property";
-              const propertyImage = propertyInfo?.image
-                ? `${BACKEND_URL}${propertyInfo.image}`
-                : DEFAULT_PROPERTY_IMAGE;
               const roomNumber = tenant?.roomId?.roomNumber;
               const bedNumber = tenant?.bedNumber;
 
@@ -216,15 +211,7 @@ Thank you!`;
                   <div className="bg-gradient-to-r from-black via-gray-800 to-gray-700">
                     <div className="flex items-stretch justify-between min-h-[68px] sm:min-h-[92px]">
                       <div className="flex items-stretch gap-2 sm:gap-3">
-                        <img
-                          src={propertyImage}
-                          alt={propertyName}
-                          className="w-[88px] sm:w-[120px] h-full object-cover shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.src = DEFAULT_PROPERTY_IMAGE;
-                          }}
-                        />
-                        <div className="py-2 sm:py-3 flex flex-col justify-center">
+                        <div className="py-2 sm:py-3 px-2 sm:px-3 flex flex-col justify-center">
                           <h2 className="text-[12px] sm:text-xl font-bold text-white drop-shadow-lg leading-tight">
                             {propertyName}
                           </h2>
