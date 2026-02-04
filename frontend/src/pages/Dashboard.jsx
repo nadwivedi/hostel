@@ -211,14 +211,14 @@ Thank you!`;
                   <div className="bg-gradient-to-r from-gray-800 to-gray-700 p-2 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-7 h-7 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 shadow-md">
-                          <span className="text-sm sm:text-xl">🏠</span>
-                        </div>
+                        {/* <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 shadow-md">
+                          <span className="text-[18px] sm:text-xl">🏠</span>
+                        </div> */}
                         <div>
                           <h2 className="text-[12px] sm:text-xl font-black text-white drop-shadow-lg">
                             {propertyName}
                           </h2>
-                          <div className="inline-flex items-center mt-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-300 text-black text-[11px] sm:text-sm font-black tracking-wide ring-2 ring-white/80 shadow-md shadow-black/25">
+                          <div className="inline-flex items-center mt-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-300 text-black text-[10px] sm:text-sm font-black tracking-wide ring-2 ring-white/80 shadow-md shadow-black/25">
                             {roomNumber ? `ROOM ${roomNumber}` : "ROOM N/A"}
                             {bedNumber ? ` • BED ${bedNumber}` : ""}
                           </div>
@@ -241,11 +241,11 @@ Thank you!`;
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-xs sm:text-base font-black text-gray-900">
+                          <span className="text-[11px] sm:text-base font-black text-gray-900">
                             {tenant?.name || "Unknown"}
                           </span>
                           <span
-                            className={`px-1 py-0.5 rounded text-[8px] sm:text-[10px] font-bold ${status.color}`}
+                            className={`px-1 py-0.5 rounded text-[9px] sm:text-[10px] font-bold ${status.color}`}
                           >
                             {status.label}
                           </span>
