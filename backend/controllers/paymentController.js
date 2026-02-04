@@ -122,6 +122,62 @@ exports.getAllPayments = async (req, res) => {
   }
 };
 
+// Get pending dashboard payments with tenant/property details (only pending/partial)
+exports.getDashboardPendingPayments = async (req, res) => {
+  try {
+    const filter = {
+      status: { $in: ['PENDING', 'PARTIAL'] },
+    };
+
+    // Non-admin users should only see their own payments
+    if (!req.isAdmin) {
+      filter.userId = req.user._id;
+    }
+
+    const pendingPayments = await Payment.find(filter)
+      .populate({
+        path: 'tenantId',
+        select: 'name mobile bedNumber propertyId roomId',
+        populate: [
+          {
+            path: 'propertyId',
+            select: 'name location propertyType',
+          },
+          {
+            path: 'roomId',
+            select: 'roomNumber floor propertyId',
+            populate: {
+              path: 'propertyId',
+              select: 'name location propertyType',
+            },
+          },
+        ],
+      })
+      .sort({ dueDate: 1 });
+
+    const totalAmount = pendingPayments.reduce(
+      (sum, payment) => sum + Math.max(0, (payment.rentAmount || 0) - (payment.amountPaid || 0)),
+      0
+    );
+
+    const data = pendingPayments.map((payment) => ({
+      ...payment.toObject(),
+      tenant: payment.tenantId,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data,
+      stats: {
+        totalPending: data.length,
+        totalAmount,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Get single payment
 exports.getPaymentById = async (req, res) => {
   try {

@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect } = require('../middleware/auth');
 const {
   getAllPayments,
+  getDashboardPendingPayments,
   getPaymentById,
   getPaymentsByTenant,
   createPayment,
@@ -16,6 +17,7 @@ const {
 
 // All routes use protect - authorization is handled in controllers
 router.get('/', protect, getAllPayments);
+router.get('/dashboard/pending', protect, getDashboardPendingPayments);
 router.get('/upcoming', protect, getUpcomingPayments);
 router.get('/overdue', protect, getOverduePayments);
 router.get('/tenant/:tenantId', protect, getPaymentsByTenant);

@@ -21,40 +21,18 @@ function Dashboard() {
   const fetchPendingPayments = async () => {
     try {
       setLoading(true);
-      const config = { withCredentials: true };
-
-      const [paymentsRes, tenantsRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/payments`, config),
-        axios.get(`${BACKEND_URL}/api/tenants`, config),
-      ]);
-
-      // Filter pending payments and enrich with tenant data
-      const pending = paymentsRes.data
-        .filter((p) => p.status === "PENDING" || p.status === "PARTIAL")
-        .map((payment) => {
-          const tenant = tenantsRes.data.find(
-            (t) =>
-              t._id === payment.tenantId?._id || t._id === payment.tenantId,
-          );
-          return {
-            ...payment,
-            tenant: tenant || payment.tenantId,
-          };
-        })
-        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-
-      setPendingPayments(pending);
-
-      // Calculate stats
-      const totalAmount = pending.reduce(
-        (acc, p) => acc + (p.rentAmount - (p.amountPaid || 0)),
-        0,
+      const { data } = await axios.get(
+        `${BACKEND_URL}/api/payments/dashboard/pending`,
+        { withCredentials: true },
       );
 
-      setStats({
-        totalPending: pending.length,
-        totalAmount,
-      });
+      setPendingPayments(data?.data || []);
+      setStats(
+        data?.stats || {
+          totalPending: 0,
+          totalAmount: 0,
+        },
+      );
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Error loading payments");
