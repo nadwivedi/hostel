@@ -394,6 +394,31 @@ function PropertyDetail() {
     }));
   };
 
+  const handleAddTenant = (room) => {
+    const buildingId = room.buildingId?._id || room.buildingId || "";
+    const rent = room.rentAmount || "";
+    const advanceAmount = rent ? rent * 2 : "";
+    
+    setSelectedFormBuildingId(buildingId);
+    setFormData({
+      name: "",
+      mobile: "",
+      email: "",
+      adharNo: "",
+      adharImg: "",
+      photo: "",
+      dob: "",
+      gender: "",
+      roomId: room._id,
+      bedNumber: "",
+      rentAmount: rent,
+      advanceAmount: advanceAmount,
+      joiningDate: new Date().toISOString().split("T")[0],
+      notes: "",
+    });
+    setShowForm(true);
+  };
+
   const activeTenants = tenants.filter((t) => t.status === "ACTIVE").length;
   const totalRooms = rooms.length;
   const totalBeds = rooms.reduce(
@@ -1066,7 +1091,7 @@ function PropertyDetail() {
                   <div className="space-y-1.5 sm:space-y-3">
                     {isEmpty ? (
                       <div
-                        onClick={() => navigate(`/add-tenant?propertyId=${locationId}&roomId=${room._id}`)}
+                        onClick={() => handleAddTenant(room)}
                         className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-emerald-200 p-2 sm:p-3 flex items-center justify-between cursor-pointer hover:bg-emerald-100 transition-colors"
                       >
                         <div className="text-xs sm:text-sm font-bold text-emerald-700">Empty Room</div>
