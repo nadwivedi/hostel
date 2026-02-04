@@ -225,7 +225,7 @@ Thank you!`;
                         <div className="text-xs sm:text-base font-black text-red-600">
                           Rs {amount.toLocaleString()}
                         </div>
-                        <div className="text-[8px] sm:text-xs text-red-500 font-medium">
+                        <div className="text-[9px] sm:text-xs text-red-500 font-medium">
                           Due: {formatDate(payment.dueDate)}
                         </div>
                       </div>
