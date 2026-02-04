@@ -24,7 +24,9 @@ function ConfirmModal({
         </div>
 
         <div className="p-4 sm:p-5">
-          <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{message}</p>
+          <p className="text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap text-center bg-yellow-100 border border-yellow-300 rounded-md px-2 py-1">
+            {message}
+          </p>
 
           {details.length > 0 && (
             <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-1.5">
