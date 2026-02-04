@@ -4,6 +4,8 @@ import axios from "axios";
 import { toast } from "../App";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const DEFAULT_PROPERTY_IMAGE =
+  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3QgZmlsbD0iIzJlMmUyZSIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiLz48cGF0aCBmaWxsPSIjYjViNWI1IiBkPSJNNTAgOTBsNTAtNDAgNTAgNDB2NjBINTB6Ii8+PHBhdGggZmlsbD0iI2YyZjJmMiIgZD0iTTc1IDk1aDI1djU1SDc1eiIvPjwvc3ZnPg==";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -198,6 +200,9 @@ Thank you!`;
               const status = getPaymentStatus(payment);
               const propertyInfo = tenant?.propertyId || tenant?.roomId?.propertyId;
               const propertyName = propertyInfo?.name || "Unknown Property";
+              const propertyImage = propertyInfo?.image
+                ? `${BACKEND_URL}${propertyInfo.image}`
+                : DEFAULT_PROPERTY_IMAGE;
               const roomNumber = tenant?.roomId?.roomNumber;
               const bedNumber = tenant?.bedNumber;
 
@@ -208,25 +213,30 @@ Thank you!`;
                   onClick={() => navigate(`/tenant/${tenant?._id}`)}
                 >
                   {/* Card Header with Property, Room, Amount & Due Date */}
-                  <div className="bg-gradient-to-r from-gray-800 to-gray-700 p-2 sm:p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {/* <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 shadow-md">
-                          <span className="text-[18px] sm:text-xl">🏠</span>
-                        </div> */}
-                        <div>
-                          <h2 className="text-[12px] sm:text-xl font-bold text-white drop-shadow-lg">
+                  <div className="bg-gradient-to-r from-black via-gray-800 to-gray-700">
+                    <div className="flex items-stretch justify-between min-h-[68px] sm:min-h-[92px]">
+                      <div className="flex items-stretch gap-2 sm:gap-3">
+                        <img
+                          src={propertyImage}
+                          alt={propertyName}
+                          className="w-[88px] sm:w-[120px] h-full object-cover shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.src = DEFAULT_PROPERTY_IMAGE;
+                          }}
+                        />
+                        <div className="py-2 sm:py-3 flex flex-col justify-center">
+                          <h2 className="text-[12px] sm:text-xl font-bold text-white drop-shadow-lg leading-tight">
                             {propertyName}
                           </h2>
                           <div className="inline-flex items-center mt-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-300 text-black text-[10px] sm:text-sm font-semibold tracking-wide ring-2 ring-white/80 shadow-md shadow-black/25">
                             {roomNumber ? `ROOM ${roomNumber}` : "ROOM N/A"}
-                            {bedNumber ? ` • BED ${bedNumber}` : ""}
+                            {bedNumber ? ` - BED ${bedNumber}` : ""}
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md sm:rounded-xl text-center">
+                      <div className="bg-white px-2 py-1 sm:px-3 sm:py-1.5 m-2 sm:m-3 rounded-md sm:rounded-xl text-center self-center">
                         <div className="text-xs sm:text-base font-black text-red-600">
-                          ₹{amount.toLocaleString()}
+                          Rs {amount.toLocaleString()}
                         </div>
                         <div className="text-[8px] sm:text-xs text-red-500 font-medium">
                           Due: {formatDate(payment.dueDate)}

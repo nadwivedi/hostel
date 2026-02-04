@@ -2,6 +2,28 @@ const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// On Windows/OneDrive, recently written files can be temporarily locked.
+const safeUnlink = async (filePath, retries = 5, delayMs = 120) => {
+  if (!filePath) return;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      await fs.promises.unlink(filePath);
+      return;
+    } catch (error) {
+      if (error.code === 'ENOENT') return;
+
+      const shouldRetry = error.code === 'EBUSY' || error.code === 'EPERM';
+      if (!shouldRetry || attempt === retries) {
+        throw error;
+      }
+      await wait(delayMs * (attempt + 1));
+    }
+  }
+};
+
 // Upload Aadhar image
 const uploadAadharImage = async (req, res) => {
   try {
@@ -69,8 +91,12 @@ const uploadPhotoImage = async (req, res) => {
       stats = fs.statSync(webpPath);
     }
 
-    // Delete original file
-    fs.unlinkSync(originalPath);
+    // Best-effort cleanup. Do not fail upload response if temp delete is locked.
+    try {
+      await safeUnlink(originalPath);
+    } catch (cleanupError) {
+      console.warn('Photo temp cleanup skipped:', cleanupError.message);
+    }
 
     const fileUrl = `/uploads/photos/${webpFilename}`;
 
@@ -83,8 +109,12 @@ const uploadPhotoImage = async (req, res) => {
   } catch (error) {
     console.error('Error uploading photo:', error);
     // Clean up files on error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (req.file && req.file.path) {
+      try {
+        await safeUnlink(req.file.path);
+      } catch (cleanupError) {
+        console.warn('Photo cleanup failed:', cleanupError.message);
+      }
     }
     res.status(500).json({ message: 'Server error while uploading photo' });
   }
@@ -137,8 +167,12 @@ const uploadPropertyImage = async (req, res) => {
       stats = fs.statSync(webpPath);
     }
 
-    // Delete original file
-    fs.unlinkSync(originalPath);
+    // Best-effort cleanup. Do not fail upload response if temp delete is locked.
+    try {
+      await safeUnlink(originalPath);
+    } catch (cleanupError) {
+      console.warn('Property temp cleanup skipped:', cleanupError.message);
+    }
 
     const fileUrl = `/uploads/properties/${webpFilename}`;
 
@@ -151,8 +185,12 @@ const uploadPropertyImage = async (req, res) => {
   } catch (error) {
     console.error('Error uploading property image:', error);
     // Clean up files on error
-    if (req.file && fs.existsSync(req.file.path)) {
-      fs.unlinkSync(req.file.path);
+    if (req.file && req.file.path) {
+      try {
+        await safeUnlink(req.file.path);
+      } catch (cleanupError) {
+        console.warn('Property image cleanup failed:', cleanupError.message);
+      }
     }
     res.status(500).json({ message: 'Server error while uploading property image' });
   }
@@ -170,7 +208,7 @@ const deleteUploadedFile = async (req, res) => {
     const filePath = path.join(__dirname, '..', fileUrl);
 
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      await safeUnlink(filePath);
       res.status(200).json({ message: 'File deleted successfully' });
     } else {
       res.status(404).json({ message: 'File not found' });

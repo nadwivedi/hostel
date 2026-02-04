@@ -141,14 +141,14 @@ exports.getDashboardPendingPayments = async (req, res) => {
         populate: [
           {
             path: 'propertyId',
-            select: 'name location propertyType',
+            select: 'name location propertyType image',
           },
           {
             path: 'roomId',
             select: 'roomNumber floor propertyId',
             populate: {
               path: 'propertyId',
-              select: 'name location propertyType',
+              select: 'name location propertyType image',
             },
           },
         ],
