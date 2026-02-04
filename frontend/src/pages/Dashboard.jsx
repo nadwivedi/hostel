@@ -215,10 +215,10 @@ Thank you!`;
                           <span className="text-[18px] sm:text-xl">🏠</span>
                         </div> */}
                         <div>
-                          <h2 className="text-[12px] sm:text-xl font-black text-white drop-shadow-lg">
+                          <h2 className="text-[12px] sm:text-xl font-bold text-white drop-shadow-lg">
                             {propertyName}
                           </h2>
-                          <div className="inline-flex items-center mt-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-300 text-black text-[10px] sm:text-sm font-black tracking-wide ring-2 ring-white/80 shadow-md shadow-black/25">
+                          <div className="inline-flex items-center mt-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-300 text-black text-[10px] sm:text-sm font-semibold tracking-wide ring-2 ring-white/80 shadow-md shadow-black/25">
                             {roomNumber ? `ROOM ${roomNumber}` : "ROOM N/A"}
                             {bedNumber ? ` • BED ${bedNumber}` : ""}
                           </div>
