@@ -8,10 +8,10 @@ const {
   deleteBuilding,
   bulkCreateBuildings,
 } = require('../controllers/buildingController');
-const { protect } = require('../middleware/auth');
+const { unifiedProtect } = require('../middleware/unifiedAuth');
 
-// All routes are protected
-router.use(protect);
+// All routes are protected - supports User, Admin, and Employee
+router.use(unifiedProtect);
 
 // Get buildings by property
 router.get('/property/:propertyId', getBuildingsByProperty);

@@ -73,7 +73,7 @@ const getOverduePaymentsHelper = async () => {
 // CONTROLLER FUNCTIONS
 // ========================================
 
-// Get all payments (filtered by user, all for admin)
+// Get all payments (filtered by user, all for admin, property-filtered for employee)
 exports.getAllPayments = async (req, res) => {
   try {
     const { status, month, year, propertyId, locationId } = req.query;
@@ -83,7 +83,21 @@ exports.getAllPayments = async (req, res) => {
     if (year) filter.year = parseInt(year);
 
     // If filtering by property, first get tenant IDs for that property
-    const propId = propertyId || locationId;
+    let propId = propertyId || locationId;
+
+    // For employees, filter by assigned properties
+    if (req.isEmployee && req.assignedPropertyIds && req.assignedPropertyIds.length > 0) {
+      if (propId) {
+        // Check if employee has access to requested property
+        const hasAccess = req.assignedPropertyIds.some(
+          id => id.toString() === propId.toString()
+        );
+        if (!hasAccess) {
+          return res.status(200).json([]);
+        }
+      }
+    }
+
     if (propId) {
       // Find rooms belonging to this property
       const Room = require('../models/Room');

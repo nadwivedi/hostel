@@ -17,6 +17,8 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const statsRoutes = require("./routes/statsRoutes");
 const propertyRoutes = require("./routes/propertyRoutes");
 const buildingRoutes = require("./routes/buildingRoutes");
+const employeeRoutes = require("./routes/employeeRoutes");
+const employeeAuthRoutes = require("./routes/employeeAuthRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,10 +30,12 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
+      "http://localhost:5175",
       "https://hosteladm.softwarebytes.in",
       "https://hostelapi.softwarebytes.in",
       "https://hostel.softwarebytes.in",
-      'https://hosteladmin2.vercel.app'
+      "https://hosteladmin2.vercel.app",
+      "https://hostelemployee.softwarebytes.in"
     ],
     credentials: true,
   }),
@@ -52,6 +56,8 @@ app.use("/api/uploads", uploadRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/buildings", buildingRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/employee/auth", employeeAuthRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hostel Management API is running" });

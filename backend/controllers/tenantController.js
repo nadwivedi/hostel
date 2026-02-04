@@ -3,11 +3,16 @@ const Tenant = require('../models/Tenant');
 const Room = require('../models/Room');
 const Payment = require('../models/Payment');
 
-// Get all tenants (filtered by user, all for admin)
+// Get all tenants (filtered by user, all for admin, property-filtered for employee)
 exports.getAllTenants = async (req, res) => {
   try {
     const { propertyId, locationId, status } = req.query;
-    const filter = req.isAdmin ? {} : { userId: req.user._id };
+    let filter = req.isAdmin ? {} : { userId: req.user._id };
+
+    // For employees, filter by assigned properties
+    if (req.isEmployee && req.assignedPropertyIds && req.assignedPropertyIds.length > 0) {
+      filter.propertyId = { $in: req.assignedPropertyIds };
+    }
 
     // Accept both propertyId and locationId as aliases
     const propId = propertyId || locationId;
@@ -54,6 +59,16 @@ exports.getTenantById = async (req, res) => {
     // Check ownership for non-admin users
     if (!req.isAdmin && tenant.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to access this tenant' });
+    }
+
+    // For employees, check property access
+    if (req.isEmployee && tenant.propertyId) {
+      const hasAccess = req.assignedPropertyIds.some(
+        id => id.toString() === tenant.propertyId.toString()
+      );
+      if (!hasAccess) {
+        return res.status(403).json({ message: 'Not authorized to access this tenant' });
+      }
     }
 
     res.status(200).json(tenant);

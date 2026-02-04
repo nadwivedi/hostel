@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { unifiedProtect } = require('../middleware/unifiedAuth');
 const {
   getAllRooms,
   getRoomById,
@@ -10,12 +10,12 @@ const {
   deleteRoom,
 } = require('../controllers/roomController');
 
-// All routes use protect - authorization is handled in controllers
-router.get('/', protect, getAllRooms);
-router.get('/:id', protect, getRoomById);
-router.post('/', protect, createRoom);
-router.patch('/:id', protect, updateRoom);
-router.patch('/:roomId/beds/:bedId', protect, updateBedStatus);
-router.delete('/:id', protect, deleteRoom);
+// All routes use unifiedProtect - supports User, Admin, and Employee
+router.get('/', unifiedProtect, getAllRooms);
+router.get('/:id', unifiedProtect, getRoomById);
+router.post('/', unifiedProtect, createRoom);
+router.patch('/:id', unifiedProtect, updateRoom);
+router.patch('/:roomId/beds/:bedId', unifiedProtect, updateBedStatus);
+router.delete('/:id', unifiedProtect, deleteRoom);
 
 module.exports = router;

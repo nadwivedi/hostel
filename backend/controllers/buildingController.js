@@ -8,6 +8,16 @@ exports.getBuildingsByProperty = async (req, res) => {
     const { propertyId } = req.params;
     const filter = req.isAdmin ? { propertyId } : { propertyId, userId: req.user._id };
 
+    // For employees, check if they have access to this property
+    if (req.isEmployee) {
+      const hasAccess = req.assignedPropertyIds.some(
+        id => id.toString() === propertyId.toString()
+      );
+      if (!hasAccess) {
+        return res.status(200).json([]);
+      }
+    }
+
     const buildings = await Building.find(filter)
       .populate('propertyId', 'name')
       .collation({ locale: 'en', numericOrdering: true })
@@ -31,6 +41,16 @@ exports.getBuildingById = async (req, res) => {
 
     if (!req.isAdmin && building.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to access this building' });
+    }
+
+    // For employees, check property access
+    if (req.isEmployee && building.propertyId) {
+      const hasAccess = req.assignedPropertyIds.some(
+        id => id.toString() === building.propertyId.toString()
+      );
+      if (!hasAccess) {
+        return res.status(403).json({ message: 'Not authorized to access this building' });
+      }
     }
 
     res.status(200).json(building);
