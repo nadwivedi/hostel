@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "../App";
+import ConfirmModal from "../components/ConfirmModal";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -13,6 +14,8 @@ function Dashboard() {
     totalPending: 0,
     totalAmount: 0,
   });
+  const [confirmPayment, setConfirmPayment] = useState(null);
+  const [markingPaid, setMarkingPaid] = useState(false);
 
   useEffect(() => {
     fetchPendingPayments();
@@ -41,20 +44,26 @@ function Dashboard() {
     }
   };
 
-  const handleMarkAsPaid = async (paymentId) => {
+  const handleConfirmMarkAsPaid = async () => {
+    if (!confirmPayment?._id) return;
+
     try {
+      setMarkingPaid(true);
       await axios.post(
-        `${BACKEND_URL}/api/payments/${paymentId}/mark-paid`,
+        `${BACKEND_URL}/api/payments/${confirmPayment._id}/mark-paid`,
         {
           paymentDate: new Date(),
         },
         { withCredentials: true },
       );
       toast.success("Payment marked as paid");
+      setConfirmPayment(null);
       fetchPendingPayments();
     } catch (error) {
       console.error("Error marking payment as paid:", error);
       toast.error("Error updating payment");
+    } finally {
+      setMarkingPaid(false);
     }
   };
 
@@ -270,9 +279,9 @@ Thank you!`;
                         onClick={(e) => e.stopPropagation()}
                       >
                         <button
-                          onClick={() => handleMarkAsPaid(payment._id)}
+                          onClick={() => setConfirmPayment(payment)}
                           className="p-1.5 sm:p-2 bg-green-600 text-white rounded-md sm:rounded-lg hover:bg-green-700 transition"
-                          title="Mark as Paid"
+                          title="Mark as Done"
                         >
                           <svg
                             className="w-3.5 h-3.5 sm:w-4 sm:h-4"
@@ -366,6 +375,23 @@ Thank you!`;
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        open={Boolean(confirmPayment)}
+        title="Mark Payment as Done?"
+        message={
+          confirmPayment
+            ? `Are you sure you want to mark ${
+                confirmPayment.tenant?.name || "this tenant"
+              }'s payment as done?`
+            : ""
+        }
+        confirmText="Yes, Mark Done"
+        cancelText="Cancel"
+        loading={markingPaid}
+        onCancel={() => setConfirmPayment(null)}
+        onConfirm={handleConfirmMarkAsPaid}
+      />
     </div>
   );
 }
