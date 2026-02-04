@@ -208,19 +208,19 @@ Thank you!`;
                   onClick={() => navigate(`/tenant/${tenant?._id}`)}
                 >
                   {/* Card Header with Property, Room, Amount & Due Date */}
-                  <div className="bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 p-2 sm:p-4">
+                  <div className="bg-gradient-to-r from-gray-800 to-gray-700 p-2 sm:p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 sm:gap-3">
                         <div className="w-7 h-7 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 shadow-md">
                           <span className="text-sm sm:text-xl">🏠</span>
                         </div>
                         <div>
-                          <h2 className="text-sm sm:text-xl font-black text-white drop-shadow-lg">
+                          <h2 className="text-[12px] sm:text-xl font-black text-white drop-shadow-lg">
                             {propertyName}
                           </h2>
-                          <div className="text-[9px] sm:text-xs text-white/80 font-semibold mt-0.5">
-                            {roomNumber ? `Room ${roomNumber}` : "N/A"}
-                            {bedNumber ? ` - Bed ${bedNumber}` : ""}
+                          <div className="inline-flex items-center mt-1 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-yellow-300 text-black text-[11px] sm:text-sm font-black tracking-wide ring-2 ring-white/80 shadow-md shadow-black/25">
+                            {roomNumber ? `ROOM ${roomNumber}` : "ROOM N/A"}
+                            {bedNumber ? ` • BED ${bedNumber}` : ""}
                           </div>
                         </div>
                       </div>
