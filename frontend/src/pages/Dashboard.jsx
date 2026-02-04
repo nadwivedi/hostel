@@ -261,45 +261,32 @@ Thank you!`;
                   <div className="p-1.5 sm:p-4 bg-gradient-to-br from-gray-50 to-white">
                     {/* Tenant Info Row */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {tenant?.photo ? (
-                          <img
-                            src={`${BACKEND_URL}${tenant.photo}`}
-                            alt={tenant?.name}
-                            className="h-9 w-9 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl object-cover shadow-sm"
-                          />
-                        ) : (
-                          <div className="h-9 w-9 sm:h-12 sm:w-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-black text-base sm:text-xl shadow-sm">
-                            {tenant?.name?.charAt(0)?.toUpperCase() || "?"}
-                          </div>
-                        )}
-                        <div>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-xs sm:text-base font-black text-gray-900">
-                              {tenant?.name || "Unknown"}
-                            </span>
-                            <span
-                              className={`px-1 py-0.5 rounded text-[8px] sm:text-[10px] font-bold ${status.color}`}
-                            >
-                              {status.label}
-                            </span>
-                          </div>
-                          <div className="text-[10px] sm:text-sm text-gray-600 flex items-center font-semibold">
-                            <svg
-                              className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 mr-0.5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                              />
-                            </svg>
-                            {tenant?.mobile}
-                          </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs sm:text-base font-black text-gray-900">
+                            {tenant?.name || "Unknown"}
+                          </span>
+                          <span
+                            className={`px-1 py-0.5 rounded text-[8px] sm:text-[10px] font-bold ${status.color}`}
+                          >
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="text-[10px] sm:text-sm text-gray-600 flex items-center font-semibold">
+                          <svg
+                            className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 mr-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                            />
+                          </svg>
+                          {tenant?.mobile}
                         </div>
                       </div>
                       {/* Action Buttons */}
