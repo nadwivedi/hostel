@@ -3,6 +3,32 @@ const bcrypt = require('bcryptjs');
 const Employee = require('../models/Employee');
 const Property = require('../models/Property');
 
+const PERMISSION_DEFAULTS = {
+  tenants: { view: false, add: false, edit: false, delete: false },
+  rooms: { view: false, add: false, edit: false, delete: false },
+  payments: { view: false, add: false, edit: false, delete: false },
+  properties: { view: false, add: false, edit: false, delete: false },
+  buildings: { view: false, add: false, edit: false, delete: false },
+};
+
+const toPlain = (value) => {
+  if (!value) return {};
+  if (typeof value.toObject === 'function') return value.toObject();
+  return value;
+};
+
+const mergePermissions = (existingPermissions = {}, incomingPermissions = {}) => {
+  const base = toPlain(existingPermissions);
+
+  return {
+    tenants: { ...PERMISSION_DEFAULTS.tenants, ...(toPlain(base.tenants) || {}), ...(incomingPermissions.tenants || {}) },
+    rooms: { ...PERMISSION_DEFAULTS.rooms, ...(toPlain(base.rooms) || {}), ...(incomingPermissions.rooms || {}) },
+    payments: { ...PERMISSION_DEFAULTS.payments, ...(toPlain(base.payments) || {}), ...(incomingPermissions.payments || {}) },
+    properties: { ...PERMISSION_DEFAULTS.properties, ...(toPlain(base.properties) || {}), ...(incomingPermissions.properties || {}) },
+    buildings: { ...PERMISSION_DEFAULTS.buildings, ...(toPlain(base.buildings) || {}), ...(incomingPermissions.buildings || {}) },
+  };
+};
+
 // Get all employees for current owner
 exports.getAllEmployees = async (req, res) => {
   try {
@@ -141,7 +167,7 @@ exports.createEmployee = async (req, res) => {
 exports.updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, mobile, fullName, isActive, password } = req.body;
+    const { email, mobile, fullName, isActive, password, assignedProperties, permissions } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: 'Invalid employee ID format' });
@@ -174,6 +200,28 @@ exports.updateEmployee = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide valid 10-digit mobile number' });
     }
 
+    // Validate assigned properties belong to owner
+    if (assignedProperties !== undefined) {
+      if (!Array.isArray(assignedProperties)) {
+        return res.status(400).json({ success: false, message: 'assignedProperties must be an array' });
+      }
+
+      if (assignedProperties.length > 0) {
+        const validProperties = await Property.find({
+          _id: { $in: assignedProperties },
+          userId: req.user._id,
+        }).select('_id');
+
+        if (validProperties.length !== assignedProperties.length) {
+          return res.status(400).json({ success: false, message: 'Some assigned properties are invalid' });
+        }
+      }
+    }
+
+    if (permissions !== undefined && typeof permissions !== 'object') {
+      return res.status(400).json({ success: false, message: 'permissions must be an object' });
+    }
+
     // Check for duplicate email/mobile
     if (email || mobile) {
       const duplicateQuery = {
@@ -198,7 +246,12 @@ exports.updateEmployee = async (req, res) => {
       ...(email !== undefined && { email: email ? email.toLowerCase() : undefined }),
       ...(mobile !== undefined && { mobile: mobile || undefined }),
       ...(isActive !== undefined && { isActive }),
+      ...(assignedProperties !== undefined && { assignedProperties }),
     };
+
+    if (permissions !== undefined) {
+      updateData.permissions = mergePermissions(employee.permissions, permissions || {});
+    }
 
     // Update password if provided
     if (password && password.length >= 4) {
@@ -276,13 +329,7 @@ exports.updatePermissions = async (req, res) => {
     }
 
     // Merge permissions
-    const updatedPermissions = {
-      tenants: { ...employee.permissions.tenants.toObject(), ...(permissions.tenants || {}) },
-      rooms: { ...employee.permissions.rooms.toObject(), ...(permissions.rooms || {}) },
-      payments: { ...employee.permissions.payments.toObject(), ...(permissions.payments || {}) },
-      properties: { ...employee.permissions.properties.toObject(), ...(permissions.properties || {}) },
-      buildings: { ...employee.permissions.buildings.toObject(), ...(permissions.buildings || {}) },
-    };
+    const updatedPermissions = mergePermissions(employee.permissions, permissions);
 
     const updatedEmployee = await Employee.findByIdAndUpdate(
       id,

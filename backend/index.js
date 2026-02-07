@@ -19,6 +19,7 @@ const propertyRoutes = require("./routes/propertyRoutes");
 const buildingRoutes = require("./routes/buildingRoutes");
 const employeeRoutes = require("./routes/employeeRoutes");
 const employeeAuthRoutes = require("./routes/employeeAuthRoutes");
+const employeeManagementRoutes = require("./routes/employeeManagementRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -58,6 +59,7 @@ app.use("/api/properties", propertyRoutes);
 app.use("/api/buildings", buildingRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/employee/auth", employeeAuthRoutes);
+app.use("/api/employee/manage", employeeManagementRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hostel Management API is running" });

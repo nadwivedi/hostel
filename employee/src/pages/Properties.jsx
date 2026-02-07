@@ -29,41 +29,43 @@ function Properties() {
       setLoading(true);
       const config = { withCredentials: true };
 
-      const [propertiesRes, tenantsRes, roomsRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/properties`, config),
-        axios.get(`${BACKEND_URL}/api/tenants?status=ACTIVE`, config),
-        axios.get(`${BACKEND_URL}/api/rooms`, config),
-      ]);
-
+      const propertyStats = {};
+      const propertiesRes = await axios.get(`${BACKEND_URL}/api/employee/manage/properties`, config);
       setProperties(propertiesRes.data);
 
-      const propertyStats = {};
-      propertiesRes.data.forEach(prop => {
-        const propTenants = tenantsRes.data.filter(t => t.propertyId?._id === prop._id || t.propertyId === prop._id);
-        const propRooms = roomsRes.data.filter(r => r.propertyId?._id === prop._id || r.propertyId === prop._id);
+      await Promise.all(
+        propertiesRes.data.map(async (prop) => {
+          const [tenantsRes, roomsRes] = await Promise.all([
+            axios.get(`${BACKEND_URL}/api/employee/manage/properties/${prop._id}/tenants?status=ACTIVE`, config),
+            axios.get(`${BACKEND_URL}/api/employee/manage/properties/${prop._id}/rooms`, config),
+          ]);
 
-        const totalBeds = propRooms.reduce((acc, r) => {
-          if (r.rentType === 'PER_BED') {
-            return acc + (r.beds?.length || 0);
-          }
-          return acc + 1;
-        }, 0);
+          const propTenants = tenantsRes.data;
+          const propRooms = roomsRes.data;
 
-        const occupiedBeds = propRooms.reduce((acc, r) => {
-          if (r.rentType === 'PER_BED') {
-            return acc + (r.beds?.filter(b => b.status === 'OCCUPIED').length || 0);
-          }
-          return acc + (r.status === 'OCCUPIED' ? 1 : 0);
-        }, 0);
+          const totalBeds = propRooms.reduce((acc, r) => {
+            if (r.rentType === 'PER_BED') {
+              return acc + (r.beds?.length || 0);
+            }
+            return acc + 1;
+          }, 0);
 
-        propertyStats[prop._id] = {
-          rooms: propRooms.length,
-          tenants: propTenants.length,
-          totalBeds,
-          occupiedBeds,
-          availableBeds: totalBeds - occupiedBeds,
-        };
-      });
+          const occupiedBeds = propRooms.reduce((acc, r) => {
+            if (r.rentType === 'PER_BED') {
+              return acc + (r.beds?.filter((b) => b.status === 'OCCUPIED').length || 0);
+            }
+            return acc + (r.status === 'OCCUPIED' ? 1 : 0);
+          }, 0);
+
+          propertyStats[prop._id] = {
+            rooms: propRooms.length,
+            tenants: propTenants.length,
+            totalBeds,
+            occupiedBeds,
+            availableBeds: totalBeds - occupiedBeds,
+          };
+        })
+      );
 
       setStats(propertyStats);
     } catch (error) {

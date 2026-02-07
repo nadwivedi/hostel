@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -9,7 +9,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 function PropertyDetail() {
   const { propertyId } = useParams();
   const navigate = useNavigate();
-  const { employee } = useEmployeeAuth();
+  const { employee, hasPermission } = useEmployeeAuth();
 
   const [property, setProperty] = useState(null);
   const [rooms, setRooms] = useState([]);
@@ -21,6 +21,7 @@ function PropertyDetail() {
 
   // Add Tenant Modal State
   const [showAddTenantModal, setShowAddTenantModal] = useState(false);
+  const [editingTenant, setEditingTenant] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedBed, setSelectedBed] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -45,20 +46,19 @@ function PropertyDetail() {
       setLoading(true);
       const config = { withCredentials: true };
 
-      const [propertiesRes, roomsRes, tenantsRes, buildingsRes] = await Promise.all([
-        axios.get(`${BACKEND_URL}/api/properties`, config),
-        axios.get(`${BACKEND_URL}/api/rooms?propertyId=${propertyId}`, config),
-        axios.get(`${BACKEND_URL}/api/tenants?propertyId=${propertyId}&status=ACTIVE`, config),
-        axios.get(`${BACKEND_URL}/api/buildings/property/${propertyId}`, config),
+      const [propertyRes, roomsRes, tenantsRes, buildingsRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/employee/manage/properties/${propertyId}`, config),
+        axios.get(`${BACKEND_URL}/api/employee/manage/properties/${propertyId}/rooms`, config),
+        axios.get(`${BACKEND_URL}/api/employee/manage/properties/${propertyId}/tenants?status=ACTIVE`, config),
+        axios.get(`${BACKEND_URL}/api/employee/manage/properties/${propertyId}/buildings`, config),
       ]);
 
-      const prop = propertiesRes.data.find((p) => p._id === propertyId);
-      setProperty(prop);
+      setProperty(propertyRes.data);
       setRooms(roomsRes.data);
       setTenants(tenantsRes.data);
       setBuildings(buildingsRes.data);
 
-      if (buildingsRes.data.length > 0) {
+      if (buildingsRes.data.length > 0 && !selectedBuildingId) {
         setSelectedBuildingId(buildingsRes.data[0]._id);
       }
     } catch (error) {
@@ -69,14 +69,15 @@ function PropertyDetail() {
     }
   };
 
-  const openAddTenantModal = (room = null, bed = null) => {
+  const openTenantModal = (room = null, bed = null, tenant = null) => {
     const sortedByRoomNumber = [...rooms].sort((a, b) => {
       const aNum = Number(a.roomNumber);
       const bNum = Number(b.roomNumber);
       if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
       return String(a.roomNumber).localeCompare(String(b.roomNumber));
     });
-    const initialRoom = room || sortedByRoomNumber.find((r) => isRoomAvailable(r));
+    const existingRoom = tenant ? rooms.find((r) => r._id === (tenant.roomId?._id || tenant.roomId)) : null;
+    const initialRoom = room || existingRoom || sortedByRoomNumber.find((r) => isRoomAvailable(r));
 
     if (!initialRoom) {
       toast.error("No available rooms to add tenant");
@@ -85,25 +86,26 @@ function PropertyDetail() {
 
     const initialBed =
       initialRoom.rentType === "PER_BED"
-        ? bed || getAvailableBeds(initialRoom)[0] || null
+        ? bed || (tenant ? initialRoom.beds?.find((b) => b.bedNumber === tenant.bedNumber) : null) || getAvailableBeds(initialRoom)[0] || null
         : null;
 
+    setEditingTenant(tenant || null);
     setSelectedRoom(initialRoom);
     setSelectedBed(initialBed);
     setTenantForm({
-      name: "",
-      mobile: "",
-      email: "",
-      adharNo: "",
-      gender: "",
-      rentAmount: initialRoom.rentAmount || "",
-      advanceAmount: initialRoom.rentAmount ? initialRoom.rentAmount * 2 : "",
-      joiningDate: new Date().toISOString().split("T")[0],
+      name: tenant?.name || "",
+      mobile: tenant?.mobile || "",
+      email: tenant?.email || "",
+      adharNo: tenant?.adharNo || "",
+      gender: tenant?.gender || "",
+      rentAmount: tenant?.rentAmount || initialRoom.rentAmount || "",
+      advanceAmount: tenant?.advanceAmount || (initialRoom.rentAmount ? initialRoom.rentAmount * 2 : ""),
+      joiningDate: tenant?.joiningDate ? new Date(tenant.joiningDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
     });
     setShowAddTenantModal(true);
   };
 
-  const handleAddTenant = async (e) => {
+  const handleSaveTenant = async (e) => {
     e.preventDefault();
 
     if (!selectedRoom) {
@@ -143,12 +145,21 @@ function PropertyDetail() {
         joiningDate: tenantForm.joiningDate,
       };
 
-      await axios.post(`${BACKEND_URL}/api/tenants`, tenantData, {
-        withCredentials: true,
-      });
+      if (editingTenant) {
+        await axios.patch(
+          `${BACKEND_URL}/api/employee/manage/tenants/${editingTenant._id}`,
+          tenantData,
+          { withCredentials: true }
+        );
+      } else {
+        await axios.post(`${BACKEND_URL}/api/employee/manage/tenants`, tenantData, {
+          withCredentials: true,
+        });
+      }
 
-      toast.success("Tenant added successfully");
+      toast.success(editingTenant ? "Tenant updated successfully" : "Tenant added successfully");
       setShowAddTenantModal(false);
+      setEditingTenant(null);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add tenant");
@@ -159,6 +170,49 @@ function PropertyDetail() {
 
   const getTenantsForRoom = (roomId) => {
     return tenants.filter((t) => t.roomId?._id === roomId || t.roomId === roomId);
+  };
+
+  const handleMarkTenantLeft = async (tenant) => {
+    if (!window.confirm(`Mark ${tenant.name} as left?`)) return;
+    try {
+      await axios.patch(
+        `${BACKEND_URL}/api/employee/manage/tenants/${tenant._id}/mark-left`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Tenant marked as left");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to mark tenant as left");
+    }
+  };
+
+  const handleDeleteTenant = async (tenant) => {
+    if (!window.confirm(`Delete tenant ${tenant.name}?`)) return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/employee/manage/tenants/${tenant._id}`, {
+        withCredentials: true,
+      });
+      toast.success("Tenant deleted successfully");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete tenant");
+    }
+  };
+
+  const handleMarkRoomEmpty = async (room) => {
+    if (!window.confirm(`Mark Room ${room.roomNumber} as empty? This will mark all active tenants in this room as left.`)) return;
+    try {
+      await axios.patch(
+        `${BACKEND_URL}/api/employee/manage/rooms/${room._id}/mark-empty`,
+        {},
+        { withCredentials: true }
+      );
+      toast.success("Room marked as empty");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to mark room empty");
+    }
   };
 
   const getAvailableBeds = (room) => {
@@ -326,7 +380,8 @@ function PropertyDetail() {
               </svg>
             </div>
             <button
-              onClick={() => openAddTenantModal()}
+              onClick={() => openTenantModal()}
+              disabled={!hasPermission("tenants", "add")}
               className="px-2.5 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg sm:rounded-xl hover:from-teal-700 hover:to-cyan-700 font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-1 sm:gap-2 shadow-md whitespace-nowrap"
             >
               <svg
@@ -337,7 +392,7 @@ function PropertyDetail() {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>Add</span>
+              <span>Add Tenant</span>
             </button>
           </div>
         </div>
@@ -404,6 +459,15 @@ function PropertyDetail() {
                       <div className="text-[15px] sm:text-3xl font-black text-white drop-shadow-lg">
                         {roomTenants.length}/{room.beds?.length || 1}
                       </div>
+                      {roomTenants.length > 0 && hasPermission("rooms", "edit") && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkRoomEmpty(room)}
+                          className="mt-1 px-2 py-0.5 text-[10px] sm:text-xs rounded bg-red-500/80 hover:bg-red-600 text-white"
+                        >
+                          Mark Empty
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -413,11 +477,16 @@ function PropertyDetail() {
                   {isEmpty && (
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-emerald-200 p-2 sm:p-3 flex items-center justify-between">
                       <div className="text-xs sm:text-sm font-bold text-emerald-700">Empty Room</div>
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 bg-emerald-500 text-white rounded-lg flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => openTenantModal(room)}
+                        disabled={!hasPermission("tenants", "add")}
+                        className="w-6 h-6 sm:w-7 sm:h-7 bg-emerald-500 disabled:bg-gray-400 text-white rounded-lg flex items-center justify-center"
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                      </div>
+                      </button>
                     </div>
                   )}
 
@@ -447,7 +516,7 @@ function PropertyDetail() {
                                 <div className="text-[10px] sm:text-sm text-gray-500">{tenant.mobile}</div>
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex flex-col items-end gap-1">
                               {tenant.bedNumber && (
                                 <div className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] sm:text-xs font-bold">
                                   Bed {tenant.bedNumber}
@@ -455,6 +524,41 @@ function PropertyDetail() {
                               )}
                               <div className="text-[10px] sm:text-sm text-gray-500 mt-1">
                                 ₹{tenant.rentAmount?.toLocaleString()}/mo
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {hasPermission("tenants", "edit") && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      openTenantModal(
+                                        room,
+                                        tenant.bedNumber ? room.beds?.find((b) => b.bedNumber === tenant.bedNumber) : null,
+                                        tenant
+                                      )
+                                    }
+                                    className="px-2 py-1 text-[10px] sm:text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                                {hasPermission("tenants", "edit") && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkTenantLeft(tenant)}
+                                    className="px-2 py-1 text-[10px] sm:text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200"
+                                  >
+                                    Mark Left
+                                  </button>
+                                )}
+                                {hasPermission("tenants", "delete") && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTenant(tenant)}
+                                    className="px-2 py-1 text-[10px] sm:text-xs rounded bg-red-100 text-red-700 hover:bg-red-200"
+                                  >
+                                    Delete
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -489,14 +593,17 @@ function PropertyDetail() {
             <div className="p-4 sm:p-6 border-b sticky top-0 bg-white z-10">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">Add New Tenant</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">{editingTenant ? "Edit Tenant" : "Add New Tenant"}</h2>
                   <p className="text-sm text-gray-500 mt-1">
                     Room {selectedRoom?.roomNumber}
                     {selectedBed && ` - Bed ${selectedBed.bedNumber}`}
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowAddTenantModal(false)}
+                  onClick={() => {
+                    setShowAddTenantModal(false);
+                    setEditingTenant(null);
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-lg"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -506,7 +613,7 @@ function PropertyDetail() {
               </div>
             </div>
 
-            <form onSubmit={handleAddTenant} className="p-4 sm:p-6 space-y-4">
+            <form onSubmit={handleSaveTenant} className="p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Room *</label>
                 <select
@@ -531,7 +638,7 @@ function PropertyDetail() {
                 >
                   <option value="">Select Room</option>
                   {[...rooms]
-                    .filter((r) => isRoomAvailable(r) || r._id === selectedRoom?._id)
+                    .filter((r) => isRoomAvailable(r) || r._id === selectedRoom?._id || r._id === editingTenant?.roomId?._id || r._id === editingTenant?.roomId)
                     .sort((a, b) => {
                       const aNum = Number(a.roomNumber);
                       const bNum = Number(b.roomNumber);
@@ -560,7 +667,7 @@ function PropertyDetail() {
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500"
                   >
                     <option value="">Select Bed</option>
-                    {getAvailableBeds(selectedRoom).map((bed) => (
+                    {[...getAvailableBeds(selectedRoom), ...(editingTenant?.bedNumber ? selectedRoom?.beds?.filter((b) => b.bedNumber === editingTenant.bedNumber) || [] : [])].filter((v, i, arr) => arr.findIndex((x) => x.bedNumber === v.bedNumber) === i).map((bed) => (
                       <option key={bed.bedNumber} value={bed.bedNumber}>
                         Bed {bed.bedNumber}
                       </option>
@@ -671,7 +778,10 @@ function PropertyDetail() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <button
                   type="button"
-                  onClick={() => setShowAddTenantModal(false)}
+                  onClick={() => {
+                    setShowAddTenantModal(false);
+                    setEditingTenant(null);
+                  }}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
@@ -681,7 +791,7 @@ function PropertyDetail() {
                   disabled={saving}
                   className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
                 >
-                  {saving ? "Adding..." : "Add Tenant"}
+                  {saving ? (editingTenant ? "Saving..." : "Adding...") : (editingTenant ? "Save Changes" : "Add Tenant")}
                 </button>
               </div>
             </form>

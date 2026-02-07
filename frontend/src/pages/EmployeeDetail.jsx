@@ -99,7 +99,7 @@ function EmployeeDetail() {
       toast.success('Permissions updated');
       fetchEmployee();
     } catch (error) {
-      toast.error('Failed to update permissions');
+      toast.error(error.response?.data?.message || 'Failed to update permissions');
     } finally {
       setSaving(false);
     }
@@ -117,7 +117,7 @@ function EmployeeDetail() {
       toast.success('Assigned properties updated');
       fetchEmployee();
     } catch (error) {
-      toast.error('Failed to update properties');
+      toast.error(error.response?.data?.message || 'Failed to update properties');
     } finally {
       setSaving(false);
     }
