@@ -7,7 +7,7 @@ import PropertyAssignment from '../components/employees/PropertyAssignment';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL;
 
-function Employees() {
+function Employees({ embedded = false }) {
   const [employees, setEmployees] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,45 +152,82 @@ function Employees() {
     });
   };
 
+  const containerClass = embedded
+    ? 'bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border border-gray-200 p-2.5 sm:p-5 space-y-2 sm:space-y-3'
+    : 'space-y-6';
+  const listWrapperClass = embedded
+    ? 'border border-gray-200 rounded-md sm:rounded-lg overflow-hidden'
+    : 'bg-white rounded-xl shadow-sm border overflow-hidden';
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className={`flex items-center justify-center ${embedded ? 'py-8' : 'min-h-[50vh]'}`}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className={containerClass}>
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Employees</h1>
-          <p className="text-sm text-gray-600 sm:text-base">Manage your employees and their access permissions</p>
+      {embedded ? (
+        <div className="flex items-center justify-between gap-2 mb-2.5 sm:mb-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-9 sm:h-9 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-md sm:rounded-lg flex items-center justify-center text-white">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-gray-800">Employees</h2>
+              <p className="text-[10px] sm:text-xs text-gray-500">Create and manage employees</p>
+            </div>
+          </div>
+          <button
+            onClick={() => { resetForm(); setShowModal(true); }}
+            className="px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-700 text-white rounded-md sm:rounded-lg hover:bg-gray-800 font-semibold text-[11px] sm:text-sm transition flex items-center gap-1"
+          >
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add</span>
+          </button>
         </div>
-        <button
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-        >
-          <span>+</span>
-          <span>Add Employee</span>
-        </button>
-      </div>
+      ) : (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">Employees</h1>
+            <p className="text-sm text-gray-600 sm:text-base">Manage your employees and their access permissions</p>
+          </div>
+          <button
+            onClick={() => { resetForm(); setShowModal(true); }}
+            className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+          >
+            <span>+</span>
+            <span>Add Employee</span>
+          </button>
+        </div>
+      )}
 
       {/* Employee List */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+      <div className={listWrapperClass}>
         {employees.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            <div className="text-4xl mb-2">👥</div>
-            <p>No employees yet. Add your first employee to get started.</p>
+          <div className="text-center py-6 sm:py-8">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500">No employees added yet</p>
+            <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">Add your first employee to get started</p>
           </div>
         ) : (
           <>
             {/* Mobile Cards */}
             <div className="divide-y divide-gray-200 md:hidden">
               {employees.map((employee) => (
-                <div key={employee._id} className="p-4">
-                  <div className="rounded-xl border bg-white shadow-sm p-4 space-y-3">
+                <div key={employee._id} className="p-2 sm:p-3">
+                  <div className="rounded-md sm:rounded-lg border border-gray-200 bg-white p-2.5 sm:p-3 space-y-2.5 sm:space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-semibold text-gray-900">{employee.fullName}</div>

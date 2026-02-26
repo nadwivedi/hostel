@@ -14,6 +14,14 @@ const PROPERTY_TYPE_CONFIG = {
   shop: { icon: '🏪', color: 'bg-purple-500', label: 'Shop' },
 };
 
+const toArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.properties)) return payload.properties;
+  return [];
+};
+
 function Properties() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
@@ -35,13 +43,16 @@ function Properties() {
         axios.get(`${BACKEND_URL}/api/rooms`, config),
       ]);
 
-      setProperties(propertiesRes.data);
+      const propertiesList = toArray(propertiesRes.data);
+      const tenantsList = toArray(tenantsRes.data);
+      const roomsList = toArray(roomsRes.data);
+      setProperties(propertiesList);
 
       // Calculate stats per property
       const propertyStats = {};
-      propertiesRes.data.forEach(prop => {
-        const propTenants = tenantsRes.data.filter(t => t.propertyId?._id === prop._id || t.propertyId === prop._id);
-        const propRooms = roomsRes.data.filter(r => r.propertyId?._id === prop._id || r.propertyId === prop._id);
+      propertiesList.forEach(prop => {
+        const propTenants = tenantsList.filter(t => t.propertyId?._id === prop._id || t.propertyId === prop._id);
+        const propRooms = roomsList.filter(r => r.propertyId?._id === prop._id || r.propertyId === prop._id);
 
         const totalBeds = propRooms.reduce((acc, r) => {
           if (r.rentType === 'PER_BED') {

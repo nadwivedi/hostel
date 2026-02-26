@@ -13,6 +13,14 @@ const PROPERTY_TYPE_CONFIG = {
   shop: { icon: '🏪', color: 'bg-purple-500', label: 'Shop' },
 };
 
+const toArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.properties)) return payload.properties;
+  return [];
+};
+
 function Properties() {
   const navigate = useNavigate();
   const { employee } = useEmployeeAuth();
@@ -31,17 +39,18 @@ function Properties() {
 
       const propertyStats = {};
       const propertiesRes = await axios.get(`${BACKEND_URL}/api/employee/manage/properties`, config);
-      setProperties(propertiesRes.data);
+      const propertiesList = toArray(propertiesRes.data);
+      setProperties(propertiesList);
 
       await Promise.all(
-        propertiesRes.data.map(async (prop) => {
+        propertiesList.map(async (prop) => {
           const [tenantsRes, roomsRes] = await Promise.all([
             axios.get(`${BACKEND_URL}/api/employee/manage/properties/${prop._id}/tenants?status=ACTIVE`, config),
             axios.get(`${BACKEND_URL}/api/employee/manage/properties/${prop._id}/rooms`, config),
           ]);
 
-          const propTenants = tenantsRes.data;
-          const propRooms = roomsRes.data;
+          const propTenants = toArray(tenantsRes.data);
+          const propRooms = toArray(roomsRes.data);
 
           const totalBeds = propRooms.reduce((acc, r) => {
             if (r.rentType === 'PER_BED') {
