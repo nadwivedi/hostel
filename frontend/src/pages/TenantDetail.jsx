@@ -141,9 +141,21 @@ function TenantDetail() {
             <span className="font-bold text-green-600">₹{Number(tenant.rentAmount || 0).toLocaleString()}</span>
           </div>
           <div className="flex justify-between gap-2">
-            <span className="text-gray-500">Advance</span>
+            <span className="text-gray-500">Advance Paid</span>
             <span className="font-semibold text-gray-800">₹{Number(tenant.advanceAmount || 0).toLocaleString()}</span>
           </div>
+          {tenant.advanceLeft > 0 && (
+            <div className="flex justify-between gap-2 bg-blue-50 -mx-3 px-3 py-1 rounded-lg">
+              <span className="text-blue-600 font-semibold text-xs sm:text-sm">Advance Remaining</span>
+              <span className="font-bold text-blue-700">₹{Number(tenant.advanceLeft).toLocaleString()}</span>
+            </div>
+          )}
+          {tenant.advanceLeft === 0 && tenant.advanceAmount > 0 && (
+            <div className="flex justify-between gap-2">
+              <span className="text-gray-400 text-xs sm:text-sm">Advance Remaining</span>
+              <span className="font-semibold text-gray-400">₹0 (fully used)</span>
+            </div>
+          )}
         </div>
       </div>
 

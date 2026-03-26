@@ -66,6 +66,10 @@ const tenantSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    advanceRefunded: {
+      type: Number,
+      default: 0,
+    },
     leaveDate: {
       type: Date,
       default: null,

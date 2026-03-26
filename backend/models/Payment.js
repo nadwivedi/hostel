@@ -42,6 +42,10 @@ const paymentSchema = new mongoose.Schema(
       enum: ['PENDING', 'PAID', 'PARTIAL'],
       default: 'PENDING',
     },
+    advanceUsed: {
+      type: Number,
+      default: 0,
+    },
     reminderCount: {
       type: Number,
       default: 0,

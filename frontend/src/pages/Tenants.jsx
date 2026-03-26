@@ -23,6 +23,14 @@ function Tenants() {
   const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+  const [leaveModal, setLeaveModal] = useState({
+    open: false, tenant: null,
+    date: new Date().toISOString().split('T')[0],
+    applyAdvanceToNext: false,
+    advanceForNext: '',
+    refundAdvance: false,
+    refundAmount: '',
+  });
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -263,17 +271,114 @@ function Tenants() {
     }
   };
 
-  const handleMarkAsLeft = async (tenant) => {
-    if (!window.confirm(`Mark ${tenant.name} as left?`)) return;
+  const handleMarkAsLeft = (tenant) => {
+    setLeaveModal({
+      open: true, tenant,
+      date: new Date().toISOString().split('T')[0],
+      applyAdvanceToNext: false,
+      advanceForNext: '',
+    });
+  };
 
+  const confirmMarkAsLeft = async () => {
+    const { tenant, date, applyAdvanceToNext, advanceForNext, refundAdvance, refundAmount } = leaveModal;
     const userId = user?.id || user?._id;
     try {
-      await axios.patch(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
+      const leaveDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isAlreadyLeft = leaveDate <= today;
+
+      // Collect tenant updates
+      const tenantUpdate = {
         userId,
-        status: 'COMPLETED',
-        leaveDate: new Date(),
-      }, { withCredentials: true });
-      toast.success('Tenant marked as left');
+        status: isAlreadyLeft ? 'COMPLETED' : 'ACTIVE',
+        leaveDate: date,
+      };
+
+      // Handle refund: record advanceRefunded, zero out advanceLeft
+      if (refundAdvance && parseFloat(refundAmount) > 0) {
+        const refAmt = parseFloat(refundAmount);
+        const currLeft = tenant.advanceLeft || 0;
+        if (refAmt > currLeft) {
+          toast.error(`Refund amount (₹${refAmt}) cannot exceed advance balance (₹${currLeft})`);
+          return;
+        }
+        tenantUpdate.advanceRefunded = (tenant.advanceRefunded || 0) + refAmt;
+        tenantUpdate.advanceLeft = Math.max(0, currLeft - refAmt);
+      }
+
+      await axios.patch(`${BACKEND_URL}/api/tenants/${tenant._id}`, tenantUpdate, { withCredentials: true });
+
+      // Handle advance-to-next-month
+      if (applyAdvanceToNext && parseFloat(advanceForNext) > 0) {
+        const advAmount = parseFloat(advanceForNext);
+        const currentAdvLeft = (refundAdvance && parseFloat(refundAmount) > 0)
+          ? Math.max(0, (tenant.advanceLeft || 0) - parseFloat(refundAmount)) - advAmount
+          : (tenant.advanceLeft || 0);
+
+        if (advAmount > (tenant.advanceLeft || 0)) {
+          toast.error('Advance to apply exceeds available balance');
+          return;
+        }
+
+        const leaveDt = new Date(date);
+        const nextMonth = leaveDt.getMonth() + 2;
+        const nextYear = nextMonth > 12 ? leaveDt.getFullYear() + 1 : leaveDt.getFullYear();
+        const actualNextMonth = nextMonth > 12 ? 1 : nextMonth;
+
+        const existingPayments = await axios.get(
+          `${BACKEND_URL}/api/payments?tenantId=${tenant._id}`,
+          { withCredentials: true }
+        );
+        const targetPayment = existingPayments.data.find(
+          p => p.month === actualNextMonth && p.year === nextYear && p.tenantId?._id === tenant._id
+        );
+
+        if (targetPayment) {
+          const newPaid = (targetPayment.amountPaid || 0) + advAmount;
+          const newStatus = newPaid >= targetPayment.rentAmount ? 'PAID' : newPaid > 0 ? 'PARTIAL' : 'PENDING';
+          await axios.patch(`${BACKEND_URL}/api/payments/${targetPayment._id}`, {
+            userId,
+            amountPaid: newPaid,
+            advanceUsed: (targetPayment.advanceUsed || 0) + advAmount,
+            paymentDate: new Date().toISOString().split('T')[0],
+            status: newStatus,
+          }, { withCredentials: true });
+        } else {
+          const joinDate = new Date(tenant.joiningDate);
+          const dueDay = joinDate.getDate();
+          const dueDate = new Date(nextYear, actualNextMonth - 1, dueDay);
+          const finalStatus = advAmount >= (tenant.rentAmount || 0) ? 'PAID' : 'PARTIAL';
+          await axios.post(`${BACKEND_URL}/api/payments`, {
+            userId,
+            tenantId: tenant._id,
+            month: actualNextMonth,
+            year: nextYear,
+            rentAmount: tenant.rentAmount || 0,
+            amountPaid: advAmount,
+            advanceUsed: advAmount,
+            paymentDate: new Date().toISOString().split('T')[0],
+            dueDate: dueDate.toISOString(),
+            status: finalStatus,
+          }, { withCredentials: true });
+        }
+
+        // Deduct advance used for next month from tenant
+        await axios.patch(`${BACKEND_URL}/api/tenants/${tenant._id}`, {
+          userId,
+          advanceLeft: Math.max(0, (tenantUpdate.advanceLeft ?? tenant.advanceLeft ?? 0) - advAmount),
+        }, { withCredentials: true });
+
+        toast.success(`₹${advAmount} advance applied to ${actualNextMonth}/${nextYear} payment!`);
+      }
+
+      if (refundAdvance && parseFloat(refundAmount) > 0) {
+        toast.success(`₹${parseFloat(refundAmount).toLocaleString()} advance refund recorded!`);
+      }
+
+      toast.success(isAlreadyLeft ? 'Tenant marked as left' : `Leave date set to ${date}. Auto-payments blocked after this date.`);
+      setLeaveModal({ open: false, tenant: null, date: new Date().toISOString().split('T')[0], applyAdvanceToNext: false, advanceForNext: '', refundAdvance: false, refundAmount: '' });
       fetchTenants();
       fetchRooms();
     } catch (error) {
@@ -414,6 +519,179 @@ function Tenants() {
           </div>
         </div>
       </div>
+
+      {/* Leave Date Modal */}
+      {leaveModal.open && leaveModal.tenant && (() => {
+        const leaveDt = new Date(leaveModal.date);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const isFuture = leaveDt > today;
+        const nextMo = leaveDt.getMonth() + 2;
+        const nextYr = nextMo > 12 ? leaveDt.getFullYear() + 1 : leaveDt.getFullYear();
+        const actualNextMo = nextMo > 12 ? 1 : nextMo;
+        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const advLeft = leaveModal.tenant.advanceLeft || 0;
+
+        return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Set Leave Date</h3>
+                  <p className="text-sm text-gray-500">{leaveModal.tenant.name}</p>
+                </div>
+              </div>
+
+              {/* Advance info */}
+              {(advLeft > 0 || leaveModal.tenant.advanceAmount > 0) && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm font-semibold text-yellow-800">💰 Advance Balance</p>
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-yellow-700">Total Advance Paid:</span>
+                    <span className="font-bold text-yellow-900">₹{Number(leaveModal.tenant.advanceAmount || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-yellow-700">Advance Remaining:</span>
+                    <span className="font-bold text-green-700">₹{Number(advLeft).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Leave Date Picker */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Leave Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={leaveModal.date}
+                  onChange={(e) => setLeaveModal(prev => ({ ...prev, date: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-gray-800"
+                />
+                {isFuture ? (
+                  <p className="text-xs text-blue-600 mt-1 font-semibold">
+                    🔔 Future date: tenant stays <b>Active</b> until {leaveModal.date}. Auto-payments will be <b>blocked</b> after this date.
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400 mt-1">Past date: tenant will be marked as Left immediately.</p>
+                )}
+              </div>
+
+              {/* Advance to next month — only if tenant has advance and leave is this month or next */}
+              {advLeft > 0 && (
+                <div className="mb-5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="applyAdvanceToNext"
+                      checked={leaveModal.applyAdvanceToNext}
+                      onChange={(e) => setLeaveModal(prev => ({ ...prev, applyAdvanceToNext: e.target.checked, advanceForNext: '' }))}
+                      className="w-4 h-4 accent-blue-600 cursor-pointer"
+                    />
+                    <label htmlFor="applyAdvanceToNext" className="text-sm font-semibold text-blue-800 cursor-pointer">
+                      Apply advance to {monthNames[actualNextMo - 1]} {nextYr} rent
+                    </label>
+                  </div>
+                  <p className="text-xs text-blue-600 mb-2">
+                    Tenant says they'll leave in {monthNames[leaveDt.getMonth()]}? Apply ₹{advLeft.toLocaleString()} advance to cover next month's rent before they go.
+                  </p>
+                  {leaveModal.applyAdvanceToNext && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Amount to Apply (Rs.) <span className="text-gray-400">— max ₹{advLeft.toLocaleString()}</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={advLeft}
+                        value={leaveModal.advanceForNext}
+                        onChange={(e) => setLeaveModal(prev => ({ ...prev, advanceForNext: e.target.value }))}
+                        placeholder={`e.g. ${Math.min(advLeft, leaveModal.tenant.rentAmount || advLeft)}`}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-400 text-gray-800 text-sm"
+                      />
+                      {leaveModal.advanceForNext && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Advance left after: ₹{Math.max(0, advLeft - (parseFloat(leaveModal.advanceForNext) || 0)).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Refund advance section */}
+              {advLeft > 0 && (
+                <div className="mb-5 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="refundAdvance"
+                      checked={leaveModal.refundAdvance}
+                      onChange={(e) => setLeaveModal(prev => ({ ...prev, refundAdvance: e.target.checked, refundAmount: '' }))}
+                      className="w-4 h-4 accent-green-600 cursor-pointer"
+                    />
+                    <label htmlFor="refundAdvance" className="text-sm font-semibold text-green-800 cursor-pointer">
+                      Return advance to tenant (Refund)
+                    </label>
+                  </div>
+                  <p className="text-xs text-green-600 mb-2">
+                    Record how much of the ₹{advLeft.toLocaleString()} advance you are returning to {leaveModal.tenant.name}.
+                  </p>
+                  {leaveModal.refundAdvance && (
+                    <div>
+                      <div className="flex gap-2 mb-2">
+                        <button
+                          type="button"
+                          onClick={() => setLeaveModal(prev => ({ ...prev, refundAmount: String(advLeft) }))}
+                          className="text-xs px-2 py-1 bg-green-600 text-white rounded font-semibold hover:bg-green-700"
+                        >
+                          Full Refund (₹{advLeft.toLocaleString()})
+                        </button>
+                      </div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Refund Amount (Rs.) <span className="text-gray-400">— max ₹{advLeft.toLocaleString()}</span>
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={advLeft}
+                        value={leaveModal.refundAmount}
+                        onChange={(e) => setLeaveModal(prev => ({ ...prev, refundAmount: e.target.value }))}
+                        placeholder={`e.g. ${advLeft}`}
+                        className="w-full px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-400 text-gray-800 text-sm"
+                      />
+                      {leaveModal.refundAmount && (
+                        <p className="text-xs text-green-700 mt-1 font-semibold">
+                          ✓ Advance left after refund: ₹{Math.max(0, advLeft - (parseFloat(leaveModal.refundAmount) || 0)).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setLeaveModal({ open: false, tenant: null, date: new Date().toISOString().split('T')[0], applyAdvanceToNext: false, advanceForNext: '', refundAdvance: false, refundAmount: '' })}
+                  className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold text-sm transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmMarkAsLeft}
+                  className="px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-semibold text-sm transition"
+                >
+                  {isFuture ? 'Set Leave Date' : 'Confirm Leave'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Tenant Form Modal */}
       {showForm && (

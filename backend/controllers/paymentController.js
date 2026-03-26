@@ -222,7 +222,7 @@ exports.getPaymentsByTenant = async (req, res) => {
 // Create payment
 exports.createPayment = async (req, res) => {
   try {
-    const { tenantId, month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
+    const { tenantId, month, year, rentAmount, amountPaid, paymentDate, status, advanceUsed } = req.body;
 
     if (!tenantId || tenantId.trim() === '') {
       return res.status(400).json({ success: false, message: 'Please provide tenant ID' });
@@ -248,32 +248,54 @@ exports.createPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Status must be PENDING, PAID, or PARTIAL' });
     }
 
-    if (amountPaid > rentAmount) {
-      return res.status(400).json({ success: false, message: 'Amount paid cannot exceed rent amount' });
+    // Handle advance deduction from tenant's advance balance
+    const advanceUsedAmount = parseFloat(advanceUsed) || 0;
+    if (advanceUsedAmount > 0) {
+      const tenant = await Tenant.findById(tenantId);
+      if (!tenant) {
+        return res.status(404).json({ success: false, message: 'Tenant not found' });
+      }
+      const currentAdvanceLeft = tenant.advanceLeft || 0;
+      if (advanceUsedAmount > currentAdvanceLeft) {
+        return res.status(400).json({ success: false, message: `Advance used (Rs.${advanceUsedAmount}) cannot exceed available advance balance (Rs.${currentAdvanceLeft})` });
+      }
+      // Deduct from tenant advance balance
+      await Tenant.findByIdAndUpdate(tenantId, { advanceLeft: currentAdvanceLeft - advanceUsedAmount });
+    }
+
+    // Effective amount paid = cash paid + advance used
+    const cashPaid = parseFloat(amountPaid) || 0;
+    const effectivePaid = cashPaid + advanceUsedAmount;
+
+    // Auto-determine status
+    let finalStatus = status || 'PENDING';
+    if (!status) {
+      if (effectivePaid >= parseFloat(rentAmount)) finalStatus = 'PAID';
+      else if (effectivePaid > 0) finalStatus = 'PARTIAL';
     }
 
     // Calculate dueDate if not provided (5th of the specified month/year as default)
     const dueDate = req.body.dueDate || new Date(year, month - 1, 5);
+
+    if (req.isAdmin && !req.body.userId) {
+      return res.status(400).json({ success: false, message: 'userId is required when admin creates a payment' });
+    }
 
     const paymentData = {
       tenantId,
       month,
       year,
       rentAmount,
-      amountPaid: amountPaid || 0,
-      dueDate: dueDate,
-      paymentDate: amountPaid > 0 ? paymentDate : null,
-      status: status || 'PENDING',
+      amountPaid: effectivePaid,
+      advanceUsed: advanceUsedAmount,
+      dueDate,
+      paymentDate: effectivePaid > 0 ? paymentDate : null,
+      status: finalStatus,
       userId: req.isAdmin ? req.body.userId : req.user._id,
     };
 
-    if (req.isAdmin && !req.body.userId) {
-      return res.status(400).json({ success: false, message: 'userId is required when admin creates a payment' });
-    }
-
     const payment = await Payment.create(paymentData);
-    const populatedPayment = await Payment.findById(payment._id)
-      .populate('tenantId');
+    const populatedPayment = await Payment.findById(payment._id).populate('tenantId');
     res.status(201).json({ success: true, data: populatedPayment });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -283,7 +305,7 @@ exports.createPayment = async (req, res) => {
 // Update payment
 exports.updatePayment = async (req, res) => {
   try {
-    const { month, year, rentAmount, amountPaid, paymentDate, status } = req.body;
+    const { month, year, rentAmount, amountPaid, paymentDate, status, advanceUsed } = req.body;
     const paymentId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {

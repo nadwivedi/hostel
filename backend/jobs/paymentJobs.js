@@ -57,6 +57,17 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
         // Calculate the due date for the next payment
         const nextDueDate = new Date(nextYear, nextMonth - 1, dueDay);
 
+        // ✅ Skip if tenant has a leave date set and their leave date is before the next due date
+        // This prevents creating payments for tenants who are about to leave
+        if (tenant.leaveDate) {
+          const tenantLeaveDate = new Date(tenant.leaveDate);
+          tenantLeaveDate.setHours(0, 0, 0, 0);
+          if (nextDueDate > tenantLeaveDate) {
+            console.log(`Skipping payment for ${tenant.name} - leave date set to ${tenantLeaveDate.toLocaleDateString()}, next due ${nextDueDate.toLocaleDateString()}`);
+            continue;
+          }
+        }
+
         // Check if the next due date is within 4 days from today
         if (nextDueDate >= today && nextDueDate <= fourDaysFromNow) {
           // Check if payment already exists for this month
@@ -177,6 +188,16 @@ const runPaymentCheckNow = async () => {
         }
 
         const nextDueDate = new Date(nextYear, nextMonth - 1, dueDay);
+
+        // ✅ Skip if tenant has a leave date set and their leave date is before the next due date
+        if (tenant.leaveDate) {
+          const tenantLeaveDate = new Date(tenant.leaveDate);
+          tenantLeaveDate.setHours(0, 0, 0, 0);
+          if (nextDueDate > tenantLeaveDate) {
+            console.log(`[Startup] Skipping payment for ${tenant.name} - leave date ${tenantLeaveDate.toLocaleDateString()}`);
+            continue;
+          }
+        }
 
         if (nextDueDate >= today && nextDueDate <= fourDaysFromNow) {
           const existingPayment = await Payment.findOne({
