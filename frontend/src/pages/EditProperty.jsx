@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from '../App';
 import { useAuth } from '../context/AuthContext';
-import PropertyFormModal from '../components/properties/PropertyFormModal';
 import PropertyRoomFormModal from '../components/properties/PropertyRoomFormModal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -19,7 +18,6 @@ function EditProperty() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingProperty, setSavingProperty] = useState(false);
-  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [roomModalSubmitting, setRoomModalSubmitting] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -60,70 +58,6 @@ function EditProperty() {
     });
 
     return uploadRes.data.fileUrl;
-  };
-
-  const createRoomsForProperty = async (propertyTargetId, roomDrafts) => {
-    const userId = user?.id || user?._id;
-
-    for (const room of roomDrafts) {
-      const beds = room.rentType === 'PER_BED'
-        ? Array.from({ length: Number(room.numberOfBeds) || 0 }, (_, index) => ({
-            bedNumber: String(index + 1),
-            status: 'AVAILABLE',
-          }))
-        : [];
-
-      await axios.post(
-        `${BACKEND_URL}/api/rooms`,
-        {
-          userId,
-          propertyId: propertyTargetId,
-          roomNumber: room.roomNumber,
-          floor: room.floor ? Number(room.floor) : undefined,
-          rentType: room.rentType,
-          rentAmount: Number(room.rentAmount),
-          beds,
-        },
-        { withCredentials: true }
-      );
-    }
-  };
-
-  const handleAddProperty = async (payload) => {
-    const userId = user?.id || user?._id;
-    if (!userId) {
-      toast.error('User not authenticated. Please log in again.');
-      return;
-    }
-
-    try {
-      setSavingProperty(true);
-      const imageUrl = await uploadPropertyImage(payload.imageFile, payload.name);
-      const propertyRes = await axios.post(
-        `${BACKEND_URL}/api/properties`,
-        {
-          userId,
-          name: payload.name,
-          location: payload.location,
-          propertyType: payload.propertyType,
-          image: imageUrl,
-        },
-        { withCredentials: true }
-      );
-
-      const newPropertyId = propertyRes.data.data?._id || propertyRes.data._id;
-      if (payload.rooms.length) {
-        await createRoomsForProperty(newPropertyId, payload.rooms);
-      }
-
-      toast.success('Property added successfully!');
-      setShowAddPropertyModal(false);
-    } catch (error) {
-      console.error('Error adding property:', error);
-      toast.error(error.response?.data?.message || 'Failed to add property');
-    } finally {
-      setSavingProperty(false);
-    }
   };
 
   const handleUpdateProperty = async (event) => {
@@ -291,7 +225,7 @@ function EditProperty() {
             >
               Back to properties
             </button>
-            <h1 className="text-2xl font-bold">{property.name}</h1>
+            <h1 className="text-xl font-bold sm:text-2xl">{property.name}</h1>
             <p className="text-sm text-slate-300">{property.location}</p>
           </div>
         </div>
@@ -299,18 +233,11 @@ function EditProperty() {
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
-            onClick={() => setShowAddPropertyModal(true)}
-            className="rounded-2xl bg-white px-5 py-3 font-semibold text-slate-900 transition hover:bg-slate-100"
-          >
-            Add Property
-          </button>
-          <button
-            type="button"
             onClick={() => {
               setEditingRoom(null);
               setShowRoomModal(true);
             }}
-            className="rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
+            className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 sm:text-base"
           >
             Add Room
           </button>
@@ -373,7 +300,7 @@ function EditProperty() {
             <button
               type="submit"
               disabled={savingProperty}
-              className="w-full rounded-2xl bg-gray-900 px-5 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-2xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
             >
               {savingProperty ? 'Saving...' : 'Save Property Changes'}
             </button>
@@ -399,8 +326,8 @@ function EditProperty() {
             ) : (
               rooms.map((room) => (
                 <div key={room._id} className="rounded-2xl border border-gray-200 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
                       <h3 className="text-lg font-bold text-gray-900">Room {room.roomNumber}</h3>
                       <p className="text-sm text-gray-500">
                         Floor {room.floor || 1} • {room.rentType === 'PER_BED' ? 'Per Bed' : 'Per Room'}
@@ -413,21 +340,21 @@ function EditProperty() {
                       )}
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex shrink-0 items-center gap-2">
                       <button
                         type="button"
                         onClick={() => {
                           setEditingRoom(room);
                           setShowRoomModal(true);
                         }}
-                        className="rounded-xl border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                        className="rounded-xl border border-gray-300 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 sm:text-sm"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDeleteRoom(room)}
-                        className="rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                        className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100 sm:text-sm"
                       >
                         Delete
                       </button>
@@ -439,15 +366,6 @@ function EditProperty() {
           </div>
         </div>
       </div>
-
-      <PropertyFormModal
-        open={showAddPropertyModal}
-        title="Add New Property"
-        submitLabel="Create Property"
-        submitting={savingProperty}
-        onClose={() => setShowAddPropertyModal(false)}
-        onSubmit={handleAddProperty}
-      />
 
       <PropertyRoomFormModal
         open={showRoomModal}
