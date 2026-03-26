@@ -6,14 +6,6 @@ const defaultFormState = {
   propertyType: 'hostel',
 };
 
-const createRoomDraft = () => ({
-  roomNumber: '',
-  floor: '',
-  rentType: 'PER_ROOM',
-  rentAmount: '',
-  numberOfBeds: 0,
-});
-
 function PropertyFormModal({
   open,
   title = 'Add Property',
@@ -26,7 +18,6 @@ function PropertyFormModal({
   const [formData, setFormData] = useState(defaultFormState);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [rooms, setRooms] = useState([createRoomDraft()]);
 
   useEffect(() => {
     if (!open) return;
@@ -38,7 +29,6 @@ function PropertyFormModal({
     });
     setImageFile(null);
     setImagePreview(initialData?.imageUrl || null);
-    setRooms(initialData?.rooms?.length ? initialData.rooms : [createRoomDraft()]);
   }, [initialData, open]);
 
   if (!open) return null;
@@ -56,39 +46,12 @@ function PropertyFormModal({
     setImagePreview(URL.createObjectURL(file));
   };
 
-  const handleRoomChange = (index, field, value) => {
-    setRooms((prev) =>
-      prev.map((room, roomIndex) =>
-        roomIndex === index ? { ...room, [field]: value } : room
-      )
-    );
-  };
-
-  const addRoomDraft = () => {
-    setRooms((prev) => [...prev, createRoomDraft()]);
-  };
-
-  const removeRoomDraft = (index) => {
-    setRooms((prev) => (prev.length === 1 ? [createRoomDraft()] : prev.filter((_, i) => i !== index)));
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    const normalizedRooms = rooms
-      .map((room) => ({
-        roomNumber: room.roomNumber.trim(),
-        floor: room.floor,
-        rentType: room.rentType,
-        rentAmount: room.rentAmount,
-        numberOfBeds: room.rentType === 'PER_BED' ? room.numberOfBeds : 0,
-      }))
-      .filter((room) => room.roomNumber && room.rentAmount);
 
     await onSubmit({
       ...formData,
       imageFile,
-      rooms: normalizedRooms,
     });
   };
 
@@ -96,10 +59,7 @@ function PropertyFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white shadow-2xl">
         <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-5 py-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-            <p className="text-sm text-gray-500">Add property details, rooms, and image in one place.</p>
-          </div>
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
           <button
             type="button"
             onClick={onClose}
@@ -181,92 +141,7 @@ function PropertyFormModal({
             </div>
           </div>
 
-          <div className="rounded-3xl border border-gray-200 bg-gray-50 p-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Rooms</h3>
-                <p className="text-sm text-gray-500">Add rooms now or leave blank and add them later.</p>
-              </div>
-              <button
-                type="button"
-                onClick={addRoomDraft}
-                className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-800"
-              >
-                Add Room
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {rooms.map((room, index) => (
-                <div key={index} className="rounded-2xl border border-gray-200 bg-white p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <h4 className="font-semibold text-gray-800">Room {index + 1}</h4>
-                    <button
-                      type="button"
-                      onClick={() => removeRoomDraft(index)}
-                      className="text-sm font-medium text-red-500 transition hover:text-red-600"
-                    >
-                      Remove
-                    </button>
-                  </div>
-
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <input
-                      type="text"
-                      value={room.roomNumber}
-                      onChange={(event) => handleRoomChange(index, 'roomNumber', event.target.value)}
-                      className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      placeholder="Room number"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={room.floor}
-                      onChange={(event) => handleRoomChange(index, 'floor', event.target.value)}
-                      className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      placeholder="Floor"
-                    />
-                    <select
-                      value={room.rentType}
-                      onChange={(event) => handleRoomChange(index, 'rentType', event.target.value)}
-                      className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-                      <option value="PER_ROOM">Per Room</option>
-                      <option value="PER_BED">Per Bed</option>
-                    </select>
-                    <input
-                      type="number"
-                      min="1"
-                      value={room.rentAmount}
-                      onChange={(event) => handleRoomChange(index, 'rentAmount', event.target.value)}
-                      className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      placeholder="Rent amount"
-                    />
-                    {room.rentType === 'PER_BED' && (
-                      <input
-                        type="number"
-                        min="1"
-                        max="20"
-                        value={room.numberOfBeds}
-                        onChange={(event) => handleRoomChange(index, 'numberOfBeds', event.target.value)}
-                        className="rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 md:col-span-2"
-                        placeholder="Number of beds"
-                      />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-2xl border border-gray-300 px-5 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
-            >
-              Cancel
-            </button>
+          <div className="flex justify-end border-t border-gray-200 pt-2">
             <button
               type="submit"
               disabled={submitting}

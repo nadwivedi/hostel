@@ -110,33 +110,6 @@ function Properties() {
     return uploadRes.data.fileUrl;
   };
 
-  const createRoomsForProperty = async (propertyId, roomDrafts) => {
-    const userId = user?.id || user?._id;
-
-    for (const room of roomDrafts) {
-      const beds = room.rentType === 'PER_BED'
-        ? Array.from({ length: Number(room.numberOfBeds) || 0 }, (_, index) => ({
-            bedNumber: String(index + 1),
-            status: 'AVAILABLE',
-          }))
-        : [];
-
-      await axios.post(
-        `${BACKEND_URL}/api/rooms`,
-        {
-          userId,
-          propertyId,
-          roomNumber: room.roomNumber,
-          floor: room.floor ? Number(room.floor) : undefined,
-          rentType: room.rentType,
-          rentAmount: Number(room.rentAmount),
-          beds,
-        },
-        { withCredentials: true }
-      );
-    }
-  };
-
   const handleAddProperty = async (payload) => {
     const userId = user?.id || user?._id;
     if (!userId) {
@@ -158,11 +131,6 @@ function Properties() {
         },
         { withCredentials: true }
       );
-
-      const newPropertyId = propertyRes.data.data?._id || propertyRes.data._id;
-      if (payload.rooms.length) {
-        await createRoomsForProperty(newPropertyId, payload.rooms);
-      }
 
       toast.success('Property added successfully!');
       setShowAddPropertyModal(false);
