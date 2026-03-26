@@ -180,14 +180,14 @@ function Properties() {
       {!loading && (
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-4 py-3 shadow-sm">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-sm">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-sm">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M5 21V7l8-4 6 4v14M9 9h.01M9 12h.01M9 15h.01M15 9h.01M15 12h.01M15 15h.01" />
               </svg>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500">Total Properties</p>
-              <h2 className="text-2xl font-bold leading-none text-gray-900">{properties.length}</h2>
+              <h2 className="text-xl font-bold leading-none text-gray-900">{properties.length}</h2>
             </div>
           </div>
 
