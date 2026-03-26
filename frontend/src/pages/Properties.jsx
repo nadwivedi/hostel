@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from '../App';
+import { useAuth } from '../context/AuthContext';
+import PropertyFormModal from '../components/properties/PropertyFormModal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -24,9 +27,12 @@ const toArray = (payload) => {
 
 function Properties() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [properties, setProperties] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [submittingProperty, setSubmittingProperty] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -89,8 +95,111 @@ function Properties() {
     navigate(`/property/${propertyId}`);
   };
 
+  const uploadPropertyImage = async (imageFile, propertyName) => {
+    if (!imageFile) return null;
+
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    formData.append('propertyName', propertyName);
+
+    const uploadRes = await axios.post(`${BACKEND_URL}/api/uploads/property`, formData, {
+      withCredentials: true,
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    return uploadRes.data.fileUrl;
+  };
+
+  const createRoomsForProperty = async (propertyId, roomDrafts) => {
+    const userId = user?.id || user?._id;
+
+    for (const room of roomDrafts) {
+      const beds = room.rentType === 'PER_BED'
+        ? Array.from({ length: Number(room.numberOfBeds) || 0 }, (_, index) => ({
+            bedNumber: String(index + 1),
+            status: 'AVAILABLE',
+          }))
+        : [];
+
+      await axios.post(
+        `${BACKEND_URL}/api/rooms`,
+        {
+          userId,
+          propertyId,
+          roomNumber: room.roomNumber,
+          floor: room.floor ? Number(room.floor) : undefined,
+          rentType: room.rentType,
+          rentAmount: Number(room.rentAmount),
+          beds,
+        },
+        { withCredentials: true }
+      );
+    }
+  };
+
+  const handleAddProperty = async (payload) => {
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
+
+    try {
+      setSubmittingProperty(true);
+      const imageUrl = await uploadPropertyImage(payload.imageFile, payload.name);
+      const propertyRes = await axios.post(
+        `${BACKEND_URL}/api/properties`,
+        {
+          userId,
+          name: payload.name,
+          location: payload.location,
+          propertyType: payload.propertyType,
+          image: imageUrl,
+        },
+        { withCredentials: true }
+      );
+
+      const newPropertyId = propertyRes.data.data?._id || propertyRes.data._id;
+      if (payload.rooms.length) {
+        await createRoomsForProperty(newPropertyId, payload.rooms);
+      }
+
+      toast.success('Property added successfully!');
+      setShowAddPropertyModal(false);
+      await fetchData();
+    } catch (error) {
+      console.error('Error adding property:', error);
+      toast.error(error.response?.data?.message || 'Failed to add property');
+    } finally {
+      setSubmittingProperty(false);
+    }
+  };
+
   return (
     <div className="space-y-6 sm:space-y-8">
+      {!loading && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-100 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-4 py-3 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-sm">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M5 21V7l8-4 6 4v14M9 9h.01M9 12h.01M9 15h.01M15 9h.01M15 12h.01M15 15h.01" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Total Properties</p>
+              <h2 className="text-2xl font-bold leading-none text-gray-900">{properties.length}</h2>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowAddPropertyModal(true)}
+            className="rounded-lg bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:scale-[1.02] hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600"
+          >
+            Add Property
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center min-h-[40vh]">
@@ -135,6 +244,20 @@ function Properties() {
                     <span>{typeConfig.label}</span>
                   </div>
 
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      navigate(`/properties/${property._id}/edit`);
+                    }}
+                    className="absolute right-2 top-2 rounded-full bg-white/95 p-2 text-gray-700 shadow-lg transition hover:scale-105 hover:bg-white"
+                    title="Edit Property"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+
                   {/* Property Name on Image */}
                   <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-4">
                     <h3 className="text-xs sm:text-2xl font-bold text-white drop-shadow-lg truncate">
@@ -150,11 +273,6 @@ function Properties() {
                   </div>
 
                   {/* Occupancy Badge */}
-                  <div className={`absolute top-1.5 right-1.5 sm:top-2 sm:right-2 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-full text-[8px] sm:text-xs font-bold shadow-lg ${
-                    occupancyRate >= 80 ? 'bg-green-500 text-white' :
-                    occupancyRate >= 50 ? 'bg-yellow-500 text-white' : 'bg-red-500 text-white'
-                  }`}>
-                    {occupancyRate}%</div>
                 </div>
 
                 {/* Bottom Stats Strip */}
@@ -245,10 +363,11 @@ function Properties() {
           </div>
           <h3 className="text-xl font-bold text-gray-700 mb-2">No Properties Yet</h3>
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Get started by adding your first property in Settings.
+            Get started by adding your first property here.
           </p>
           <button
-            onClick={() => navigate('/settings')}
+            type="button"
+            onClick={() => setShowAddPropertyModal(true)}
             className="px-6 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-800 font-semibold transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,6 +377,15 @@ function Properties() {
           </button>
         </div>
       )}
+
+      <PropertyFormModal
+        open={showAddPropertyModal}
+        title="Add New Property"
+        submitLabel="Create Property"
+        submitting={submittingProperty}
+        onClose={() => setShowAddPropertyModal(false)}
+        onSubmit={handleAddProperty}
+      />
     </div>
   );
 }
