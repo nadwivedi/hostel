@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from '../App';
+import { useAuth } from '../context/AuthContext';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -9,11 +10,26 @@ function TenantDetail() {
   const { tenantId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const [tenant, setTenant] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    mobile: '',
+    email: '',
+    adharNo: '',
+    dob: '',
+    gender: '',
+    rentAmount: '',
+    advanceAmount: '',
+    joiningDate: '',
+    notes: '',
+  });
 
   const backPath = location.state?.from || '/tenants';
 
@@ -51,6 +67,80 @@ function TenantDetail() {
     if (!value) return '-';
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('en-GB');
+  };
+
+  const openEditModal = () => {
+    if (!tenant) return;
+
+    setEditForm({
+      name: tenant.name || '',
+      mobile: tenant.mobile || '',
+      email: tenant.email || '',
+      adharNo: tenant.adharNo || '',
+      dob: tenant.dob ? new Date(tenant.dob).toISOString().split('T')[0] : '',
+      gender: tenant.gender || '',
+      rentAmount: tenant.rentAmount || '',
+      advanceAmount: tenant.advanceAmount || '',
+      joiningDate: tenant.joiningDate ? new Date(tenant.joiningDate).toISOString().split('T')[0] : '',
+      notes: tenant.notes || '',
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (event) => {
+    const { name, value } = event.target;
+
+    if (name === 'mobile') {
+      setEditForm((prev) => ({ ...prev, mobile: value.replace(/\D/g, '').slice(0, 10) }));
+      return;
+    }
+
+    if (name === 'adharNo') {
+      setEditForm((prev) => ({ ...prev, adharNo: value.replace(/\D/g, '').slice(0, 12) }));
+      return;
+    }
+
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSubmit = async (event) => {
+    event.preventDefault();
+
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      toast.error('User not authenticated. Please log in again.');
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      const response = await axios.patch(
+        `${BACKEND_URL}/api/tenants/${tenantId}`,
+        {
+          userId,
+          name: editForm.name,
+          mobile: editForm.mobile,
+          email: editForm.email || '',
+          adharNo: editForm.adharNo || '',
+          dob: editForm.dob || undefined,
+          gender: editForm.gender || undefined,
+          rentAmount: editForm.rentAmount ? Number(editForm.rentAmount) : undefined,
+          advanceAmount: editForm.advanceAmount ? Number(editForm.advanceAmount) : 0,
+          joiningDate: editForm.joiningDate || undefined,
+          notes: editForm.notes || '',
+        },
+        { withCredentials: true }
+      );
+
+      setTenant(response.data.data);
+      setShowEditModal(false);
+      toast.success('Tenant updated successfully!');
+    } catch (error) {
+      console.error('Error updating tenant:', error);
+      toast.error(error.response?.data?.message || 'Failed to update tenant');
+    } finally {
+      setSavingEdit(false);
+    }
   };
 
   if (loading) {
@@ -98,6 +188,13 @@ function TenantDetail() {
               <a href={`tel:${tenant.mobile}`} className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700">
                 {tenant.mobile}
               </a>
+              <button
+                type="button"
+                onClick={openEditModal}
+                className="inline-flex items-center rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-700 transition hover:bg-blue-100 sm:text-xs"
+              >
+                Edit
+              </button>
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
               <span
@@ -263,6 +360,157 @@ function TenantDetail() {
               </svg>
             </button>
             <img src={previewPhoto} alt="Tenant Document" className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl" />
+          </div>
+        </div>
+      )}
+
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5">
+              <div>
+                <h2 className="text-base font-bold text-gray-900 sm:text-lg">Edit Tenant</h2>
+                <p className="text-xs text-gray-500 sm:text-sm">Update tenant details from this page.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4 p-4 sm:p-5">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleEditChange}
+                    required
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Mobile</label>
+                  <input
+                    type="text"
+                    name="mobile"
+                    value={editForm.mobile}
+                    onChange={handleEditChange}
+                    required
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editForm.email}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Aadhar Number</label>
+                  <input
+                    type="text"
+                    name="adharNo"
+                    value={editForm.adharNo}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Date of Birth</label>
+                  <input
+                    type="date"
+                    name="dob"
+                    value={editForm.dob}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Gender</label>
+                  <select
+                    name="gender"
+                    value={editForm.gender}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Monthly Rent</label>
+                  <input
+                    type="number"
+                    min="0"
+                    name="rentAmount"
+                    value={editForm.rentAmount}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Advance Amount</label>
+                  <input
+                    type="number"
+                    min="0"
+                    name="advanceAmount"
+                    value={editForm.advanceAmount}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Joining Date</label>
+                  <input
+                    type="date"
+                    name="joiningDate"
+                    value={editForm.joiningDate}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block text-xs font-semibold text-gray-700 sm:text-sm">Notes</label>
+                  <textarea
+                    name="notes"
+                    rows="3"
+                    value={editForm.notes}
+                    onChange={handleEditChange}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {savingEdit ? 'Saving...' : 'Update Tenant'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
