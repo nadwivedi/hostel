@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from '../App';
 import { useAuth } from '../context/AuthContext';
+import PropertyFormModal from '../components/properties/PropertyFormModal';
 import PropertyRoomFormModal from '../components/properties/PropertyRoomFormModal';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -18,6 +19,7 @@ function EditProperty() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingProperty, setSavingProperty] = useState(false);
+  const [showEditPropertyModal, setShowEditPropertyModal] = useState(false);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [roomModalSubmitting, setRoomModalSubmitting] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -60,9 +62,7 @@ function EditProperty() {
     return uploadRes.data.fileUrl;
   };
 
-  const handleUpdateProperty = async (event) => {
-    event.preventDefault();
-
+  const handleUpdateProperty = async (payload) => {
     if (!property) {
       toast.error('Property data is not ready yet.');
       return;
@@ -70,26 +70,25 @@ function EditProperty() {
 
     try {
       setSavingProperty(true);
-      const form = new FormData(event.currentTarget);
-      const imageFile = form.get('image');
       let imageUrl = property.image || null;
 
-      if (imageFile && imageFile.size > 0) {
-        imageUrl = await uploadPropertyImage(imageFile, form.get('name'));
+      if (payload.imageFile) {
+        imageUrl = await uploadPropertyImage(payload.imageFile, payload.name);
       }
 
       await axios.patch(
         `${BACKEND_URL}/api/properties/${propertyId}`,
         {
-          name: form.get('name'),
-          location: form.get('location'),
-          propertyType: form.get('propertyType'),
+          name: payload.name,
+          location: payload.location,
+          propertyType: payload.propertyType,
           image: imageUrl,
         },
         { withCredentials: true }
       );
 
       toast.success('Property updated successfully!');
+      setShowEditPropertyModal(false);
       await fetchPropertyData();
     } catch (error) {
       console.error('Error updating property:', error);
@@ -218,19 +217,19 @@ function EditProperty() {
             className="h-20 w-20 rounded-2xl object-cover shadow-lg"
           />
           <div>
-            <button
-              type="button"
-              onClick={() => navigate('/properties')}
-              className="mb-2 text-sm font-medium text-blue-200 transition hover:text-white"
-            >
-              Back to properties
-            </button>
             <h1 className="text-xl font-bold sm:text-2xl">{property.name}</h1>
             <p className="text-sm text-slate-300">{property.location}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => setShowEditPropertyModal(true)}
+            className="rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 sm:text-base"
+          >
+            Edit Property
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -244,68 +243,32 @@ function EditProperty() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
-        <form onSubmit={handleUpdateProperty} className="rounded-3xl bg-white p-6 shadow-lg">
+      <div className="grid gap-6 lg:grid-cols-[0.8fr,1.2fr]">
+        <div className="rounded-3xl bg-white p-6 shadow-lg">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Edit Property</h2>
-            <p className="text-sm text-gray-500">Update property info, image, and type.</p>
+            <h2 className="text-xl font-bold text-gray-900">Property Details</h2>
+            <p className="text-sm text-gray-500">Use the edit button above to update property info.</p>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Property Name</label>
-              <input
-                type="text"
-                name="name"
-                defaultValue={property.name}
-                required
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Property Name</p>
+              <p className="mt-1 text-sm font-bold text-gray-900 sm:text-base">{property.name}</p>
             </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Location</label>
-              <input
-                type="text"
-                name="location"
-                defaultValue={property.location}
-                required
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Location</p>
+              <p className="mt-1 text-sm font-semibold text-gray-900 sm:text-base">{property.location}</p>
             </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Property Type</label>
-              <select
-                name="propertyType"
-                defaultValue={property.propertyType || 'hostel'}
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="hostel">Hostel</option>
-                <option value="resident">Resident</option>
-                <option value="shop">Shop</option>
-              </select>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Property Type</p>
+              <p className="mt-1 text-sm font-semibold capitalize text-gray-900 sm:text-base">{property.propertyType}</p>
             </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-gray-700">Update Image</label>
-              <input
-                type="file"
-                name="image"
-                accept="image/*"
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3 text-sm text-gray-600"
-              />
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500">Rooms</p>
+              <p className="mt-1 text-sm font-semibold text-gray-900 sm:text-base">{rooms.length}</p>
             </div>
-
-            <button
-              type="submit"
-              disabled={savingProperty}
-              className="w-full rounded-2xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-70 sm:text-base"
-            >
-              {savingProperty ? 'Saving...' : 'Save Property Changes'}
-            </button>
           </div>
-        </form>
+        </div>
 
         <div className="rounded-3xl bg-white p-6 shadow-lg">
           <div className="mb-4 flex items-center justify-between gap-3">
@@ -366,6 +329,21 @@ function EditProperty() {
           </div>
         </div>
       </div>
+
+      <PropertyFormModal
+        open={showEditPropertyModal}
+        title="Edit Property"
+        submitLabel="Save Property Changes"
+        submitting={savingProperty}
+        initialData={{
+          name: property.name,
+          location: property.location,
+          propertyType: property.propertyType,
+          imageUrl: property.image ? `${BACKEND_URL}${property.image}` : null,
+        }}
+        onClose={() => setShowEditPropertyModal(false)}
+        onSubmit={handleUpdateProperty}
+      />
 
       <PropertyRoomFormModal
         open={showRoomModal}
