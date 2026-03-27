@@ -4,7 +4,12 @@ const Property = require('../models/Property');
 // Get all properties
 exports.getAllProperties = async (req, res) => {
   try {
-    const filter = req.isAdmin ? {} : { userId: req.user._id };
+    let filter = req.isAdmin ? {} : { userId: req.user._id };
+
+    // Employees only see their assigned properties
+    if (req.isEmployee && req.assignedPropertyIds?.length) {
+      filter._id = { $in: req.assignedPropertyIds };
+    }
 
     // Filter by propertyType if provided
     if (req.query.propertyType) {
@@ -174,7 +179,12 @@ exports.deleteProperty = async (req, res) => {
 exports.getPropertyStats = async (req, res) => {
   try {
     const Room = require('../models/Room');
-    const filter = req.isAdmin ? {} : { userId: req.user._id };
+    let filter = req.isAdmin ? {} : { userId: req.user._id };
+
+    // Employees only see their assigned properties
+    if (req.isEmployee && req.assignedPropertyIds?.length) {
+      filter._id = { $in: req.assignedPropertyIds };
+    }
 
     const properties = await Property.find(filter);
 

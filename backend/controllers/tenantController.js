@@ -9,6 +9,11 @@ exports.getAllTenants = async (req, res) => {
     const { propertyId, locationId, status } = req.query;
     let filter = req.isAdmin ? {} : { userId: req.user._id };
 
+    // Employees only see tenants in their assigned properties
+    if (req.isEmployee && req.assignedPropertyIds?.length) {
+      filter.propertyId = { $in: req.assignedPropertyIds };
+    }
+
     // Accept both propertyId and locationId as aliases
     const propId = propertyId || locationId;
     if (propId) {
