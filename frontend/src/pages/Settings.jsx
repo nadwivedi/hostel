@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../App';
+import Employees from './Employees';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -1197,6 +1198,9 @@ function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Staff / Employees Management */}
+      <Employees embedded />
 
       {/* Logout */}
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl border border-red-200 p-2.5 sm:p-5">

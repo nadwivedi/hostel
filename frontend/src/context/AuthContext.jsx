@@ -3,63 +3,80 @@ import axios from 'axios';
 
 const AuthContext = createContext(null);
 
+const API = import.meta.env.VITE_BACKEND_URL;
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authType, setAuthType] = useState(null); // 'owner' | 'employee' | null
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
+    setLoading(true);
     try {
-      const userResponse = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/me`,
-        {
-          withCredentials: true,
-        }
-      );
-      setUser(userResponse.data.user);
+      // Try owner session first
+      const res = await axios.get(`${API}/api/auth/me`, { withCredentials: true });
+      setUser({ ...res.data.user, isEmployee: false });
+      setAuthType('owner');
       setIsAuthenticated(true);
-    } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
+    } catch {
+      try {
+        // Try employee session
+        const res = await axios.get(`${API}/api/employees/auth/me`, { withCredentials: true });
+        setUser({ ...res.data.employee, isEmployee: true });
+        setAuthType('employee');
+        setIsAuthenticated(true);
+      } catch {
+        setUser(null);
+        setAuthType(null);
+        setIsAuthenticated(false);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (loginId, password) => {
-    try {
-      const userResponse = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/login`,
+  /**
+   * Login — loginType: 'owner' | 'employee'
+   */
+  const login = async (loginId, password, loginType = 'owner') => {
+    if (loginType === 'employee') {
+      const res = await axios.post(
+        `${API}/api/employees/auth/login`,
         { loginId, password },
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
-      setUser(userResponse.data.user);
+      setUser({ ...res.data.employee, isEmployee: true });
+      setAuthType('employee');
       setIsAuthenticated(true);
-      return userResponse;
-    } catch (error) {
-      throw error;
+      return res;
+    } else {
+      const res = await axios.post(
+        `${API}/api/auth/login`,
+        { loginId, password },
+        { withCredentials: true }
+      );
+      setUser({ ...res.data.user, isEmployee: false });
+      setAuthType('owner');
+      setIsAuthenticated(true);
+      return res;
     }
   };
 
   const logout = async () => {
     try {
-      await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-    } catch (error) {
-      console.error('Logout error:', error);
+      const endpoint =
+        authType === 'employee' ? '/api/employees/auth/logout' : '/api/auth/logout';
+      await axios.post(`${API}${endpoint}`, {}, { withCredentials: true });
+    } catch (err) {
+      console.error('Logout error:', err);
     } finally {
       setUser(null);
+      setAuthType(null);
       setIsAuthenticated(false);
     }
   };
@@ -68,6 +85,10 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
+    isEmployee: authType === 'employee',
+    isOwner: authType === 'owner',
+    authType,
+    permissions: user?.permissions || null,
     login,
     logout,
     checkAuth,
@@ -78,8 +99,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

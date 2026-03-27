@@ -4,35 +4,44 @@ import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, isEmployee, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Links shown in navbar (mobile: Dashboard, Properties | desktop: all)
+  // Desktop nav links — employees get a reduced set (no Settings)
+  const ownerDesktopLinks = [
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/properties', label: 'Properties', icon: '🏢' },
+    { path: '/tenants', label: 'Tenants', icon: '👥' },
+    { path: '/payments', label: 'Payments', icon: '💰' },
+    { path: '/settings', label: 'Settings', icon: '⚙️' },
+  ];
+  const employeeDesktopLinks = [
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/properties', label: 'Properties', icon: '🏢' },
+    { path: '/tenants', label: 'Tenants', icon: '👥' },
+    { path: '/payments', label: 'Payments', icon: '💰' },
+  ];
+  const desktopLinks = isEmployee ? employeeDesktopLinks : ownerDesktopLinks;
+
+  // Mobile bottom nav — always shows 2 primary links
   const mobileNavLinks = [
-    { path: '/', label: 'Dashboard', icon: '📊', description: 'Pending Payments' },
-    { path: '/properties', label: 'Properties', icon: '🏢', description: 'Your Properties' },
+    { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/properties', label: 'Properties', icon: '🏢' },
   ];
 
-  // All links for desktop navbar
-  const ownerDesktopNavLinks = [
-    { path: '/', label: 'Dashboard', icon: '📊', description: 'Pending Payments' },
-    { path: '/properties', label: 'Properties', icon: '🏢', description: 'Your Properties' },
-    { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
-    { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
-  ];
-  const desktopNavLinks = ownerDesktopNavLinks;
-
-  // Links shown in hamburger menu (mobile only)
+  // Hamburger menu links (mobile only) — anything not in mobileNavLinks
   const ownerHamburgerLinks = [
     { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
     { path: '/payments', label: 'Payments', icon: '💰', description: 'All Payments' },
     { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
   ];
-  const hamburgerLinks = ownerHamburgerLinks;
+  const employeeHamburgerLinks = [
+    { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
+    { path: '/payments', label: 'Payments', icon: '💰', description: 'All Payments' },
+  ];
+  const hamburgerLinks = isEmployee ? employeeHamburgerLinks : ownerHamburgerLinks;
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) => location.pathname === path;
 
   const handleLogout = async () => {
     await logout();
@@ -45,37 +54,22 @@ function Navbar() {
       <nav className="fixed top-0 left-0 right-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900 text-white shadow-2xl z-50">
         <div className="px-2 sm:px-4 lg:px-6 py-1.5 sm:py-3">
           <div className="flex items-center justify-between">
-            {/* Hamburger Menu Button - Mobile Only */}
+            {/* Hamburger - Mobile Only */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="lg:hidden p-1.5 sm:p-2 rounded-lg hover:bg-white/10 transition-all"
               aria-label="Toggle menu"
             >
-              <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
 
-            {/* Mobile Nav Links (Dashboard, Properties) */}
+            {/* Mobile Nav Links */}
             <div className="flex lg:hidden items-center justify-center gap-1.5 sm:gap-3 flex-1">
               {mobileNavLinks.map((link) => (
                 <Link
@@ -83,15 +77,14 @@ function Navbar() {
                   to={link.path}
                   className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-2 rounded-lg transition-all duration-200 group ${
                     isActive(link.path)
-                      ? "bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/40 shadow-lg"
-                      : "hover:bg-white/10 hover:border border-transparent hover:border-purple-400/20"
+                      ? 'bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/40 shadow-lg'
+                      : 'hover:bg-white/10 border border-transparent hover:border-purple-400/20'
                   }`}
-                  title={link.description}
                 >
-                  <span className={`text-base sm:text-lg ${isActive(link.path) ? "text-orange-300" : "text-purple-200 group-hover:text-orange-300"}`}>
+                  <span className={`text-base sm:text-lg ${isActive(link.path) ? 'text-orange-300' : 'text-purple-200 group-hover:text-orange-300'}`}>
                     {link.icon}
                   </span>
-                  <span className={`text-xs sm:text-sm font-semibold ${isActive(link.path) ? "text-white" : "text-purple-100 group-hover:text-white"}`}>
+                  <span className={`text-xs sm:text-sm font-semibold ${isActive(link.path) ? 'text-white' : 'text-purple-100 group-hover:text-white'}`}>
                     {link.label}
                   </span>
                   {isActive(link.path) && <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-orange-400 rounded-full animate-pulse"></div>}
@@ -99,23 +92,22 @@ function Navbar() {
               ))}
             </div>
 
-            {/* Desktop Nav Links (All links) */}
+            {/* Desktop Nav Links */}
             <div className="hidden lg:flex items-center justify-center gap-3 flex-1">
-              {desktopNavLinks.map((link) => (
+              {desktopLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-200 group ${
                     isActive(link.path)
-                      ? "bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/40 shadow-lg"
-                      : "hover:bg-white/10 hover:border border-transparent hover:border-purple-400/20"
+                      ? 'bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-400/40 shadow-lg'
+                      : 'hover:bg-white/10 border border-transparent hover:border-purple-400/20'
                   }`}
-                  title={link.description}
                 >
-                  <span className={`text-lg ${isActive(link.path) ? "text-orange-300" : "text-purple-200 group-hover:text-orange-300"}`}>
+                  <span className={`text-lg ${isActive(link.path) ? 'text-orange-300' : 'text-purple-200 group-hover:text-orange-300'}`}>
                     {link.icon}
                   </span>
-                  <span className={`text-sm font-semibold ${isActive(link.path) ? "text-white" : "text-purple-100 group-hover:text-white"}`}>
+                  <span className={`text-sm font-semibold ${isActive(link.path) ? 'text-white' : 'text-purple-100 group-hover:text-white'}`}>
                     {link.label}
                   </span>
                   {isActive(link.path) && <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>}
@@ -123,21 +115,33 @@ function Navbar() {
               ))}
             </div>
 
-            {/* Placeholder for balance on mobile */}
+            {/* Employee badge + logout (desktop) */}
+            <div className="hidden lg:flex items-center gap-2">
+              {isEmployee && (
+                <span className="text-xs bg-purple-500/30 border border-purple-400/40 text-purple-200 px-2.5 py-1 rounded-full font-medium">
+                  👔 {user?.fullName?.split(' ')[0] || 'Staff'}
+                </span>
+              )}
+              <button
+                onClick={handleLogout}
+                className="text-xs text-purple-300 hover:text-white px-2 py-1 rounded hover:bg-white/10 transition"
+              >
+                Logout
+              </button>
+            </div>
+
+            {/* Spacer for mobile balance */}
             <div className="w-5 sm:w-6 lg:hidden"></div>
           </div>
         </div>
       </nav>
 
-      {/* Slide-out Menu Overlay - Mobile Only */}
+      {/* Overlay */}
       {isMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-          onClick={() => setIsMenuOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setIsMenuOpen(false)} />
       )}
 
-      {/* Slide-out Menu - Mobile Only */}
+      {/* Slide-out Menu */}
       <div
         className={`fixed top-0 left-0 h-full w-72 sm:w-80 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white z-50 transform transition-transform duration-300 ease-in-out shadow-2xl lg:hidden ${
           isMenuOpen ? 'translate-x-0' : '-translate-x-full'
@@ -150,13 +154,14 @@ function Navbar() {
               <img src="/logo.svg" alt="Hostel Manager" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg" />
               <div>
                 <h2 className="text-base sm:text-lg font-bold text-white">Hostel Manager</h2>
-                <p className="text-xs text-purple-300">Menu</p>
+                {isEmployee ? (
+                  <p className="text-xs text-purple-300">👔 Staff: {user?.fullName}</p>
+                ) : (
+                  <p className="text-xs text-purple-300">Owner Panel</p>
+                )}
               </div>
             </div>
-            <button
-              onClick={() => setIsMenuOpen(false)}
-              className="p-2 rounded-lg hover:bg-white/10 transition-all"
-            >
+            <button onClick={() => setIsMenuOpen(false)} className="p-2 rounded-lg hover:bg-white/10 transition-all">
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -174,26 +179,22 @@ function Navbar() {
               onClick={() => setIsMenuOpen(false)}
               className={`flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 ${
                 isActive(link.path)
-                  ? "bg-gradient-to-r from-indigo-600/40 to-purple-600/40 border border-indigo-400/30 shadow-lg"
-                  : "hover:bg-white/5 border border-transparent"
+                  ? 'bg-gradient-to-r from-indigo-600/40 to-purple-600/40 border border-indigo-400/30 shadow-lg'
+                  : 'hover:bg-white/5 border border-transparent'
               }`}
             >
               <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${
-                isActive(link.path)
-                  ? "bg-gradient-to-br from-indigo-500 to-purple-600"
-                  : "bg-gray-700/50"
+                isActive(link.path) ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gray-700/50'
               }`}>
                 <span className="text-lg sm:text-xl">{link.icon}</span>
               </div>
               <div className="flex-1">
-                <div className={`text-sm sm:text-base font-semibold ${isActive(link.path) ? "text-white" : "text-gray-200"}`}>
+                <div className={`text-sm sm:text-base font-semibold ${isActive(link.path) ? 'text-white' : 'text-gray-200'}`}>
                   {link.label}
                 </div>
                 <div className="text-xs text-gray-400">{link.description}</div>
               </div>
-              {isActive(link.path) && (
-                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-              )}
+              {isActive(link.path) && <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>}
             </Link>
           ))}
         </div>

@@ -11,6 +11,8 @@ import PropertyDetail from './pages/propertyDetail/PropertyDetail';
 import TenantDetail from './pages/TenantDetail';
 import Payments from './pages/Payments';
 import Settings from './pages/Settings';
+import Employees from './pages/Employees';
+import EmployeeDetail from './pages/EmployeeDetail';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -38,7 +40,32 @@ function App() {
             <Route path="property/:locationId" element={<PropertyDetail />} />
             <Route path="tenant/:tenantId" element={<TenantDetail />} />
             <Route path="payments" element={<Payments />} />
-            <Route path="settings" element={<Settings />} />
+
+            {/* Owner-only routes — employees redirected to / */}
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute ownerOnly>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="employees"
+              element={
+                <ProtectedRoute ownerOnly>
+                  <Employees />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="employees/:employeeId"
+              element={
+                <ProtectedRoute ownerOnly>
+                  <EmployeeDetail />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Routes>
       </BrowserRouter>
