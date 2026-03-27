@@ -81,7 +81,7 @@ exports.getTenantById = async (req, res) => {
 exports.createTenant = async (req, res) => {
   try {
     const {
-      name, mobile, email, adharNo, adharImg, photo, dob, gender,
+      name, mobile, email, adharNo, adharImg, document, photo, dob, gender,
       propertyId, locationId, roomId, bedNumber, rentAmount, advanceAmount, joiningDate, notes
     } = req.body;
 
@@ -122,6 +122,7 @@ exports.createTenant = async (req, res) => {
       email: email || '',
       adharNo: adharNo || '',
       adharImg: adharImg || '',
+      document: document || photo || '',
       photo: photo || '',
       dob: dob || undefined,
       gender: gender || undefined,
@@ -207,7 +208,7 @@ exports.createTenant = async (req, res) => {
 exports.updateTenant = async (req, res) => {
   try {
     const {
-      userId, name, mobile, email, adharNo, adharImg, photo, dob, gender,
+      userId, name, mobile, email, adharNo, adharImg, document, photo, dob, gender,
       propertyId, roomId, bedNumber, rentAmount, advanceAmount, joiningDate, leaveDate, status, notes
     } = req.body;
     const tenantId = req.params.id;
@@ -282,6 +283,7 @@ exports.updateTenant = async (req, res) => {
       ...(email !== undefined && { email: email || '' }),
       ...(adharNo !== undefined && { adharNo: adharNo || '' }),
       ...(adharImg !== undefined && { adharImg: adharImg || '' }),
+      ...((document !== undefined || photo !== undefined) && { document: document || photo || '' }),
       ...(photo !== undefined && { photo: photo || '' }),
       ...(dob !== undefined && { dob: dob || undefined }),
       ...(gender !== undefined && { gender: gender || undefined }),

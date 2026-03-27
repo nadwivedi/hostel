@@ -4,7 +4,6 @@ const sharp = require('sharp');
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// On Windows/OneDrive, recently written files can be temporarily locked.
 const safeUnlink = async (filePath, retries = 5, delayMs = 120) => {
   if (!filePath) return;
 
@@ -24,7 +23,6 @@ const safeUnlink = async (filePath, retries = 5, delayMs = 120) => {
   }
 };
 
-// Upload Aadhar image
 const uploadAadharImage = async (req, res) => {
   try {
     if (!req.file) {
@@ -35,8 +33,8 @@ const uploadAadharImage = async (req, res) => {
 
     res.status(200).json({
       message: 'Aadhar image uploaded successfully',
-      fileUrl: fileUrl,
-      filename: req.file.filename
+      fileUrl,
+      filename: req.file.filename,
     });
   } catch (error) {
     console.error('Error uploading aadhar:', error);
@@ -44,8 +42,7 @@ const uploadAadharImage = async (req, res) => {
   }
 };
 
-// Upload Photo
-const uploadPhotoImage = async (req, res) => {
+const uploadTenantDocument = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -56,71 +53,84 @@ const uploadPhotoImage = async (req, res) => {
     const cleanName = tenantName.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);
     const date = new Date().toISOString().split('T')[0];
     const uniqueSuffix = Date.now();
-    const webpFilename = `photo-${cleanName}-${date}-${uniqueSuffix}.webp`;
+    const isPdf = req.file.mimetype === 'application/pdf';
+
+    if (isPdf) {
+      const pdfFilename = `document-${cleanName}-${date}-${uniqueSuffix}${path.extname(req.file.originalname).toLowerCase() || '.pdf'}`;
+      const pdfPath = path.join(path.dirname(originalPath), pdfFilename);
+
+      if (originalPath !== pdfPath) {
+        await fs.promises.rename(originalPath, pdfPath);
+      }
+
+      return res.status(200).json({
+        message: 'Document uploaded successfully',
+        fileUrl: `/uploads/documents/${pdfFilename}`,
+        filename: pdfFilename,
+        type: 'pdf',
+      });
+    }
+
+    const webpFilename = `document-${cleanName}-${date}-${uniqueSuffix}.webp`;
     const webpPath = path.join(path.dirname(originalPath), webpFilename);
 
-    // Process image: resize, convert to WebP, and compress
     await sharp(originalPath)
-      .resize(800, 800, {
-        fit: 'inside', // Maintain aspect ratio, max 800x800
-        withoutEnlargement: true // Don't upscale smaller images
+      .resize(1600, 1600, {
+        fit: 'inside',
+        withoutEnlargement: true,
       })
       .webp({
-        quality: 80, // Start with quality 80
-        effort: 6 // Compression effort (0-6, higher = better compression)
+        quality: 82,
+        effort: 6,
       })
       .toFile(webpPath);
 
-    // Check file size and adjust quality if needed
     let stats = fs.statSync(webpPath);
-    let quality = 80;
+    let quality = 82;
 
-    // If file is larger than 150KB, reduce quality
-    while (stats.size > 150 * 1024 && quality > 40) {
+    while (stats.size > 250 * 1024 && quality > 45) {
       quality -= 10;
       await sharp(originalPath)
-        .resize(800, 800, {
+        .resize(1600, 1600, {
           fit: 'inside',
-          withoutEnlargement: true
+          withoutEnlargement: true,
         })
         .webp({
-          quality: quality,
-          effort: 6
+          quality,
+          effort: 6,
         })
         .toFile(webpPath);
       stats = fs.statSync(webpPath);
     }
 
-    // Best-effort cleanup. Do not fail upload response if temp delete is locked.
     try {
       await safeUnlink(originalPath);
     } catch (cleanupError) {
-      console.warn('Photo temp cleanup skipped:', cleanupError.message);
+      console.warn('Document temp cleanup skipped:', cleanupError.message);
     }
 
-    const fileUrl = `/uploads/photos/${webpFilename}`;
-
-    res.status(200).json({
-      message: 'Photo uploaded and optimized successfully',
-      fileUrl: fileUrl,
+    return res.status(200).json({
+      message: 'Document uploaded successfully',
+      fileUrl: `/uploads/documents/${webpFilename}`,
       filename: webpFilename,
-      size: Math.round(stats.size / 1024) + ' KB'
+      type: 'image',
+      size: `${Math.round(stats.size / 1024)} KB`,
     });
   } catch (error) {
-    console.error('Error uploading photo:', error);
-    // Clean up files on error
+    console.error('Error uploading tenant document:', error);
     if (req.file && req.file.path) {
       try {
         await safeUnlink(req.file.path);
       } catch (cleanupError) {
-        console.warn('Photo cleanup failed:', cleanupError.message);
+        console.warn('Document cleanup failed:', cleanupError.message);
       }
     }
-    res.status(500).json({ message: 'Server error while uploading photo' });
+    res.status(500).json({ message: 'Server error while uploading tenant document' });
   }
 };
 
-// Upload Property Image
+const uploadPhotoImage = uploadTenantDocument;
+
 const uploadPropertyImage = async (req, res) => {
   try {
     if (!req.file) {
@@ -135,39 +145,35 @@ const uploadPropertyImage = async (req, res) => {
     const webpFilename = `property-${cleanName}-${date}-${uniqueSuffix}.webp`;
     const webpPath = path.join(path.dirname(originalPath), webpFilename);
 
-    // Process image: resize, convert to WebP, and compress
     await sharp(originalPath)
       .resize(1200, 800, {
-        fit: 'cover', // Cover the area for property images
-        withoutEnlargement: true
+        fit: 'cover',
+        withoutEnlargement: true,
       })
       .webp({
         quality: 85,
-        effort: 6
+        effort: 6,
       })
       .toFile(webpPath);
 
-    // Check file size and adjust quality if needed
     let stats = fs.statSync(webpPath);
     let quality = 85;
 
-    // If file is larger than 300KB, reduce quality
     while (stats.size > 300 * 1024 && quality > 50) {
       quality -= 10;
       await sharp(originalPath)
         .resize(1200, 800, {
           fit: 'cover',
-          withoutEnlargement: true
+          withoutEnlargement: true,
         })
         .webp({
-          quality: quality,
-          effort: 6
+          quality,
+          effort: 6,
         })
         .toFile(webpPath);
       stats = fs.statSync(webpPath);
     }
 
-    // Best-effort cleanup. Do not fail upload response if temp delete is locked.
     try {
       await safeUnlink(originalPath);
     } catch (cleanupError) {
@@ -178,13 +184,12 @@ const uploadPropertyImage = async (req, res) => {
 
     res.status(200).json({
       message: 'Property image uploaded successfully',
-      fileUrl: fileUrl,
+      fileUrl,
       filename: webpFilename,
-      size: Math.round(stats.size / 1024) + ' KB'
+      size: `${Math.round(stats.size / 1024)} KB`,
     });
   } catch (error) {
     console.error('Error uploading property image:', error);
-    // Clean up files on error
     if (req.file && req.file.path) {
       try {
         await safeUnlink(req.file.path);
@@ -196,7 +201,6 @@ const uploadPropertyImage = async (req, res) => {
   }
 };
 
-// Delete uploaded file
 const deleteUploadedFile = async (req, res) => {
   try {
     const { fileUrl } = req.body;
@@ -221,7 +225,8 @@ const deleteUploadedFile = async (req, res) => {
 
 module.exports = {
   uploadAadharImage,
+  uploadTenantDocument,
   uploadPhotoImage,
   uploadPropertyImage,
-  deleteUploadedFile
+  deleteUploadedFile,
 };

@@ -26,9 +26,8 @@ function PropertyDetail() {
   const [showBedsGrid, setShowBedsGrid] = useState(false);
   const [selectedFormBuildingId, setSelectedFormBuildingId] = useState("");
   const [aadharFile, setAadharFile] = useState(null);
-  const [photoFile, setPhotoFile] = useState(null);
+  const [documentFile, setDocumentFile] = useState(null);
   const [aadharPreview, setAadharPreview] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
@@ -41,7 +40,7 @@ function PropertyDetail() {
     email: "",
     adharNo: "",
     adharImg: "",
-    photo: "",
+    document: "",
     dob: "",
     gender: "",
     roomId: "",
@@ -184,13 +183,10 @@ function PropertyDetail() {
     }
   };
 
-  const handlePhotoChange = (e) => {
+  const handleDocumentChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPhotoPreview(reader.result);
-      reader.readAsDataURL(file);
+      setDocumentFile(file);
     }
   };
 
@@ -201,9 +197,8 @@ function PropertyDetail() {
       tenantRoom?.buildingId?._id || tenantRoom?.buildingId || "";
     setEditingTenant(tenant);
     setAadharFile(null);
-    setPhotoFile(null);
+    setDocumentFile(null);
     setAadharPreview(null);
-    setPhotoPreview(null);
     setSelectedFormBuildingId(tenantBuildingId);
     setFormData({
       name: tenant.name,
@@ -211,7 +206,7 @@ function PropertyDetail() {
       email: tenant.email || "",
       adharNo: tenant.adharNo || "",
       adharImg: tenant.adharImg || "",
-      photo: tenant.photo || "",
+      document: tenant.document || tenant.photo || "",
       dob: tenant.dob ? new Date(tenant.dob).toISOString().split("T")[0] : "",
       gender: tenant.gender || "",
       roomId: tenantRoomId,
@@ -237,14 +232,18 @@ function PropertyDetail() {
 
     try {
       let aadharUrl = formData.adharImg;
-      let photoUrl = formData.photo;
+      let documentUrl = formData.document;
 
       if (aadharFile) {
         aadharUrl = await handleFileUpload(aadharFile, "aadhar", formData.name);
       }
 
-      if (photoFile) {
-        photoUrl = await handleFileUpload(photoFile, "photo", formData.name);
+      if (documentFile) {
+        documentUrl = await handleFileUpload(
+          documentFile,
+          "document",
+          formData.name,
+        );
       }
 
       const tenantData = {
@@ -253,7 +252,7 @@ function PropertyDetail() {
         email: formData.email || undefined,
         adharNo: formData.adharNo || undefined,
         adharImg: aadharUrl || undefined,
-        photo: photoUrl || undefined,
+        document: documentUrl || undefined,
         dob: formData.dob || undefined,
         ...(formData.gender && { gender: formData.gender }),
         locationId: locationId,
@@ -364,9 +363,8 @@ function PropertyDetail() {
     setShowForm(false);
     setEditingTenant(null);
     setAadharFile(null);
-    setPhotoFile(null);
+    setDocumentFile(null);
     setAadharPreview(null);
-    setPhotoPreview(null);
     setShowAdditionalDetails(false);
     setSelectedFormBuildingId("");
     setFormData({
@@ -375,7 +373,7 @@ function PropertyDetail() {
       email: "",
       adharNo: "",
       adharImg: "",
-      photo: "",
+      document: "",
       dob: "",
       gender: "",
       roomId: "",
@@ -406,7 +404,7 @@ function PropertyDetail() {
       email: "",
       adharNo: "",
       adharImg: "",
-      photo: "",
+      document: "",
       dob: "",
       gender: "",
       roomId: room._id,
@@ -730,9 +728,9 @@ function PropertyDetail() {
           showAdditionalDetails={showAdditionalDetails}
           setShowAdditionalDetails={setShowAdditionalDetails}
           handleAadharChange={handleAadharChange}
-          handlePhotoChange={handlePhotoChange}
+          handleDocumentChange={handleDocumentChange}
           aadharPreview={aadharPreview}
-          photoPreview={photoPreview}
+          documentFile={documentFile}
           BACKEND_URL={BACKEND_URL}
         />
 
@@ -1117,19 +1115,9 @@ function PropertyDetail() {
                           {/* Tenant Header */}
                           <div className="flex items-center justify-between mb-1.5 sm:mb-3">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              {tenant.photo ? (
-                                <div className="flex-shrink-0 h-9 w-9 sm:h-14 sm:w-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg sm:rounded-2xl flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-sm overflow-hidden">
-                                  <img
-                                    src={`${BACKEND_URL}${tenant.photo}`}
-                                    alt={tenant.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="flex-shrink-0 h-9 w-9 sm:h-14 sm:w-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg sm:rounded-2xl flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-sm">
-                                  {tenant.name.charAt(0).toUpperCase()}
-                                </div>
-                              )}
+                              <div className="flex-shrink-0 h-9 w-9 sm:h-14 sm:w-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg sm:rounded-2xl flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-sm">
+                                {tenant.name.charAt(0).toUpperCase()}
+                              </div>
                               <div>
                                 <div className="text-xs sm:text-lg font-black text-gray-900">
                                   {tenant.name}

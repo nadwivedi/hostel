@@ -18,9 +18,8 @@ function Tenants() {
   const [filterLocation, setFilterLocation] = useState('ALL');
   const [editingTenant, setEditingTenant] = useState(null);
   const [aadharFile, setAadharFile] = useState(null);
-  const [photoFile, setPhotoFile] = useState(null);
+  const [documentFile, setDocumentFile] = useState(null);
   const [aadharPreview, setAadharPreview] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [leaveModal, setLeaveModal] = useState({
@@ -37,7 +36,7 @@ function Tenants() {
     email: '',
     adharNo: '',
     adharImg: '',
-    photo: '',
+    document: '',
     dob: '',
     gender: '',
     locationId: '',
@@ -152,29 +151,25 @@ function Tenants() {
     }
   };
 
-  const handlePhotoChange = (e) => {
+  const handleDocumentChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPhotoPreview(reader.result);
-      reader.readAsDataURL(file);
+      setDocumentFile(file);
     }
   };
 
   const handleEdit = (tenant) => {
     setEditingTenant(tenant);
     setAadharFile(null);
-    setPhotoFile(null);
+    setDocumentFile(null);
     setAadharPreview(null);
-    setPhotoPreview(null);
     setFormData({
       name: tenant.name,
       mobile: tenant.mobile,
       email: tenant.email || '',
       adharNo: tenant.adharNo || '',
       adharImg: tenant.adharImg || '',
-      photo: tenant.photo || '',
+      document: tenant.document || tenant.photo || '',
       dob: tenant.dob ? new Date(tenant.dob).toISOString().split('T')[0] : '',
       gender: tenant.gender || '',
       locationId: tenant.locationId?._id || tenant.locationId || '',
@@ -199,14 +194,14 @@ function Tenants() {
 
     try {
       let aadharUrl = formData.adharImg;
-      let photoUrl = formData.photo;
+      let documentUrl = formData.document;
 
       if (aadharFile) {
         aadharUrl = await handleFileUpload(aadharFile, 'aadhar', formData.name);
       }
 
-      if (photoFile) {
-        photoUrl = await handleFileUpload(photoFile, 'photo', formData.name);
+      if (documentFile) {
+        documentUrl = await handleFileUpload(documentFile, 'document', formData.name);
       }
 
       const tenantData = {
@@ -215,7 +210,7 @@ function Tenants() {
         email: formData.email || undefined,
         adharNo: formData.adharNo || undefined,
         adharImg: aadharUrl || undefined,
-        photo: photoUrl || undefined,
+        document: documentUrl || undefined,
         dob: formData.dob || undefined,
         ...(formData.gender && { gender: formData.gender }),
         locationId: formData.locationId || undefined,
@@ -391,16 +386,15 @@ function Tenants() {
     setShowForm(false);
     setEditingTenant(null);
     setAadharFile(null);
-    setPhotoFile(null);
+    setDocumentFile(null);
     setAadharPreview(null);
-    setPhotoPreview(null);
     setFormData({
       name: '',
       mobile: '',
       email: '',
       adharNo: '',
       adharImg: '',
-      photo: '',
+      document: '',
       dob: '',
       gender: '',
       locationId: '',
@@ -909,26 +903,23 @@ function Tenants() {
                     </label>
                   </div>
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Tenant Photo</label>
-                    <input type="file" id="photoUpload" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">Rent Agreement / Other Document</label>
+                    <input type="file" id="documentUpload" accept="image/*,application/pdf" onChange={handleDocumentChange} className="hidden" />
                     <label
-                      htmlFor="photoUpload"
-                      className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                        photoPreview || formData.photo ? 'border-green-400 bg-green-50 p-1 sm:p-2' : 'border-gray-300 hover:bg-gray-50 p-3 sm:p-4 lg:p-6'
+                      htmlFor="documentUpload"
+                      className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all overflow-hidden ${
+                        documentFile || formData.document ? 'border-green-400 bg-green-50 p-3 sm:p-4 lg:p-6' : 'border-gray-300 hover:bg-gray-50 p-3 sm:p-4 lg:p-6 cursor-pointer hover:border-gray-400'
                       }`}
                     >
-                      {photoPreview ? (
-                        <img src={photoPreview} alt="Photo" className="w-full h-24 sm:h-32 lg:h-48 object-cover rounded" />
-                      ) : formData.photo ? (
-                        <img src={`${BACKEND_URL}${formData.photo}`} alt="Photo" className="w-full h-24 sm:h-32 lg:h-48 object-cover rounded" />
-                      ) : (
-                        <>
-                          <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-400 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 text-center">Upload Photo</span>
-                        </>
-                      )}
+                      <svg className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 text-gray-400 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7V3m10 4V3m-11 8h12M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-700 text-center">
+                        {documentFile || formData.document ? 'Document Selected' : 'Upload Document'}
+                      </span>
+                      <span className="mt-1 text-[10px] sm:text-xs text-gray-500 text-center break-all">
+                        {documentFile?.name || (formData.document ? formData.document.split('/').pop() : 'Agreement, PDF, or other supporting file')}
+                      </span>
                     </label>
                   </div>
                 </div>
@@ -1028,21 +1019,9 @@ function Tenants() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      {tenant.photo ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`);
-                          }}
-                          className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
-                        >
-                          <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
-                        </button>
-                      ) : (
-                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
-                          {tenant.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                        {tenant.name.charAt(0).toUpperCase()}
+                      </div>
                       <div className="ml-3">
                         <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
                         <div className="text-xs text-gray-500 flex items-center mt-0.5">
@@ -1121,21 +1100,9 @@ function Tenants() {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      {tenant.photo ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`);
-                          }}
-                          className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm overflow-hidden hover:ring-2 hover:ring-blue-400 transition-all"
-                        >
-                          <img src={`${BACKEND_URL}${tenant.photo}`} alt={tenant.name} className="w-full h-full object-cover rounded-full" />
-                        </button>
-                      ) : (
-                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
-                          {tenant.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
+                        {tenant.name.charAt(0).toUpperCase()}
+                      </div>
                       <div className="ml-3">
                         <div className="text-sm font-bold text-gray-900">{tenant.name}</div>
                         <div className="text-xs text-gray-500">{tenant.mobile}</div>

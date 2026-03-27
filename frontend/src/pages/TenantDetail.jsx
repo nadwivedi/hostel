@@ -15,7 +15,6 @@ function TenantDetail() {
   const [tenant, setTenant] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [previewPhoto, setPreviewPhoto] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -165,23 +164,16 @@ function TenantDetail() {
   const propertyLabel =
     tenant.propertyId?.name || tenant.propertyId?.location || tenant.propertyId?.propertyName || '-';
   const roomLabel = tenant.roomId?.roomNumber ? `Room ${tenant.roomId.roomNumber}` : tenant.roomId ? `Room ${tenant.roomId}` : '-';
+  const tenantDocument = tenant.document || tenant.photo;
 
   return (
     <div className="space-y-3 sm:space-y-5">
     
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-5">
         <div className="flex items-center gap-3 sm:gap-4">
-          {tenant.photo ? (
-            <img
-              src={`${BACKEND_URL}${tenant.photo}`}
-              alt={tenant.name}
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border border-gray-200"
-            />
-          ) : (
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white flex items-center justify-center text-base sm:text-xl font-bold">
-              {tenant.name.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white flex items-center justify-center text-base sm:text-xl font-bold">
+            {tenant.name.charAt(0).toUpperCase()}
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-sm sm:text-xl font-bold text-gray-900">{tenant.name}</h1>
@@ -318,25 +310,37 @@ function TenantDetail() {
       {/* Documents */}
       <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
         <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-2">Documents</h3>
-        {(tenant.photo || tenant.adharImg) ? (
+        {(tenantDocument || tenant.adharImg) ? (
           <div className="grid grid-cols-2 gap-2">
-            {tenant.photo && (
-              <button
-                onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.photo}`)}
-                className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition"
+            {tenantDocument && (
+              <a
+                href={`${BACKEND_URL}${tenantDocument}`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition text-center"
               >
-                <img src={`${BACKEND_URL}${tenant.photo}`} alt="Photo" className="w-full h-16 object-cover rounded" />
-                <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-center">Photo</p>
-              </button>
+                <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+                  <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7V3m10 4V3m-11 8h12M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p className="text-[10px] sm:text-xs text-gray-500">Agreement / Document</p>
+              </a>
             )}
             {tenant.adharImg && (
-              <button
-                onClick={() => setPreviewPhoto(`${BACKEND_URL}${tenant.adharImg}`)}
-                className="bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition"
+              <a
+                href={`${BACKEND_URL}${tenant.adharImg}`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition text-center"
               >
-                <img src={`${BACKEND_URL}${tenant.adharImg}`} alt="Aadhar" className="w-full h-16 object-cover rounded" />
-                <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-center">Aadhar</p>
-              </button>
+                <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                  <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <p className="text-[10px] sm:text-xs text-gray-500">Aadhar</p>
+              </a>
             )}
           </div>
         ) : (
@@ -348,19 +352,6 @@ function TenantDetail() {
         <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
           <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-2">Notes</h3>
           <p className="text-xs sm:text-sm text-gray-700">{tenant.notes}</p>
-        </div>
-      )}
-
-      {previewPhoto && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-3" onClick={() => setPreviewPhoto(null)}>
-          <div className="relative max-w-3xl w-full max-h-[90vh]" onClick={(event) => event.stopPropagation()}>
-            <button onClick={() => setPreviewPhoto(null)} className="absolute -top-10 right-0 text-white hover:text-gray-300">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <img src={previewPhoto} alt="Tenant Document" className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl" />
-          </div>
         </div>
       )}
 

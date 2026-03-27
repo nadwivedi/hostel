@@ -27,6 +27,10 @@ const tenantSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    document: {
+      type: String,
+      default: '',
+    },
     joiningDate: {
       type: Date,
       default: Date.now,
