@@ -25,27 +25,34 @@ function TenantFormModal({
 }) {
   const formRef = useRef(null);
 
+  const inputClassName =
+    "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-transparent focus:ring-2 focus:ring-indigo-500";
+  const labelClassName =
+    "mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-700 md:text-sm";
+  const sectionTitleClassName =
+    "mb-3 flex items-center gap-2 text-base font-bold text-gray-800 md:mb-4 md:text-lg";
+
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-1 sm:p-4">
-      <div className="bg-gray-50 rounded-lg shadow-xl max-w-4xl w-full max-h-[98vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-gray-800 p-2 sm:p-4 text-white flex-shrink-0">
-          <div className="flex justify-between items-center gap-2">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-sm sm:text-xl font-bold truncate">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-2 md:p-4">
+      <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl md:rounded-2xl">
+        <div className="flex-shrink-0 bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white md:p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-lg font-bold md:text-2xl">
                 {editingTenant ? "Edit Tenant" : "Add New Tenant"}
               </h2>
-              <p className="text-gray-400 text-[10px] sm:text-sm">
+              <p className="mt-1 text-xs text-blue-100 md:text-sm">
                 {location.propertyName || location.location}
               </p>
             </div>
             <button
               onClick={handleCancel}
-              className="text-gray-400 hover:bg-gray-700 rounded-full p-1 sm:p-2 transition"
+              className="rounded-lg p-1.5 text-white transition hover:bg-white/20 md:p-2"
             >
               <svg
-                className="w-4 h-4 sm:w-6 sm:h-6"
+                className="h-5 w-5 md:h-6 md:w-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -64,181 +71,197 @@ function TenantFormModal({
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 space-y-2 sm:space-y-4"
+          className="flex flex-1 flex-col overflow-hidden"
         >
-          {/* Personal Information */}
-          <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
-            <h3 className="text-xs sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">
-              Personal Information
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-2 sm:gap-4">
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                  placeholder="Full name"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Mobile <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  required
-                  maxLength="10"
-                  inputMode="numeric"
-                  className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                  placeholder="Mobile"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Aadhar No.
-                </label>
-                <input
-                  type="text"
-                  name="adharNo"
-                  value={formData.adharNo}
-                  onChange={handleChange}
-                  maxLength="12"
-                  inputMode="numeric"
-                  className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                  placeholder="12-digit"
-                />
-              </div>
-            </div>
-          </div>
+          <div className="flex-1 space-y-4 overflow-y-auto p-3 md:space-y-6 md:p-6">
+            <div className="rounded-xl border-2 border-indigo-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 md:p-6">
+              <h3 className={sectionTitleClassName}>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white md:h-8 md:w-8 md:text-sm">
+                  1
+                </span>
+                Personal Information
+              </h3>
 
-          {/* Room Assignment */}
-          <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
-            <h3 className="text-xs sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">
-              Room Assignment
-            </h3>
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              {hasBuildings && (
-                <div className="col-span-2">
-                  <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                    Building <span className="text-red-500">*</span>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-2 md:gap-4">
+                <div>
+                  <label className={labelClassName}>
+                    Name <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    name="buildingId"
-                    value={selectedFormBuildingId}
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                  >
-                    <option value="">Select Building</option>
-                    {buildings.map((building) => (
-                      <option key={building._id} value={building._id}>
-                        {building.name || building.buildingName || "Building"}
-                      </option>
-                    ))}
-                    {roomsWithoutBuilding.length > 0 && (
-                      <option value="no-building">No Building</option>
-                    )}
-                  </select>
+                    className={inputClassName}
+                    placeholder="Full name"
+                  />
                 </div>
-              )}
 
-              {/* Room row - full width */}
-              <div className="col-span-2">
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Room <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="roomId"
-                  value={formData.roomId}
-                  onChange={handleChange}
-                  required
-                  disabled={hasBuildings && !selectedFormBuildingId}
-                  className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                >
-                  <option value="">
-                    {hasBuildings && !selectedFormBuildingId
-                      ? "Select Building First"
-                      : "Select Room"}
-                  </option>
-                  {[...formRooms]
-                    .sort((a, b) => {
-                      const aNum = Number(a.roomNumber);
-                      const bNum = Number(b.roomNumber);
-                      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
-                      return String(a.roomNumber).localeCompare(String(b.roomNumber));
-                    })
-                    .map((room) => {
-                    const availableCount =
-                      room.rentType === "PER_BED"
-                        ? room.beds?.filter((b) => b.status === "AVAILABLE")
-                            .length || 0
-                        : room.status === "AVAILABLE"
-                          ? 1
-                          : 0;
-                    const isAvailable =
-                      availableCount > 0 ||
-                      (editingTenant && editingTenant.roomId?._id === room._id);
-                    return (
-                      <option
-                        key={room._id}
-                        value={room._id}
-                        disabled={!isAvailable}
-                      >
-                        Room {room.roomNumber} - ₹{room.rentAmount}
-                        {room.rentType === "PER_BED"
-                          ? ` (${availableCount} beds)`
-                          : ""}
-                        {!isAvailable ? " (Full)" : ""}
-                      </option>
-                    );
-                  })}
-                </select>
+                <div>
+                  <label className={labelClassName}>
+                    Mobile <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                    required
+                    maxLength="10"
+                    inputMode="numeric"
+                    className={`${inputClassName} font-semibold`}
+                    placeholder="Mobile"
+                  />
+                </div>
+
               </div>
+            </div>
 
-              {/* Bed & Join Date row (or just Join Date if no bed) */}
-              {selectedRoom?.rentType === "PER_BED" ? (
-                <>
+            <div className="rounded-xl border-2 border-emerald-200 bg-gradient-to-r from-green-50 to-emerald-50 p-3 md:p-6">
+              <h3 className={sectionTitleClassName}>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white md:h-8 md:w-8 md:text-sm">
+                  2
+                </span>
+                Room Assignment
+              </h3>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                {hasBuildings && (
                   <div>
-                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                      Bed <span className="text-red-500">*</span>
+                    <label className={labelClassName}>
+                      Building <span className="text-red-500">*</span>
                     </label>
                     <select
-                      name="bedNumber"
-                      value={formData.bedNumber}
+                      name="buildingId"
+                      value={selectedFormBuildingId}
                       onChange={handleChange}
                       required
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                      className={inputClassName}
                     >
-                      <option value="">Select Bed</option>
-                      {selectedRoom.beds?.map((bed) => {
-                        const isCurrentBed =
-                          editingTenant?.bedNumber === bed.bedNumber;
+                      <option value="">Select Building</option>
+                      {buildings.map((building) => (
+                        <option key={building._id} value={building._id}>
+                          {building.name || building.buildingName || "Building"}
+                        </option>
+                      ))}
+                      {roomsWithoutBuilding.length > 0 && (
+                        <option value="no-building">No Building</option>
+                      )}
+                    </select>
+                  </div>
+                )}
+
+                <div className={hasBuildings ? "" : "md:col-span-2"}>
+                  <label className={labelClassName}>
+                    Room <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="roomId"
+                    value={formData.roomId}
+                    onChange={handleChange}
+                    required
+                    disabled={hasBuildings && !selectedFormBuildingId}
+                    className={inputClassName}
+                  >
+                    <option value="">
+                      {hasBuildings && !selectedFormBuildingId
+                        ? "Select Building First"
+                        : "Select Room"}
+                    </option>
+                    {[...formRooms]
+                      .sort((a, b) => {
+                        const aNum = Number(a.roomNumber);
+                        const bNum = Number(b.roomNumber);
+                        if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+                          return aNum - bNum;
+                        }
+                        return String(a.roomNumber).localeCompare(
+                          String(b.roomNumber)
+                        );
+                      })
+                      .map((room) => {
+                        const availableCount =
+                          room.rentType === "PER_BED"
+                            ? room.beds?.filter((b) => b.status === "AVAILABLE")
+                                .length || 0
+                            : room.status === "AVAILABLE"
+                              ? 1
+                              : 0;
+
                         const isAvailable =
-                          bed.status === "AVAILABLE" || isCurrentBed;
+                          availableCount > 0 ||
+                          (editingTenant && editingTenant.roomId?._id === room._id);
+
                         return (
                           <option
-                            key={bed.bedNumber}
-                            value={bed.bedNumber}
+                            key={room._id}
+                            value={room._id}
                             disabled={!isAvailable}
                           >
-                            Bed {bed.bedNumber}{" "}
-                            {!isAvailable ? "(Occupied)" : ""}
+                            {`Room ${room.roomNumber} - Rs. ${room.rentAmount}${
+                              room.rentType === "PER_BED"
+                                ? ` (${availableCount} beds)`
+                                : ""
+                            }${!isAvailable ? " (Full)" : ""}`}
                           </option>
                         );
                       })}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
+                  </select>
+                </div>
+
+                {selectedRoom?.rentType === "PER_BED" ? (
+                  <>
+                    <div>
+                      <label className={labelClassName}>
+                        Bed <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="bedNumber"
+                        value={formData.bedNumber}
+                        onChange={handleChange}
+                        required
+                        className={inputClassName}
+                      >
+                        <option value="">Select Bed</option>
+                        {selectedRoom.beds?.map((bed) => {
+                          const isCurrentBed =
+                            editingTenant?.bedNumber === bed.bedNumber;
+                          const isAvailable =
+                            bed.status === "AVAILABLE" || isCurrentBed;
+
+                          return (
+                            <option
+                              key={bed.bedNumber}
+                              value={bed.bedNumber}
+                              disabled={!isAvailable}
+                            >
+                              {`Bed ${bed.bedNumber}${
+                                !isAvailable ? " (Occupied)" : ""
+                              }`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClassName}>
+                        Join Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="joiningDate"
+                        value={formData.joiningDate}
+                        onChange={handleChange}
+                        required
+                        className={inputClassName}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="md:col-span-2">
+                    <label className={labelClassName}>
                       Join Date <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -247,285 +270,336 @@ function TenantFormModal({
                       value={formData.joiningDate}
                       onChange={handleChange}
                       required
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                      className={inputClassName}
                     />
                   </div>
-                </>
-              ) : (
-                <div className="col-span-2">
-                  <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                    Join Date <span className="text-red-500">*</span>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 md:contents">
+                  <div>
+                  <label className={labelClassName}>
+                    Rent (Rs.) <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="date"
-                    name="joiningDate"
-                    value={formData.joiningDate}
+                    type="number"
+                    name="rentAmount"
+                    value={formData.rentAmount}
                     onChange={handleChange}
                     required
-                    className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                    min="0"
+                    className={`${inputClassName} font-semibold`}
+                    placeholder="Monthly rent"
                   />
+                  </div>
+
+                  <div>
+                    <label className={labelClassName}>Advance (Rs.)</label>
+                    <input
+                      type="number"
+                      name="advanceAmount"
+                      value={formData.advanceAmount}
+                      onChange={handleChange}
+                      min="0"
+                      className={`${inputClassName} font-semibold`}
+                      placeholder="Deposit"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 p-3 md:p-6">
+              <h3 className={sectionTitleClassName}>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white md:h-8 md:w-8 md:text-sm">
+                  3
+                </span>
+                Documents
+              </h3>
+
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div>
+                  <label className={labelClassName}>Aadhar Card</label>
+                  <input
+                    type="file"
+                    id="aadharUpload"
+                    accept="image/*,application/pdf"
+                    onChange={handleAadharChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="aadharUpload"
+                    className={`flex min-h-32 flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all ${
+                      aadharPreview || formData.adharImg
+                        ? "border-green-400 bg-green-50 p-1"
+                        : "cursor-pointer border-purple-300 bg-white p-4 hover:border-purple-400 hover:bg-purple-50"
+                    }`}
+                  >
+                    {aadharPreview ? (
+                      <img
+                        src={aadharPreview}
+                        alt="Aadhar"
+                        className="h-24 w-full rounded-lg object-contain"
+                      />
+                    ) : formData.adharImg ? (
+                      <img
+                        src={`${BACKEND_URL}${formData.adharImg}`}
+                        alt="Aadhar"
+                        className="h-24 w-full rounded-lg object-contain"
+                      />
+                    ) : (
+                      <>
+                        <svg
+                          className="mb-1 h-8 w-8 text-purple-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                        <span className="text-xs font-semibold text-purple-700">
+                          Upload Aadhar
+                        </span>
+                        <span className="mt-1 text-[11px] text-gray-500">
+                          Image or PDF
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                <div>
+                  <label className={labelClassName}>Photo</label>
+                  <input
+                    type="file"
+                    id="photoUpload"
+                    accept="image/*"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="photoUpload"
+                    className={`flex min-h-32 flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition-all ${
+                      photoPreview || formData.photo
+                        ? "border-green-400 bg-green-50 p-1"
+                        : "cursor-pointer border-purple-300 bg-white p-4 hover:border-purple-400 hover:bg-purple-50"
+                    }`}
+                  >
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Photo"
+                        className="h-24 w-full rounded-lg object-cover"
+                      />
+                    ) : formData.photo ? (
+                      <img
+                        src={`${BACKEND_URL}${formData.photo}`}
+                        alt="Photo"
+                        className="h-24 w-full rounded-lg object-cover"
+                      />
+                    ) : (
+                      <>
+                        <svg
+                          className="mb-1 h-8 w-8 text-purple-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span className="text-xs font-semibold text-purple-700">
+                          Upload Photo
+                        </span>
+                        <span className="mt-1 text-[11px] text-gray-500">
+                          Clear face image
+                        </span>
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-xl border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+              <button
+                type="button"
+                onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
+                className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-white/40 md:p-4"
+              >
+                <span className="flex items-center gap-2 text-base font-bold text-gray-800 md:text-lg">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white md:h-8 md:w-8 md:text-sm">
+                    4
+                  </span>
+                  Additional Details
+                </span>
+                <svg
+                  className={`h-5 w-5 text-amber-700 transition-transform ${
+                    showAdditionalDetails ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {showAdditionalDetails && (
+                <div className="border-t border-amber-200 p-3 pt-3 md:p-6">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
+                    <div>
+                      <label className={labelClassName}>DOB</label>
+                      <input
+                        type="date"
+                        name="dob"
+                        value={formData.dob}
+                        onChange={handleChange}
+                        className={inputClassName}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={labelClassName}>Gender</label>
+                      <select
+                        name="gender"
+                        value={formData.gender}
+                        onChange={handleChange}
+                        className={inputClassName}
+                      >
+                        <option value="">Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className={labelClassName}>Aadhar No.</label>
+                      <input
+                        type="text"
+                        name="adharNo"
+                        value={formData.adharNo}
+                        onChange={handleChange}
+                        maxLength="12"
+                        inputMode="numeric"
+                        className={`${inputClassName} font-semibold`}
+                        placeholder="12-digit"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className={labelClassName}>Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        className={inputClassName}
+                        placeholder="email@example.com"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3 md:mt-4">
+                    <label className={labelClassName}>Notes</label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleChange}
+                      rows="2"
+                      className={inputClassName}
+                      placeholder="Notes..."
+                    />
+                  </div>
                 </div>
               )}
-
-              {/* Rent & Advance row */}
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Rent (₹) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="rentAmount"
-                  value={formData.rentAmount}
-                  onChange={handleChange}
-                  required
-                  min="0"
-                  className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                  placeholder="Monthly rent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Advance (₹)
-                </label>
-                <input
-                  type="number"
-                  name="advanceAmount"
-                  value={formData.advanceAmount}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold"
-                  placeholder="Deposit"
-                />
-              </div>
             </div>
           </div>
 
-          {/* Document Uploads */}
-          <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-4">
-            <h3 className="text-xs sm:text-base font-bold text-gray-800 mb-2 sm:mb-3">
-              Documents
-            </h3>
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Aadhar Card
-                </label>
-                <input
-                  type="file"
-                  id="aadharUpload"
-                  accept="image/*,application/pdf"
-                  onChange={handleAadharChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="aadharUpload"
-                  className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                    aadharPreview || formData.adharImg
-                      ? "border-green-400 bg-green-50 p-1"
-                      : "border-gray-300 hover:bg-gray-50 p-2 sm:p-4"
-                  }`}
-                >
-                  {aadharPreview ? (
-                    <img
-                      src={aadharPreview}
-                      alt="Aadhar"
-                      className="w-full h-16 sm:h-24 object-contain rounded"
-                    />
-                  ) : formData.adharImg ? (
-                    <img
-                      src={`${BACKEND_URL}${formData.adharImg}`}
-                      alt="Aadhar"
-                      className="w-full h-16 sm:h-24 object-contain rounded"
-                    />
-                  ) : (
-                    <>
-                      <svg
-                        className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                        />
-                      </svg>
-                      <span className="text-[10px] sm:text-xs text-gray-500">
-                        Upload
-                      </span>
-                    </>
-                  )}
-                </label>
-              </div>
-              <div>
-                <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                  Photo
-                </label>
-                <input
-                  type="file"
-                  id="photoUpload"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="photoUpload"
-                  className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:border-gray-400 transition-all overflow-hidden ${
-                    photoPreview || formData.photo
-                      ? "border-green-400 bg-green-50 p-1"
-                      : "border-gray-300 hover:bg-gray-50 p-2 sm:p-4"
-                  }`}
-                >
-                  {photoPreview ? (
-                    <img
-                      src={photoPreview}
-                      alt="Photo"
-                      className="w-full h-16 sm:h-24 object-cover rounded"
-                    />
-                  ) : formData.photo ? (
-                    <img
-                      src={`${BACKEND_URL}${formData.photo}`}
-                      alt="Photo"
-                      className="w-full h-16 sm:h-24 object-cover rounded"
-                    />
-                  ) : (
-                    <>
-                      <svg
-                        className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mb-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span className="text-[10px] sm:text-xs text-gray-500">
-                        Upload
-                      </span>
-                    </>
-                  )}
-                </label>
-              </div>
+          <div className="flex flex-shrink-0 flex-col items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 p-3 md:flex-row md:p-4">
+            <div className="text-xs text-gray-600 md:text-sm">
+              Fill the required tenant details, then submit.
             </div>
-          </div>
 
-          {/* Additional Details - Collapsible */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowAdditionalDetails(!showAdditionalDetails)}
-              className="w-full p-2 sm:p-3 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
-            >
-              <span className="text-xs sm:text-base font-bold text-gray-800">
-                Additional Details
-              </span>
-              <svg
-                className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 transition-transform ${
-                  showAdditionalDetails ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex w-full gap-2 md:w-auto md:gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 md:flex-none md:px-6"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {showAdditionalDetails && (
-              <div className="p-2 sm:p-4 pt-0 sm:pt-0 border-t border-gray-100">
-                <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                  <div>
-                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                      DOB
-                    </label>
-                    <input
-                      type="date"
-                      name="dob"
-                      value={formData.dob}
-                      onChange={handleChange}
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                      Gender
-                    </label>
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                onClick={(e) => {
+                  e.preventDefault();
+                  formRef.current?.requestSubmit();
+                }}
+                disabled={uploading}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2 text-sm font-semibold text-white transition hover:shadow-lg md:flex-none md:px-8 ${
+                  uploading ? "cursor-not-allowed opacity-50" : ""
+                }`}
+              >
+                {uploading ? (
+                  <>
+                    <svg
+                      className="h-4 w-4 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
                     >
-                      <option value="">Select</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                      placeholder="email@example.com"
-                    />
-                  </div>
-                </div>
-                <div className="mt-2 sm:mt-4">
-                  <label className="block text-[10px] sm:text-sm font-semibold text-gray-700 mb-0.5 sm:mb-1">
-                    Notes
-                  </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows="2"
-                    className="w-full px-2 py-1.5 sm:px-3 sm:py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800"
-                    placeholder="Notes..."
-                  />
-                </div>
-              </div>
-            )}
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    {editingTenant ? "Update Tenant" : "Add Tenant"}
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
-
-        <div className="border-t border-gray-200 p-2 sm:p-4 bg-gray-100 flex justify-end gap-2 flex-shrink-0">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-3 sm:px-6 py-1.5 sm:py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-semibold text-xs sm:text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={(e) => {
-              e.preventDefault();
-              formRef.current?.requestSubmit();
-            }}
-            disabled={uploading}
-            className={`px-3 sm:px-6 py-1.5 sm:py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold flex items-center gap-2 text-xs sm:text-sm ${
-              uploading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
-            {uploading ? "Uploading..." : editingTenant ? "Update" : "Add"}
-          </button>
-        </div>
       </div>
     </div>
   );
