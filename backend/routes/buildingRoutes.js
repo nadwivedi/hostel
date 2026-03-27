@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth');
 const {
   getBuildingsByProperty,
   getBuildingById,
@@ -8,10 +9,7 @@ const {
   deleteBuilding,
   bulkCreateBuildings,
 } = require('../controllers/buildingController');
-const { unifiedProtect } = require('../middleware/unifiedAuth');
-
-// All routes are protected - supports User, Admin, and Employee
-router.use(unifiedProtect);
+router.use(protect);
 
 // Get buildings by property
 router.get('/property/:propertyId', getBuildingsByProperty);

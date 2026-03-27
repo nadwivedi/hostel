@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
   const location = useLocation();
-  const { logout, isEmployee } = useAuth();
+  const { logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Links shown in navbar (mobile: Dashboard, Properties | desktop: all)
@@ -20,13 +20,7 @@ function Navbar() {
     { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
     { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
   ];
-  const employeeDesktopNavLinks = [
-    { path: '/', label: 'Dashboard', icon: '📊', description: 'Pending Payments' },
-    { path: '/properties', label: 'Properties', icon: '🏢', description: 'Assigned Properties' },
-    { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
-    { path: '/payments', label: 'Payments', icon: '💰', description: 'All Payments' },
-  ];
-  const desktopNavLinks = isEmployee ? employeeDesktopNavLinks : ownerDesktopNavLinks;
+  const desktopNavLinks = ownerDesktopNavLinks;
 
   // Links shown in hamburger menu (mobile only)
   const ownerHamburgerLinks = [
@@ -34,11 +28,7 @@ function Navbar() {
     { path: '/payments', label: 'Payments', icon: '💰', description: 'All Payments' },
     { path: '/settings', label: 'Settings', icon: '⚙️', description: 'Manage Settings' },
   ];
-  const employeeHamburgerLinks = [
-    { path: '/tenants', label: 'Tenants', icon: '👥', description: 'All Tenants' },
-    { path: '/payments', label: 'Payments', icon: '💰', description: 'All Payments' },
-  ];
-  const hamburgerLinks = isEmployee ? employeeHamburgerLinks : ownerHamburgerLinks;
+  const hamburgerLinks = ownerHamburgerLinks;
 
   const isActive = (path) => {
     return location.pathname === path;

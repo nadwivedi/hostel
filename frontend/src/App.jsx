@@ -11,8 +11,6 @@ import PropertyDetail from './pages/propertyDetail/PropertyDetail';
 import TenantDetail from './pages/TenantDetail';
 import Payments from './pages/Payments';
 import Settings from './pages/Settings';
-import Employees from './pages/Employees';
-import EmployeeDetail from './pages/EmployeeDetail';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -41,8 +39,6 @@ function App() {
             <Route path="tenant/:tenantId" element={<TenantDetail />} />
             <Route path="payments" element={<Payments />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="employees" element={<Employees />} />
-            <Route path="employees/:employeeId" element={<EmployeeDetail />} />
           </Route>
         </Routes>
       </BrowserRouter>

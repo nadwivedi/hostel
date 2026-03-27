@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { toast } from '../App';
-import Employees from './Employees';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Settings() {
   const navigate = useNavigate();
-  const { user, logout, isEmployee } = useAuth();
+  const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState({
     email: true,
     payment: true,
@@ -935,9 +934,6 @@ function Settings() {
           )}
         </div>
       </div>
-
-      {/* Employee Management */}
-      {!isEmployee && <Employees embedded />}
 
       {/* Room Form Modal */}
       {showRoomForm && (

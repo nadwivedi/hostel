@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Room = require('../models/Room');
 
-// Get all rooms (filtered by user, all for admin, property-filtered for employee)
+// Get all rooms
 exports.getAllRooms = async (req, res) => {
   try {
     const { status, propertyId, locationId, buildingId } = req.query;
@@ -11,21 +11,6 @@ exports.getAllRooms = async (req, res) => {
     if (propertyId || locationId) filter.propertyId = propertyId || locationId;
     // Filter by buildingId if provided
     if (buildingId) filter.buildingId = buildingId;
-
-    // For employees, filter by assigned properties
-    if (req.isEmployee && req.assignedPropertyIds && req.assignedPropertyIds.length > 0) {
-      if (filter.propertyId) {
-        // If propertyId is already set, check if employee has access
-        const hasAccess = req.assignedPropertyIds.some(
-          id => id.toString() === filter.propertyId.toString()
-        );
-        if (!hasAccess) {
-          return res.status(200).json([]);
-        }
-      } else {
-        filter.propertyId = { $in: req.assignedPropertyIds };
-      }
-    }
 
     const rooms = await Room.find(filter)
       .populate('propertyId', 'name location propertyType')
@@ -48,16 +33,6 @@ exports.getRoomById = async (req, res) => {
     // Check ownership for non-admin users
     if (!req.isAdmin && room.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to access this room' });
-    }
-
-    // For employees, check property access
-    if (req.isEmployee && room.propertyId) {
-      const hasAccess = req.assignedPropertyIds.some(
-        id => id.toString() === room.propertyId.toString()
-      );
-      if (!hasAccess) {
-        return res.status(403).json({ message: 'Not authorized to access this room' });
-      }
     }
 
     res.status(200).json(room);

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Property = require('../models/Property');
 
-// Get all properties (filtered by user, all for admin, assigned-filtered for employee)
+// Get all properties
 exports.getAllProperties = async (req, res) => {
   try {
     const filter = req.isAdmin ? {} : { userId: req.user._id };
@@ -9,11 +9,6 @@ exports.getAllProperties = async (req, res) => {
     // Filter by propertyType if provided
     if (req.query.propertyType) {
       filter.propertyType = req.query.propertyType;
-    }
-
-    // For employees, only show assigned properties
-    if (req.isEmployee && req.assignedPropertyIds && req.assignedPropertyIds.length > 0) {
-      filter._id = { $in: req.assignedPropertyIds };
     }
 
     const properties = await Property.find(filter).sort({ name: 1 });
@@ -34,16 +29,6 @@ exports.getPropertyById = async (req, res) => {
     // Check ownership for non-admin users
     if (!req.isAdmin && property.userId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to access this property' });
-    }
-
-    // For employees, check if property is assigned
-    if (req.isEmployee) {
-      const hasAccess = req.assignedPropertyIds.some(
-        id => id.toString() === property._id.toString()
-      );
-      if (!hasAccess) {
-        return res.status(403).json({ message: 'Not authorized to access this property' });
-      }
     }
 
     res.status(200).json(property);
@@ -190,11 +175,6 @@ exports.getPropertyStats = async (req, res) => {
   try {
     const Room = require('../models/Room');
     const filter = req.isAdmin ? {} : { userId: req.user._id };
-
-    // For employees, only show assigned properties
-    if (req.isEmployee && req.assignedPropertyIds && req.assignedPropertyIds.length > 0) {
-      filter._id = { $in: req.assignedPropertyIds };
-    }
 
     const properties = await Property.find(filter);
 

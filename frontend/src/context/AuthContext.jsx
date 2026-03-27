@@ -7,7 +7,6 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authType, setAuthType] = useState(null); // 'user' | 'employee' | null
 
   useEffect(() => {
     checkAuth();
@@ -22,24 +21,10 @@ export const AuthProvider = ({ children }) => {
         }
       );
       setUser(userResponse.data.user);
-      setAuthType('user');
       setIsAuthenticated(true);
     } catch (error) {
-      try {
-        const employeeResponse = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/employee/auth/me`,
-          {
-            withCredentials: true,
-          }
-        );
-        setUser(employeeResponse.data.employee);
-        setAuthType('employee');
-        setIsAuthenticated(true);
-      } catch (employeeError) {
-        setUser(null);
-        setAuthType(null);
-        setIsAuthenticated(false);
-      }
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -55,32 +40,17 @@ export const AuthProvider = ({ children }) => {
         }
       );
       setUser(userResponse.data.user);
-      setAuthType('user');
       setIsAuthenticated(true);
       return userResponse;
-    } catch (userError) {
-      const employeeResponse = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/employee/auth/login`,
-        { loginId, password },
-        {
-          withCredentials: true,
-        }
-      );
-      setUser(employeeResponse.data.employee);
-      setAuthType('employee');
-      setIsAuthenticated(true);
-      return employeeResponse;
+    } catch (error) {
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-      const endpoint =
-        authType === 'employee'
-          ? '/api/employee/auth/logout'
-          : '/api/auth/logout';
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}${endpoint}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/auth/logout`,
         {},
         {
           withCredentials: true,
@@ -90,7 +60,6 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      setAuthType(null);
       setIsAuthenticated(false);
     }
   };
@@ -99,8 +68,6 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
-    isEmployee: authType === 'employee',
-    authType,
     login,
     logout,
     checkAuth,

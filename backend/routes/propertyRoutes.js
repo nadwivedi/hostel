@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { unifiedProtect } = require('../middleware/unifiedAuth');
+const { protect } = require('../middleware/auth');
 const {
   getAllProperties,
   getPropertyById,
@@ -10,12 +10,11 @@ const {
   getPropertyStats,
 } = require('../controllers/propertyController');
 
-// All routes use unifiedProtect - supports User, Admin, and Employee
-router.get('/', unifiedProtect, getAllProperties);
-router.get('/stats', unifiedProtect, getPropertyStats);
-router.get('/:id', unifiedProtect, getPropertyById);
-router.post('/', unifiedProtect, createProperty);
-router.patch('/:id', unifiedProtect, updateProperty);
-router.delete('/:id', unifiedProtect, deleteProperty);
+router.get('/', protect, getAllProperties);
+router.get('/stats', protect, getPropertyStats);
+router.get('/:id', protect, getPropertyById);
+router.post('/', protect, createProperty);
+router.patch('/:id', protect, updateProperty);
+router.delete('/:id', protect, deleteProperty);
 
 module.exports = router;
