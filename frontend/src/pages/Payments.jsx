@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Payments() {
-  const { user } = useAuth();
+  const { user, canDo } = useAuth();
   const [payments, setPayments] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -336,6 +336,7 @@ function Payments() {
                 </button>
               ))}
             </div>
+            {canDo('payments', 'add') && (
             <button
               onClick={() => setShowForm(true)}
               className="px-4 py-2 bg-gray-800 text-white rounded-xl font-semibold text-sm hover:bg-gray-700 transition-all flex items-center gap-2 whitespace-nowrap"
@@ -345,6 +346,7 @@ function Payments() {
               </svg>
               Add Payment
             </button>
+            )}
           </div>
         </div>
       </div>
@@ -599,7 +601,7 @@ function Payments() {
                       )}
                     </div>
                     <div className="flex gap-1">
-                      {payment.status !== "PAID" && (
+                      {payment.status !== "PAID" && canDo('payments', 'edit') && (
                         <>
                           <button onClick={() => handleOpenMarkPaid(payment)} className="px-2 py-1 bg-green-600 text-white rounded text-[10px] font-medium hover:bg-green-700 transition cursor-pointer">Mark Paid</button>
                           <button onClick={() => handleWhatsAppReminder(payment)} className="px-2 py-1 bg-green-500 text-white rounded text-[10px] font-medium hover:bg-green-600 transition cursor-pointer" title="WhatsApp Reminder">
@@ -686,7 +688,7 @@ function Payments() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-center gap-2">
-                        {payment.status !== "PAID" && (
+                        {payment.status !== "PAID" && canDo('payments', 'edit') && (
                           <>
                             <button onClick={() => handleOpenMarkPaid(payment)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Record Payment">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,11 +702,13 @@ function Payments() {
                             </button>
                           </>
                         )}
+                        {canDo('payments', 'delete') && (
                         <button onClick={() => handleDelete(payment)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>

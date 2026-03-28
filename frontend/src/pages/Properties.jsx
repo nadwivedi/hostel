@@ -27,7 +27,7 @@ const toArray = (payload) => {
 
 function Properties() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, canDo } = useAuth();
   const [properties, setProperties] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
@@ -159,6 +159,7 @@ function Properties() {
             </div>
           </div>
 
+          {canDo('properties', 'add') && (
           <button
             type="button"
             onClick={() => setShowAddPropertyModal(true)}
@@ -166,6 +167,7 @@ function Properties() {
           >
             Add Property
           </button>
+          )}
         </div>
       )}
 
@@ -212,6 +214,7 @@ function Properties() {
                     <span>{typeConfig.label}</span>
                   </div>
 
+                  {canDo('properties', 'edit') && (
                   <button
                     type="button"
                     onClick={(event) => {
@@ -225,6 +228,7 @@ function Properties() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
+                  )}
 
                   {/* Property Name on Image */}
                   <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-4">
@@ -333,6 +337,7 @@ function Properties() {
           <p className="text-gray-500 mb-6 max-w-md mx-auto">
             Get started by adding your first property here.
           </p>
+          {canDo('properties', 'add') && (
           <button
             type="button"
             onClick={() => setShowAddPropertyModal(true)}
@@ -343,6 +348,7 @@ function Properties() {
             </svg>
             Add Property
           </button>
+          )}
         </div>
       )}
 

@@ -10,7 +10,7 @@ function TenantDetail() {
   const { tenantId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, canDo } = useAuth();
 
   const [tenant, setTenant] = useState(null);
   const [payments, setPayments] = useState([]);
@@ -261,6 +261,7 @@ function TenantDetail() {
               <a href={`tel:${tenant.mobile}`} className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700">
                 {tenant.mobile}
               </a>
+              {canDo('tenants', 'edit') && (
               <button
                 type="button"
                 onClick={openEditModal}
@@ -268,7 +269,8 @@ function TenantDetail() {
               >
                 Edit
               </button>
-              {tenant.status === 'ACTIVE' && (
+              )}
+              {tenant.status === 'ACTIVE' && canDo('tenants', 'edit') && (
                 <button
                   type="button"
                   onClick={() => {

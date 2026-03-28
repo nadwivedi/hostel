@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
+const { checkPermission } = require('../middleware/employeeAuth');
 const {
   getAllTenants,
   getTenantById,
@@ -11,8 +12,8 @@ const {
 
 router.get('/', protect, getAllTenants);
 router.get('/:id', protect, getTenantById);
-router.post('/', protect, createTenant);
-router.patch('/:id', protect, updateTenant);
-router.delete('/:id', protect, deleteTenant);
+router.post('/', protect, checkPermission('tenants', 'add'), createTenant);
+router.patch('/:id', protect, checkPermission('tenants', 'edit'), updateTenant);
+router.delete('/:id', protect, checkPermission('tenants', 'delete'), deleteTenant);
 
 module.exports = router;

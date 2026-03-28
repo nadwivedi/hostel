@@ -10,7 +10,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 function PropertyDetail() {
   const { locationId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, canDo } = useAuth();
 
   const [location, setLocation] = useState(null);
   const [tenants, setTenants] = useState([]);
@@ -1205,6 +1205,7 @@ function PropertyDetail() {
                                   </div>
                                 </div>
                               )}
+                              {canDo('tenants', 'edit') && (
                               <button
                                 onClick={() => handleEdit(tenant)}
                                 className="p-1 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-md transition"
@@ -1224,7 +1225,8 @@ function PropertyDetail() {
                                   />
                                 </svg>
                               </button>
-                              {tenant.status === "ACTIVE" && (
+                              )}
+                              {tenant.status === "ACTIVE" && canDo('tenants', 'edit') && (
                                 <button
                                   onClick={() => handleMarkAsLeft(tenant)}
                                   className="p-1 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-md transition"

@@ -81,6 +81,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * canDo('payments', 'edit') → true if owner OR employee has that permission.
+   */
+  const canDo = (resource, action) => {
+    if (authType === 'owner') return true;   // owners can do everything
+    if (authType !== 'employee') return false;
+    return !!user?.permissions?.[resource]?.[action];
+  };
+
   const value = {
     user,
     loading,
@@ -89,6 +98,7 @@ export const AuthProvider = ({ children }) => {
     isOwner: authType === 'owner',
     authType,
     permissions: user?.permissions || null,
+    canDo,
     login,
     logout,
     checkAuth,

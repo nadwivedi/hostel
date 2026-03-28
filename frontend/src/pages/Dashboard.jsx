@@ -8,7 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, canDo } = useAuth();
   const currentUserId = user?.id || user?._id || "";
   const [pendingPayments, setPendingPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -432,15 +432,17 @@ function Dashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2.5 sm:gap-1" onClick={(e) => e.stopPropagation()}>
+                        {canDo('payments', 'edit') && (
                         <button
                           onClick={() => handleOpenMarkPaid(payment)}
                           className="p-1.5 sm:p-2 bg-green-600 text-white rounded-md sm:rounded-lg hover:bg-green-700 transition"
-                          title="Mark as Done"
+                          title="Record Payment"
                         >
                           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                           </svg>
                         </button>
+                        )}
                         <button
                           onClick={() => handleWhatsAppReminder(payment)}
                           className="p-1.5 sm:p-2 bg-green-500 text-white rounded-md sm:rounded-lg hover:bg-green-600 transition"
@@ -489,7 +491,8 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Floating Add Tenant Button */}
+      {/* Floating Add Tenant Button — only for users with tenants.add */}
+      {canDo('tenants', 'add') && (
       <button
         onClick={openAddTenant}
         title="Add New Tenant"
@@ -499,6 +502,7 @@ function Dashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
         </svg>
       </button>
+      )}
 
       {/* Quick Add Tenant Modal */}
       {showAddTenant && (
