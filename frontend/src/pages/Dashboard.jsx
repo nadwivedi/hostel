@@ -23,6 +23,62 @@ function Dashboard() {
   });
   const [markingPaid, setMarkingPaid] = useState(false);
 
+  // --- Quick Add Tenant FAB ---
+  const [showAddTenant, setShowAddTenant] = useState(false);
+  const [addTenantStep, setAddTenantStep] = useState(1); // 1=property, 2=room+details
+  const [properties, setProperties] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [savingTenant, setSavingTenant] = useState(false);
+  const [tenantForm, setTenantForm] = useState({
+    propertyId: '', roomId: '', bedNumber: '',
+    name: '', mobile: '',
+    rentAmount: '', advanceAmount: '',
+    joiningDate: new Date().toISOString().split('T')[0],
+  });
+  const selectedAddRoom = rooms.find(r => r._id === tenantForm.roomId);
+
+  const openAddTenant = async () => {
+    setTenantForm({ propertyId: '', roomId: '', bedNumber: '', name: '', mobile: '', rentAmount: '', advanceAmount: '', joiningDate: new Date().toISOString().split('T')[0] });
+    setAddTenantStep(1);
+    setShowAddTenant(true);
+    try {
+      const { data } = await axios.get(`${BACKEND_URL}/api/properties`, { withCredentials: true });
+      setProperties(data || []);
+    } catch { toast.error('Failed to load properties'); }
+  };
+
+  const handleSelectProperty = async (propertyId) => {
+    setTenantForm(prev => ({ ...prev, propertyId, roomId: '', bedNumber: '', rentAmount: '' }));
+    try {
+      const { data } = await axios.get(`${BACKEND_URL}/api/rooms?propertyId=${propertyId}`, { withCredentials: true });
+      setRooms(data || []);
+      setAddTenantStep(2);
+    } catch { toast.error('Failed to load rooms'); }
+  };
+
+  const handleAddTenantSubmit = async (e) => {
+    e.preventDefault();
+    if (!tenantForm.propertyId || !tenantForm.roomId || !tenantForm.name || !tenantForm.mobile) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    const userId = currentUserId;
+    if (!userId) { toast.error('Not authenticated'); return; }
+    try {
+      setSavingTenant(true);
+      await axios.post(`${BACKEND_URL}/api/tenants`,
+        { userId, ...tenantForm },
+        { withCredentials: true }
+      );
+      toast.success(`${tenantForm.name} added successfully!`);
+      setShowAddTenant(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add tenant');
+    } finally {
+      setSavingTenant(false);
+    }
+  };
+
   useEffect(() => {
     fetchPendingPayments();
   }, []);
@@ -432,6 +488,173 @@ function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Floating Add Tenant Button */}
+      <button
+        onClick={openAddTenant}
+        title="Add New Tenant"
+        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-2xl transition hover:bg-indigo-700 hover:scale-110 active:scale-95"
+      >
+        <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+      </button>
+
+      {/* Quick Add Tenant Modal */}
+      {showAddTenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-4">
+              <div>
+                <h2 className="text-base font-bold text-white">Add New Tenant</h2>
+                <p className="text-xs text-indigo-200">
+                  {addTenantStep === 1 ? 'Step 1: Choose a property' : `Step 2: Room & details`}
+                </p>
+              </div>
+              <button type="button" onClick={() => setShowAddTenant(false)}
+                className="rounded-full p-1.5 text-white hover:bg-white/20">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Step 1: Property */}
+            {addTenantStep === 1 && (
+              <div className="p-5">
+                <p className="text-sm text-gray-600 mb-3">Select the property where this tenant will stay:</p>
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {properties.map(prop => (
+                    <button key={prop._id} type="button"
+                      onClick={() => handleSelectProperty(prop._id)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-indigo-400 hover:bg-indigo-50 transition text-left">
+                      <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">{prop.name}</div>
+                        <div className="text-xs text-gray-500">{prop.location}</div>
+                      </div>
+                      <svg className="w-4 h-4 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ))}
+                  {properties.length === 0 && (
+                    <p className="text-center text-sm text-gray-400 py-6">No properties found.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Tenant Details */}
+            {addTenantStep === 2 && (
+              <form onSubmit={handleAddTenantSubmit} className="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
+                {/* Room selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Room <span className="text-red-500">*</span></label>
+                  <select value={tenantForm.roomId}
+                    onChange={e => {
+                      const room = rooms.find(r => r._id === e.target.value);
+                      setTenantForm(prev => ({ ...prev, roomId: e.target.value, bedNumber: '', rentAmount: room?.rentAmount || '' }));
+                    }}
+                    required
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+                    <option value="">Select Room</option>
+                    {rooms.map(room => {
+                      const avail = room.rentType === 'PER_BED'
+                        ? (room.beds?.filter(b => b.status === 'AVAILABLE').length || 0) > 0
+                        : room.status === 'AVAILABLE';
+                      return (
+                        <option key={room._id} value={room._id} disabled={!avail}>
+                          Room {room.roomNumber} — ₹{room.rentAmount}{room.rentType === 'PER_BED' ? ' (per bed)' : ''}{!avail ? ' (Full)' : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Bed selector (if PER_BED) */}
+                {selectedAddRoom?.rentType === 'PER_BED' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Bed <span className="text-red-500">*</span></label>
+                    <select value={tenantForm.bedNumber}
+                      onChange={e => setTenantForm(prev => ({ ...prev, bedNumber: e.target.value }))}
+                      required
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+                      <option value="">Select Bed</option>
+                      {selectedAddRoom.beds?.map(bed => (
+                        <option key={bed.bedNumber} value={bed.bedNumber} disabled={bed.status !== 'AVAILABLE'}>
+                          Bed {bed.bedNumber}{bed.status !== 'AVAILABLE' ? ' (Occupied)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Name + Mobile */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
+                    <input type="text" required placeholder="Full name"
+                      value={tenantForm.name}
+                      onChange={e => setTenantForm(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Mobile <span className="text-red-500">*</span></label>
+                    <input type="tel" required placeholder="10 digits" maxLength={10} inputMode="numeric"
+                      value={tenantForm.mobile}
+                      onChange={e => setTenantForm(prev => ({ ...prev, mobile: e.target.value }))}
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" />
+                  </div>
+                </div>
+
+                {/* Rent + Advance */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Rent (₹) <span className="text-red-500">*</span></label>
+                    <input type="number" required min="0" placeholder="Monthly rent"
+                      value={tenantForm.rentAmount}
+                      onChange={e => setTenantForm(prev => ({ ...prev, rentAmount: e.target.value }))}
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Advance (₹)</label>
+                    <input type="number" min="0" placeholder="Deposit"
+                      value={tenantForm.advanceAmount}
+                      onChange={e => setTenantForm(prev => ({ ...prev, advanceAmount: e.target.value }))}
+                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" />
+                  </div>
+                </div>
+
+                {/* Join Date */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Join Date <span className="text-red-500">*</span></label>
+                  <input type="date" required
+                    value={tenantForm.joiningDate}
+                    onChange={e => setTenantForm(prev => ({ ...prev, joiningDate: e.target.value }))}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100" />
+                </div>
+
+                <div className="flex gap-2 justify-between pt-2">
+                  <button type="button" onClick={() => setAddTenantStep(1)}
+                    className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    ← Back
+                  </button>
+                  <button type="submit" disabled={savingTenant}
+                    className="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-70">
+                    {savingTenant ? 'Saving...' : '✓ Add Tenant'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
