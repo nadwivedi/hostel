@@ -18,6 +18,19 @@ function PropertyFormModal({
   const [formData, setFormData] = useState(defaultFormState);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [buildings, setBuildings] = useState([]);
+
+  const handleAddBuilding = () => {
+    setBuildings([...buildings, { id: Date.now().toString(), name: `Building ${buildings.length + 1}`, isNew: true }]);
+  };
+
+  const handleBuildingChange = (id, newName) => {
+    setBuildings(buildings.map(b => b.id === id || b._id === id ? { ...b, name: newName } : b));
+  };
+
+  const handleRemoveBuilding = (id) => {
+    setBuildings(buildings.filter(b => b.id !== id && b._id !== id));
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -29,6 +42,13 @@ function PropertyFormModal({
     });
     setImageFile(null);
     setImagePreview(initialData?.imageUrl || null);
+    
+    // Initialize buildings
+    if (initialData?.buildings && initialData.buildings.length > 0) {
+      setBuildings(initialData.buildings);
+    } else {
+      setBuildings([]);
+    }
   }, [initialData, open]);
 
   if (!open) return null;
@@ -49,9 +69,13 @@ function PropertyFormModal({
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    // Filter out empty building names
+    const validBuildings = buildings.filter(b => b.name.trim() !== '');
+
     await onSubmit({
       ...formData,
       imageFile,
+      buildings: validBuildings,
     });
   };
 
@@ -112,6 +136,46 @@ function PropertyFormModal({
                   <option value="resident">Resident</option>
                   <option value="shop">Shop</option>
                 </select>
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="block text-sm font-semibold text-gray-700">Buildings</label>
+                  <button
+                    type="button"
+                    onClick={handleAddBuilding}
+                    className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                  >
+                    + Add Building
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {buildings.map((building, index) => (
+                    <div key={building.id || building._id} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={building.name}
+                        onChange={(e) => handleBuildingChange(building.id || building._id, e.target.value)}
+                        placeholder={`Building ${index + 1}`}
+                        className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveBuilding(building.id || building._id)}
+                        className="rounded-lg p-2 text-red-500 hover:bg-red-50"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  {buildings.length === 0 && (
+                    <p className="text-xs text-gray-500 text-center py-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                      No buildings added. Click + to add.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 

@@ -32,12 +32,16 @@ function EditProperty() {
     try {
       setLoading(true);
       const config = { withCredentials: true };
-      const [propertyRes, roomsRes] = await Promise.all([
+      const [propertyRes, roomsRes, buildingsRes] = await Promise.all([
         axios.get(`${BACKEND_URL}/api/properties/${propertyId}`, config),
         axios.get(`${BACKEND_URL}/api/rooms?propertyId=${propertyId}`, config),
+        axios.get(`${BACKEND_URL}/api/buildings/property/${propertyId}`, config).catch(() => ({ data: [] })),
       ]);
 
-      setProperty(propertyRes.data);
+      const propertyData = propertyRes.data;
+      propertyData.buildings = buildingsRes.data || [];
+
+      setProperty(propertyData);
       setRooms(Array.isArray(roomsRes.data) ? roomsRes.data : []);
     } catch (error) {
       console.error('Error fetching property data:', error);
@@ -83,6 +87,7 @@ function EditProperty() {
           location: payload.location,
           propertyType: payload.propertyType,
           image: imageUrl,
+          buildings: payload.buildings,
         },
         { withCredentials: true }
       );
@@ -340,6 +345,7 @@ function EditProperty() {
           location: property.location,
           propertyType: property.propertyType,
           imageUrl: property.image ? `${BACKEND_URL}${property.image}` : null,
+          buildings: property.buildings,
         }}
         onClose={() => setShowEditPropertyModal(false)}
         onSubmit={handleUpdateProperty}

@@ -45,7 +45,7 @@ exports.getPropertyById = async (req, res) => {
 // Create property
 exports.createProperty = async (req, res) => {
   try {
-    const { name, location, propertyType, image } = req.body;
+    const { name, location, propertyType, image, buildings } = req.body;
 
     if (!name || name.trim() === '') {
       return res.status(400).json({ success: false, message: 'Please provide property name' });
@@ -76,6 +76,23 @@ exports.createProperty = async (req, res) => {
     }
 
     const newProperty = await Property.create(propertyData);
+
+    // Create buildings if provided
+    if (Array.isArray(buildings) && buildings.length > 0) {
+      const Building = require('../models/Building');
+      const buildingDocs = buildings
+        .filter(b => b && b.name && b.name.trim() !== '')
+        .map(b => ({
+          name: b.name.trim(),
+          propertyId: newProperty._id,
+          userId: propertyData.userId,
+        }));
+      
+      if (buildingDocs.length > 0) {
+        await Building.insertMany(buildingDocs);
+      }
+    }
+
     res.status(201).json({ success: true, data: newProperty });
   } catch (error) {
     if (error.code === 11000) {
@@ -88,7 +105,7 @@ exports.createProperty = async (req, res) => {
 // Update property
 exports.updateProperty = async (req, res) => {
   try {
-    const { name, location, propertyType, image } = req.body;
+    const { name, location, propertyType, image, buildings } = req.body;
     const propertyId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(propertyId)) {
@@ -132,6 +149,47 @@ exports.updateProperty = async (req, res) => {
       new: true,
       runValidators: true,
     });
+
+    // Update buildings if provided
+    if (buildings && Array.isArray(buildings)) {
+      const Building = require('../models/Building');
+      
+      // Get existing buildings for this property
+      const existingBuildings = await Building.find({ propertyId });
+      const existingIds = existingBuildings.map(b => b._id.toString());
+      
+      const newBuildingDocs = [];
+      const updatedBuildingIds = new Set();
+      
+      for (const building of buildings) {
+        if (!building.name || building.name.trim() === '') continue;
+        
+        if (building.isNew || !building._id) {
+          // It's a new building
+          newBuildingDocs.push({
+            name: building.name.trim(),
+            propertyId,
+            userId: existingProperty.userId,
+          });
+        } else {
+          // Existing building, update name
+          updatedBuildingIds.add(building._id);
+          await Building.findByIdAndUpdate(building._id, { name: building.name.trim() });
+        }
+      }
+      
+      // Delete removed buildings
+      const idsToDelete = existingIds.filter(id => !updatedBuildingIds.has(id));
+      if (idsToDelete.length > 0) {
+        // Optional: Check if rooms exist for these buildings before deleting
+        // We'll proceed with direct deletion for now to keep synced with UI
+        await Building.deleteMany({ _id: { $in: idsToDelete } });
+      }
+      
+      if (newBuildingDocs.length > 0) {
+        await Building.insertMany(newBuildingDocs);
+      }
+    }
 
     res.status(200).json({ success: true, data: updatedProperty });
   } catch (error) {
