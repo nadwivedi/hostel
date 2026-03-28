@@ -142,10 +142,18 @@ exports.getDashboardPendingPayments = async (req, res) => {
       })
       .sort({ dueDate: 1 });
 
-    const totalAmount = pendingPayments.reduce(
-      (sum, payment) => sum + Math.max(0, (payment.rentAmount || 0) - (payment.amountPaid || 0)),
-      0
-    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const totalAmount = pendingPayments.reduce((sum, payment) => {
+      const dueDate = new Date(payment.dueDate);
+      dueDate.setHours(0, 0, 0, 0);
+      
+      if (dueDate <= today) {
+        return sum + Math.max(0, (payment.rentAmount || 0) - (payment.amountPaid || 0));
+      }
+      return sum;
+    }, 0);
 
     const data = pendingPayments.map((payment) => ({
       ...payment.toObject(),
