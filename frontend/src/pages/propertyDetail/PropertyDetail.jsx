@@ -33,6 +33,9 @@ function PropertyDetail() {
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [expandedRooms, setExpandedRooms] = useState({});
+  const [exitModal, setExitModal] = useState({ open: false, tenant: null });
+  const [exitForm, setExitForm] = useState({ leaveDate: new Date().toISOString().split('T')[0], action: 'adjust' });
+  const [processingExit, setProcessingExit] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -296,25 +299,73 @@ function PropertyDetail() {
     }
   };
 
-  const handleMarkAsLeft = async (tenant) => {
-    if (!window.confirm(`Mark ${tenant.name} as left?`)) return;
+  const handleMarkAsLeft = (tenant) => {
+    setExitForm({ leaveDate: new Date().toISOString().split('T')[0], action: 'adjust' });
+    setExitModal({ open: true, tenant });
+  };
 
+  const handleExitConfirm = async () => {
+    const { tenant } = exitModal;
+    if (!tenant) return;
     const userId = user?.id || user?._id;
     try {
+      setProcessingExit(true);
+      const advLeft = tenant.advanceLeft || 0;
+      const leaveDate = exitForm.leaveDate;
+
+      // Mark tenant as COMPLETED, zero advance balance
       await axios.patch(
         `${BACKEND_URL}/api/tenants/${tenant._id}`,
-        {
-          userId,
-          status: "COMPLETED",
-          leaveDate: new Date(),
-        },
+        { userId, status: "COMPLETED", leaveDate, advanceLeft: 0 },
         { withCredentials: true },
       );
-      toast.success("Tenant marked as left");
+
+      if (advLeft > 0) {
+        const paymentsRes = await axios.get(`${BACKEND_URL}/api/payments/tenant/${tenant._id}`, { withCredentials: true });
+
+        if (exitForm.action === 'adjust') {
+          const now = new Date();
+          const nextMonth = now.getMonth() + 2;
+          const nextYear = nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear();
+          const safeMonth = nextMonth > 12 ? 1 : nextMonth;
+          const nextMonthPayment = paymentsRes.data.find(p => p.month === safeMonth && p.year === nextYear);
+          if (nextMonthPayment && nextMonthPayment.status !== 'PAID') {
+            const newAmtPaid = Math.min(nextMonthPayment.rentAmount, (nextMonthPayment.amountPaid || 0) + advLeft);
+            const newStatus = newAmtPaid >= nextMonthPayment.rentAmount ? 'PAID' : 'PARTIAL';
+            const settlementNote = `Advance ₹${advLeft.toLocaleString()} adjusted against rent on tenant exit (${new Date(leaveDate).toLocaleDateString('en-GB')}).`;
+            await axios.patch(`${BACKEND_URL}/api/payments/${nextMonthPayment._id}`,
+              { userId, amountPaid: newAmtPaid, advanceUsed: advLeft, paymentDate: leaveDate, status: newStatus, notes: settlementNote },
+              { withCredentials: true }
+            );
+          }
+        } else {
+          // Refund — add note to most recent pending payment
+          const pendingPayment = paymentsRes.data
+            .filter(p => p.status !== 'PAID')
+            .sort((a, b) => b.year - a.year || b.month - a.month)[0];
+          if (pendingPayment) {
+            const refundNote = `Advance ₹${advLeft.toLocaleString()} refunded to tenant in cash on exit (${new Date(leaveDate).toLocaleDateString('en-GB')}).`;
+            await axios.patch(`${BACKEND_URL}/api/payments/${pendingPayment._id}`,
+              { userId, notes: refundNote },
+              { withCredentials: true }
+            );
+          }
+        }
+      }
+
+      const actionMsg = advLeft > 0
+        ? exitForm.action === 'adjust'
+          ? ` Advance ₹${advLeft.toLocaleString()} adjusted against next month.`
+          : ` Refund ₹${advLeft.toLocaleString()} to tenant in cash.`
+        : '';
+      toast.success(`${tenant.name} marked as left.${actionMsg}`);
+      setExitModal({ open: false, tenant: null });
       fetchData();
     } catch (error) {
       console.error("Error updating tenant:", error);
-      toast.error("Error updating tenant status");
+      toast.error(error.response?.data?.message || "Error updating tenant status");
+    } finally {
+      setProcessingExit(false);
     }
   };
 
@@ -1361,6 +1412,87 @@ function PropertyDetail() {
           </div>
         )}
       </div>
+
+      {/* Exit Settlement Modal */}
+      {exitModal.open && exitModal.tenant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Tenant Exit Settlement</h2>
+                <p className="text-xs text-gray-500">{exitModal.tenant.name} — settle advance &amp; set leave date</p>
+              </div>
+              <button type="button" onClick={() => setExitModal({ open: false, tenant: null })}
+                className="rounded-full p-2 text-gray-500 hover:bg-gray-100 transition">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 sm:p-5 space-y-4">
+              {(exitModal.tenant.advanceLeft || 0) > 0 ? (
+                <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-blue-800">💰 Advance Balance</span>
+                    <span className="text-lg font-black text-blue-700">₹{exitModal.tenant.advanceLeft.toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">This needs to be settled on exit.</p>
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 text-center text-sm text-gray-500">
+                  No advance balance to settle.
+                </div>
+              )}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-700">Leave Date</label>
+                <input type="date" value={exitForm.leaveDate}
+                  onChange={(e) => setExitForm(prev => ({ ...prev, leaveDate: e.target.value }))}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100" />
+              </div>
+              {(exitModal.tenant.advanceLeft || 0) > 0 && (
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-gray-700">Advance Settlement</label>
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-blue-300 transition">
+                      <input type="radio" name="exitAction" value="adjust"
+                        checked={exitForm.action === 'adjust'}
+                        onChange={() => setExitForm(prev => ({ ...prev, action: 'adjust' }))}
+                        className="mt-0.5 accent-blue-600" />
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">Adjust against next month&apos;s rent</div>
+                        <div className="text-xs text-gray-500">₹{exitModal.tenant.advanceLeft.toLocaleString()} applied toward next month payment</div>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-green-300 transition">
+                      <input type="radio" name="exitAction" value="refund"
+                        checked={exitForm.action === 'refund'}
+                        onChange={() => setExitForm(prev => ({ ...prev, action: 'refund' }))}
+                        className="mt-0.5 accent-green-600" />
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">Cash Refund to Tenant</div>
+                        <div className="text-xs text-gray-500">Manually refund ₹{exitModal.tenant.advanceLeft.toLocaleString()} in cash</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+              <div className="bg-red-50 rounded-xl p-3 border border-red-200 text-xs text-red-700">
+                <strong>Note:</strong> This will mark the tenant as <strong>Left</strong> and stop automated payment generation.
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <button type="button" onClick={() => setExitModal({ open: false, tenant: null })}
+                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleExitConfirm} disabled={processingExit}
+                  className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-70 transition">
+                  {processingExit ? 'Processing...' : 'Confirm Exit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

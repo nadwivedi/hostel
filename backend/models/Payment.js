@@ -46,12 +46,20 @@ const paymentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    advanceAdded: {
+      type: Number,
+      default: 0,
+    },
     reminderCount: {
       type: Number,
       default: 0,
     },
     lastReminderDate: {
       type: Date,
+    },
+    notes: {
+      type: String,
+      default: '',
     },
   },
   {

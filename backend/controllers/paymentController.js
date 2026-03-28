@@ -124,7 +124,7 @@ exports.getDashboardPendingPayments = async (req, res) => {
     const pendingPayments = await Payment.find(filter)
       .populate({
         path: 'tenantId',
-        select: 'name mobile bedNumber propertyId roomId',
+        select: 'name mobile bedNumber propertyId roomId advanceLeft rentAmount',
         populate: [
           {
             path: 'propertyId',
@@ -292,7 +292,7 @@ exports.createPayment = async (req, res) => {
 // Update payment
 exports.updatePayment = async (req, res) => {
   try {
-    const { month, year, rentAmount, amountPaid, paymentDate, status, advanceUsed } = req.body;
+    const { month, year, rentAmount, amountPaid, paymentDate, status, advanceUsed, advanceAdded, notes } = req.body;
     const paymentId = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(paymentId)) {
@@ -329,9 +329,44 @@ exports.updatePayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Status must be PENDING, PAID, or PARTIAL' });
     }
 
-    const currentRentAmount = rentAmount !== undefined ? rentAmount : payment.rentAmount;
-    if (amountPaid !== undefined && amountPaid > currentRentAmount) {
-      return res.status(400).json({ success: false, message: 'Amount paid cannot exceed rent amount' });
+    // Handle advance used delta (deduct from tenant balance)
+    if (advanceUsed !== undefined) {
+      const nextAdvanceUsed = parseFloat(advanceUsed) || 0;
+      const previousAdvanceUsed = parseFloat(payment.advanceUsed) || 0;
+      const advanceDelta = nextAdvanceUsed - previousAdvanceUsed;
+
+      if (advanceDelta !== 0) {
+        const tenant = await Tenant.findById(payment.tenantId);
+        if (!tenant) {
+          return res.status(404).json({ success: false, message: 'Tenant not found' });
+        }
+        const tenantAdvanceLeft = parseFloat(tenant.advanceLeft) || 0;
+        if (advanceDelta > tenantAdvanceLeft) {
+          return res.status(400).json({
+            success: false,
+            message: `Advance used (Rs.${nextAdvanceUsed}) cannot exceed available advance balance (Rs.${tenantAdvanceLeft + previousAdvanceUsed})`,
+          });
+        }
+        tenant.advanceLeft = Math.max(0, tenantAdvanceLeft - advanceDelta);
+        await tenant.save();
+      }
+    }
+
+    // Handle advanceAdded delta (top-up tenant balance)
+    if (advanceAdded !== undefined) {
+      const nextAdvanceAdded = parseFloat(advanceAdded) || 0;
+      const previousAdvanceAdded = parseFloat(payment.advanceAdded) || 0;
+      const addedDelta = nextAdvanceAdded - previousAdvanceAdded;
+
+      if (addedDelta !== 0) {
+        const tenant = await Tenant.findById(payment.tenantId);
+        if (!tenant) {
+          return res.status(404).json({ success: false, message: 'Tenant not found' });
+        }
+        const tenantAdvanceLeft = parseFloat(tenant.advanceLeft) || 0;
+        tenant.advanceLeft = Math.max(0, tenantAdvanceLeft + addedDelta);
+        await tenant.save();
+      }
     }
 
     const updateData = {
@@ -339,9 +374,13 @@ exports.updatePayment = async (req, res) => {
       ...(year !== undefined && { year }),
       ...(rentAmount !== undefined && { rentAmount }),
       ...(amountPaid !== undefined && { amountPaid }),
+      ...(advanceUsed !== undefined && { advanceUsed }),
+      ...(advanceAdded !== undefined && { advanceAdded }),
       ...(paymentDate !== undefined && { paymentDate: amountPaid > 0 ? paymentDate : null }),
       ...(status !== undefined && { status }),
+      ...(notes !== undefined && { notes }),
     };
+
 
     const updatedPayment = await Payment.findByIdAndUpdate(paymentId, updateData, {
       new: true,

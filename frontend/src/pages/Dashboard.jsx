@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "../App";
+import { useAuth } from "../context/AuthContext";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const currentUserId = user?.id || user?._id || "";
   const [pendingPayments, setPendingPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalPending: 0, totalAmount: 0 });
@@ -14,6 +17,8 @@ function Dashboard() {
     open: false,
     payment: null,
     date: new Date().toISOString().split("T")[0],
+    cashCollected: "",
+    useAdvanceChecked: false,
     advanceUsed: "",
   });
   const [markingPaid, setMarkingPaid] = useState(false);
@@ -37,60 +42,80 @@ function Dashboard() {
   };
 
   const handleOpenMarkPaid = (payment) => {
+    const balance = Math.max(0, payment.rentAmount - (payment.amountPaid || 0));
     setMarkPaidModal({
       open: true,
       payment,
       date: new Date().toISOString().split("T")[0],
+      cashCollected: String(balance),
+      useAdvanceChecked: false,
       advanceUsed: "",
     });
   };
 
+  const closeMarkPaidModal = () => setMarkPaidModal({
+    open: false, payment: null,
+    date: new Date().toISOString().split("T")[0],
+    cashCollected: "", useAdvanceChecked: false, advanceUsed: "",
+  });
+
   const handleConfirmMarkAsPaid = async () => {
     if (!markPaidModal.payment?._id) return;
-    const { payment, date, advanceUsed: advUsed } = markPaidModal;
-    const advAmount = parseFloat(advUsed) || 0;
-    const tenantAdvanceLeft = payment.tenant?.advanceLeft || 0;
+    if (!currentUserId) { toast.error("User not authenticated."); return; }
+
+    const { payment, date, cashCollected, advanceUsed, useAdvanceChecked } = markPaidModal;
+
+    let newAmountPaid, newAdvanceUsed, newAdvanceAdded, newStatus;
+
+    if (useAdvanceChecked) {
+      // MODE: Adjust advance against rent — ignore cash collected
+      const advUsed = parseFloat(advanceUsed) || 0;
+      newAmountPaid = Math.min(payment.rentAmount, (payment.amountPaid || 0) + advUsed);
+      newAdvanceUsed = advUsed;
+      newAdvanceAdded = undefined;
+      newStatus = newAmountPaid >= payment.rentAmount ? "PAID" : advUsed > 0 ? "PARTIAL" : "PENDING";
+    } else {
+      // MODE: Cash payment — excess auto-goes to advance
+      const cash = parseFloat(cashCollected) || 0;
+      const balance = payment.rentAmount - (payment.amountPaid || 0);
+      const cashForRent = Math.min(cash, balance);
+      const excessCash = Math.max(0, cash - balance);
+      newAmountPaid = (payment.amountPaid || 0) + cashForRent;
+      newAdvanceUsed = 0;
+      newAdvanceAdded = excessCash > 0 ? excessCash : undefined;
+      newStatus = newAmountPaid >= payment.rentAmount ? "PAID" : newAmountPaid > 0 ? "PARTIAL" : "PENDING";
+    }
 
     try {
       setMarkingPaid(true);
-
-      // If advance was used, update payment via patch (which handles advance deduction in backend)
-      if (advAmount > 0 && advAmount <= tenantAdvanceLeft) {
-        const newAmountPaid = (payment.amountPaid || 0) + advAmount;
-        let newStatus = "PENDING";
-        if (newAmountPaid >= payment.rentAmount) newStatus = "PAID";
-        else if (newAmountPaid > 0) newStatus = "PARTIAL";
-
-        await axios.patch(
-          `${BACKEND_URL}/api/payments/${payment._id}`,
-          { amountPaid: newAmountPaid, advanceUsed: advAmount, paymentDate: date, status: newStatus },
-          { withCredentials: true }
-        );
-        // Deduct from tenant advance
-        await axios.patch(
-          `${BACKEND_URL}/api/tenants/${payment.tenant._id}`,
-          { advanceLeft: Math.max(0, tenantAdvanceLeft - advAmount) },
-          { withCredentials: true }
-        );
-      } else {
-        // Normal mark as paid
-        await axios.post(
-          `${BACKEND_URL}/api/payments/${payment._id}/mark-paid`,
-          { paymentDate: date },
-          { withCredentials: true }
-        );
-      }
-
-      toast.success("Payment marked as paid");
-      setMarkPaidModal({ open: false, payment: null, date: new Date().toISOString().split("T")[0], advanceUsed: "" });
+      await axios.patch(
+        `${BACKEND_URL}/api/payments/${payment._id}`,
+        {
+          userId: currentUserId,
+          amountPaid: newAmountPaid,
+          advanceUsed: newAdvanceUsed,
+          advanceAdded: newAdvanceAdded,
+          paymentDate: date,
+          status: newStatus,
+        },
+        { withCredentials: true }
+      );
+      const msgs = [];
+      if (newStatus === "PAID") msgs.push("Rent marked as Paid ✅");
+      else if (newStatus === "PARTIAL") msgs.push("Partial payment recorded");
+      if (newAdvanceAdded > 0) msgs.push(`₹${newAdvanceAdded.toLocaleString()} added to advance`);
+      if (newAdvanceUsed > 0) msgs.push(`₹${newAdvanceUsed.toLocaleString()} advance used`);
+      toast.success(msgs.join(" • "));
+      closeMarkPaidModal();
       fetchPendingPayments();
     } catch (error) {
-      console.error("Error marking payment as paid:", error);
-      toast.error("Error updating payment");
+      console.error("Error:", error);
+      toast.error(error.response?.data?.message || "Error recording payment");
     } finally {
       setMarkingPaid(false);
     }
   };
+
 
   const handleWhatsAppReminder = async (payment) => {
     const tenant = payment.tenant;
@@ -171,91 +196,136 @@ function Dashboard() {
         </div>
 
         {/* Mark Paid Modal */}
-        {markPaidModal.open && mp && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5">
-              <div className="flex items-center gap-3 mb-4">
+        {markPaidModal.open && mp && (() => {
+          const isAdvMode = markPaidModal.useAdvanceChecked;
+          const cash = isAdvMode ? 0 : (parseFloat(markPaidModal.cashCollected) || 0);
+          const balance = mp.rentAmount - (mp.amountPaid || 0);
+          const cashForRent = Math.min(cash, balance);
+          const excessCash = Math.max(0, cash - balance);
+          const advUsed = isAdvMode ? (parseFloat(markPaidModal.advanceUsed) || 0) : 0;
+          const totalForRent = (mp.amountPaid || 0) + cashForRent + advUsed;
+          const addToAdv = isAdvMode ? 0 : excessCash;
+          const previewStatus = totalForRent >= mp.rentAmount ? "PAID" : totalForRent > 0 ? "PARTIAL" : "PENDING";
+          return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-3">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">Mark Payment as Done</h3>
+                  <h3 className="text-sm font-bold text-gray-900">Record Payment</h3>
                   <p className="text-xs text-gray-500">{mp.tenant?.name} — {new Date(mp.year, mp.month - 1).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</p>
                 </div>
               </div>
 
-              {/* Payment summary */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-3 text-xs space-y-1">
-                <div className="flex justify-between"><span className="text-gray-500">Rent Due:</span><span className="font-bold">₹{mp.rentAmount?.toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Already Paid:</span><span className="font-bold text-green-600">₹{(mp.amountPaid || 0).toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Balance:</span><span className="font-bold text-red-600">₹{mpBalance.toLocaleString()}</span></div>
-                {mpAdvLeft > 0 && (
-                  <div className="flex justify-between pt-1 border-t border-gray-200">
-                    <span className="text-blue-600 font-semibold">Advance Available:</span>
-                    <span className="font-bold text-blue-600">₹{mpAdvLeft.toLocaleString()}</span>
-                  </div>
+              {/* Summary row */}
+              <div className="bg-gray-50 rounded-lg p-2.5 mb-3 text-xs grid grid-cols-3 gap-2 text-center">
+                <div><div className="text-gray-500">Rent</div><div className="font-bold">₹{mp.rentAmount?.toLocaleString()}</div></div>
+                <div><div className="text-gray-500">Paid</div><div className="font-bold text-green-600">₹{(mp.amountPaid||0).toLocaleString()}</div></div>
+                <div><div className="text-gray-500">Balance</div><div className="font-bold text-red-600">₹{balance.toLocaleString()}</div></div>
+              </div>
+
+              {mpAdvLeft > 0 && (
+                <div className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-1.5 mb-3 text-xs">
+                  <span className="text-blue-700 font-semibold">💰 Advance Available</span>
+                  <span className="font-bold text-blue-700">₹{mpAdvLeft.toLocaleString()}</span>
+                </div>
+              )}
+
+              {/* === CASH MODE === */}
+              <div className={`transition-opacity ${isAdvMode ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+                {/* Date */}
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Payment Date</label>
+                  <input type="date" value={markPaidModal.date}
+                    onChange={(e) => setMarkPaidModal(prev => ({ ...prev, date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400" />
+                </div>
+
+                {/* Cash Collected */}
+                <div className="mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Cash Collected (₹)</label>
+                  <input type="number" min="0"
+                    value={markPaidModal.cashCollected}
+                    onChange={(e) => setMarkPaidModal(prev => ({ ...prev, cashCollected: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400" />
+                </div>
+                {/* Excess → advance message */}
+                {excessCash > 0 && !isAdvMode && (
+                  <p className="text-[11px] text-purple-700 font-semibold bg-purple-50 rounded-lg px-3 py-1.5 mb-3">
+                    ✨ ₹{excessCash.toLocaleString()} excess — will be added to advance balance
+                  </p>
                 )}
               </div>
 
-              {/* Date */}
-              <div className="mb-3">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Payment Date</label>
-                <input
-                  type="date"
-                  value={markPaidModal.date}
-                  onChange={(e) => setMarkPaidModal(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-400"
-                />
-              </div>
+              {/* Divider */}
+              {mpAdvLeft > 0 && balance > 0 && (
+                <div className="relative my-3">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                  <div className="relative flex justify-center"><span className="bg-white px-2 text-[10px] text-gray-400 uppercase tracking-wide">or</span></div>
+                </div>
+              )}
 
-              {/* Advance */}
-              {mpAdvLeft > 0 && (
-                <div className="mb-4">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Use Advance (Rs.) <span className="text-gray-400 font-normal">— max ₹{Math.min(mpAdvLeft, mpBalance).toLocaleString()}</span>
+              {/* === ADVANCE MODE === */}
+              {mpAdvLeft > 0 && balance > 0 && (
+                <div className="mb-3">
+                  <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border border-gray-200 hover:border-blue-300 transition">
+                    <input type="checkbox"
+                      checked={markPaidModal.useAdvanceChecked}
+                      onChange={(e) => setMarkPaidModal(prev => ({
+                        ...prev,
+                        useAdvanceChecked: e.target.checked,
+                        advanceUsed: e.target.checked ? String(Math.min(mpAdvLeft, balance)) : "",
+                        cashCollected: e.target.checked ? "" : prev.cashCollected,
+                      }))}
+                      className="w-4 h-4 accent-blue-600 flex-shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold text-blue-700">Adjust current month against advance</div>
+                      <div className="text-[10px] text-gray-500">Uses available advance balance to pay this month&apos;s rent</div>
+                    </div>
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max={Math.min(mpAdvLeft, mpBalance)}
-                    value={markPaidModal.advanceUsed}
-                    onChange={(e) => setMarkPaidModal(prev => ({ ...prev, advanceUsed: e.target.value }))}
-                    placeholder="0"
-                    className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400"
-                  />
-                  {markPaidModal.advanceUsed && (
-                    <p className="text-[10px] text-blue-600 mt-1">
-                      Total after advance: ₹{((mp.amountPaid || 0) + (parseFloat(markPaidModal.advanceUsed) || 0)).toLocaleString()}
-                      {" "}/ ₹{mp.rentAmount?.toLocaleString()}
-                    </p>
+
+                  {markPaidModal.useAdvanceChecked && (
+                    <div className="mt-2">
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Amount to adjust from advance (max ₹{Math.min(mpAdvLeft, balance).toLocaleString()})
+                      </label>
+                      <input type="number" min="0" max={Math.min(mpAdvLeft, balance)}
+                        value={markPaidModal.advanceUsed}
+                        onChange={(e) => setMarkPaidModal(prev => ({ ...prev, advanceUsed: e.target.value }))}
+                        className="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400" />
+                    </div>
                   )}
                 </div>
               )}
 
+              {/* Live Preview */}
+              <div className={`rounded-lg p-2.5 mb-3 text-xs border ${previewStatus === 'PAID' ? 'bg-green-50 border-green-200' : previewStatus === 'PARTIAL' ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'}`}>
+                <div className="flex justify-between"><span className="text-gray-600">Applied to rent:</span><span className="font-bold">₹{totalForRent.toLocaleString()} / ₹{mp.rentAmount?.toLocaleString()}</span></div>
+                {addToAdv > 0 && <div className="flex justify-between mt-1"><span className="text-gray-600">Added to Advance:</span><span className="font-bold text-purple-700">+₹{addToAdv.toLocaleString()}</span></div>}
+                {advUsed > 0 && <div className="flex justify-between mt-1"><span className="text-gray-600">Advance used:</span><span className="font-bold text-blue-700">-₹{advUsed.toLocaleString()}</span></div>}
+                <div className="flex justify-between mt-1"><span className="text-gray-600">Status after:</span><span className={`font-bold ${previewStatus === 'PAID' ? 'text-green-700' : previewStatus === 'PARTIAL' ? 'text-yellow-700' : 'text-gray-500'}`}>{previewStatus}</span></div>
+              </div>
+
               <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setMarkPaidModal({ open: false, payment: null, date: new Date().toISOString().split("T")[0], advanceUsed: "" })}
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50"
-                  disabled={markingPaid}
-                >
+                <button onClick={closeMarkPaidModal} disabled={markingPaid}
+                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50">
                   Cancel
                 </button>
-                <button
-                  onClick={handleConfirmMarkAsPaid}
-                  disabled={markingPaid}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
-                >
-                  {markingPaid ? (
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                  ) : null}
-                  {markingPaid ? "Processing..." : "Confirm"}
+                <button onClick={handleConfirmMarkAsPaid} disabled={markingPaid}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-1">
+                  {markingPaid ? <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : null}
+                  {markingPaid ? "Processing..." : "Confirm Payment"}
                 </button>
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
         {/* Pending Payments */}
         {pendingPayments.length > 0 ? (

@@ -199,7 +199,7 @@ exports.updateTenant = async (req, res) => {
   try {
     const {
       userId, name, mobile, email, adharNo, adharImg, document, photo, dob, gender,
-      propertyId, roomId, bedNumber, rentAmount, advanceAmount, joiningDate, leaveDate, status, notes
+      propertyId, roomId, bedNumber, rentAmount, advanceAmount, advanceLeft, joiningDate, leaveDate, status, notes
     } = req.body;
     const tenantId = req.params.id;
 
@@ -282,6 +282,7 @@ exports.updateTenant = async (req, res) => {
       ...(bedNumber !== undefined && { bedNumber: bedNumber || null }),
       ...(rentAmount !== undefined && { rentAmount }),
       ...(advanceAmount !== undefined && { advanceAmount }),
+      ...(advanceLeft !== undefined && { advanceLeft }),
       ...(joiningDate !== undefined && { joiningDate }),
       ...(leaveDate !== undefined && { leaveDate }),
       ...(status !== undefined && { status }),

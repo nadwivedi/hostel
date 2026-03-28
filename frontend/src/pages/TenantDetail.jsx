@@ -17,6 +17,13 @@ function TenantDetail() {
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [exitForm, setExitForm] = useState({
+    leaveDate: new Date().toISOString().split('T')[0],
+    action: 'adjust', // 'adjust' = apply against next month rent | 'refund' = cash refund
+    notes: '',
+  });
+  const [processExit, setProcessExit] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
     mobile: '',
@@ -141,6 +148,80 @@ function TenantDetail() {
       setSavingEdit(false);
     }
   };
+  const handleExitSettlement = async () => {
+    if (!tenant) return;
+    const userId = user?.id || user?._id;
+    if (!userId) { toast.error('User not authenticated'); return; }
+
+    try {
+      setProcessExit(true);
+      const advLeft = tenant.advanceLeft || 0;
+      const leaveDate = exitForm.leaveDate;
+
+      // Step 1: Mark tenant as COMPLETED with leave date AND zero the advance balance
+      await axios.patch(`${BACKEND_URL}/api/tenants/${tenantId}`,
+        { userId, status: 'COMPLETED', leaveDate, advanceLeft: 0 },
+        { withCredentials: true }
+      );
+
+      // Step 2: Handle advance settlement
+      if (advLeft > 0) {
+        if (exitForm.action === 'adjust') {
+          // Find next month's pending payment and apply advance to it
+          const now = new Date();
+          const nextMonth = now.getMonth() + 2;
+          const nextYear = nextMonth > 12 ? now.getFullYear() + 1 : now.getFullYear();
+          const safeMonth = nextMonth > 12 ? 1 : nextMonth;
+          const paymentsRes = await axios.get(`${BACKEND_URL}/api/payments/tenant/${tenantId}`, { withCredentials: true });
+          const nextMonthPayment = paymentsRes.data.find(p => p.month === safeMonth && p.year === nextYear);
+          if (nextMonthPayment && nextMonthPayment.status !== 'PAID') {
+            const newAmtPaid = Math.min(nextMonthPayment.rentAmount, (nextMonthPayment.amountPaid || 0) + advLeft);
+            const newStatus = newAmtPaid >= nextMonthPayment.rentAmount ? 'PAID' : 'PARTIAL';
+            const settlementNote = `Advance ₹${advLeft.toLocaleString()} adjusted against this month's rent on tenant exit (${new Date(leaveDate).toLocaleDateString('en-GB')}).`;
+            await axios.patch(`${BACKEND_URL}/api/payments/${nextMonthPayment._id}`,
+              { userId, amountPaid: newAmtPaid, advanceUsed: advLeft, paymentDate: leaveDate, status: newStatus, notes: settlementNote },
+              { withCredentials: true }
+            );
+          }
+        } else {
+          // Refund — add a note to the most recent pending payment if any, otherwise just zero it
+          const paymentsRes = await axios.get(`${BACKEND_URL}/api/payments/tenant/${tenantId}`, { withCredentials: true });
+          const pendingPayment = paymentsRes.data
+            .filter(p => p.status !== 'PAID')
+            .sort((a, b) => b.year - a.year || b.month - a.month)[0];
+          if (pendingPayment) {
+            const refundNote = `Advance ₹${advLeft.toLocaleString()} refunded to tenant in cash on exit (${new Date(leaveDate).toLocaleDateString('en-GB')}).`;
+            await axios.patch(`${BACKEND_URL}/api/payments/${pendingPayment._id}`,
+              { userId, notes: refundNote },
+              { withCredentials: true }
+            );
+          }
+        }
+      }
+
+      const actionMsg = advLeft > 0
+        ? exitForm.action === 'adjust'
+          ? ` Advance ₹${advLeft.toLocaleString()} adjusted against next month rent.`
+          : ` Please refund ₹${advLeft.toLocaleString()} to tenant in cash.`
+        : '';
+      toast.success(`Tenant marked as left on ${new Date(leaveDate).toLocaleDateString('en-GB')}.${actionMsg}`);
+      setShowExitModal(false);
+
+      // Refresh data
+      const [tenantRes, paymentsRes2] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/tenants/${tenantId}`, { withCredentials: true }),
+        axios.get(`${BACKEND_URL}/api/payments/tenant/${tenantId}`, { withCredentials: true }),
+      ]);
+      setTenant(tenantRes.data);
+      setPayments(paymentsRes2.data);
+    } catch (error) {
+      console.error('Exit error:', error);
+      toast.error(error.response?.data?.message || 'Error processing exit');
+    } finally {
+      setProcessExit(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -187,6 +268,18 @@ function TenantDetail() {
               >
                 Edit
               </button>
+              {tenant.status === 'ACTIVE' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExitForm({ leaveDate: new Date().toISOString().split('T')[0], action: 'adjust', notes: '' });
+                    setShowExitModal(true);
+                  }}
+                  className="inline-flex items-center rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold text-red-700 transition hover:bg-red-100 sm:text-xs"
+                >
+                  🗓️ Set Leave Date
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
               <span
@@ -257,46 +350,68 @@ function TenantDetail() {
               const paymentDate = new Date(payment.year, payment.month - 1);
               const monthYear = paymentDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
               const isPaid = payment.status === 'PAID';
+              const isPartial = payment.status === 'PARTIAL';
 
               return (
                 <div
                   key={payment._id}
-                  className={`flex items-center justify-between p-2.5 sm:p-3 rounded-lg border transition-colors ${
-                    isPaid ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                  className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${
+                    isPaid ? 'bg-green-50 border-green-200' : isPartial ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
                   }`}
                 >
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
-                      isPaid ? 'bg-green-100' : 'bg-red-100'
-                    }`}>
-                      {isPaid ? (
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs sm:text-sm font-bold text-gray-900">{monthYear}</div>
-                      <div className="text-[10px] sm:text-xs text-gray-500">
-                        Rent: ₹{payment.rentAmount.toLocaleString()}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1">
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isPaid ? 'bg-green-100' : isPartial ? 'bg-yellow-100' : 'bg-red-100'
+                      }`}>
+                        {isPaid ? (
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : isPartial ? (
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-bold text-gray-900">{monthYear}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500">
+                          Rent: ₹{payment.rentAmount.toLocaleString()}
+                          {payment.amountPaid > 0 && ` · Paid: ₹${payment.amountPaid.toLocaleString()}`}
+                        </div>
+                        {(payment.advanceUsed > 0 || payment.advanceAdded > 0) && (
+                          <div className="flex gap-2 mt-0.5 flex-wrap">
+                            {payment.advanceUsed > 0 && (
+                              <span className="text-[9px] sm:text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                Advance used: ₹{payment.advanceUsed.toLocaleString()}
+                              </span>
+                            )}
+                            {payment.advanceAdded > 0 && (
+                              <span className="text-[9px] sm:text-[10px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
+                                +₹{payment.advanceAdded.toLocaleString()} to advance
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        {payment.notes && (
+                          <div className="mt-1 text-[9px] sm:text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 italic">
+                            📝 {payment.notes}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold ${
-                      isPaid ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-                    }`}>
-                      {isPaid ? 'Paid' : 'Pending'}
-                    </span>
-                    {!isPaid && payment.amountPaid > 0 && (
-                      <div className="text-[10px] sm:text-xs text-gray-600 mt-1">
-                        Paid: ₹{payment.amountPaid.toLocaleString()}
-                      </div>
-                    )}
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <span className={`inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold ${
+                        isPaid ? 'bg-green-600 text-white' : isPartial ? 'bg-yellow-500 text-white' : 'bg-red-600 text-white'
+                      }`}>
+                        {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Pending'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               );
@@ -352,6 +467,95 @@ function TenantDetail() {
         <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
           <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-2">Notes</h3>
           <p className="text-xs sm:text-sm text-gray-700">{tenant.notes}</p>
+        </div>
+      )}
+
+      {/* Exit Settlement Modal */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+              <div>
+                <h2 className="text-base font-bold text-gray-900">Tenant Exit Settlement</h2>
+                <p className="text-xs text-gray-500">{tenant.name} — settle advance & set leave date</p>
+              </div>
+              <button type="button" onClick={() => setShowExitModal(false)}
+                className="rounded-full p-2 text-gray-500 transition hover:bg-gray-100">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-5 space-y-4">
+              {/* Advance Summary */}
+              {(tenant.advanceLeft || 0) > 0 ? (
+                <div className="bg-blue-50 rounded-xl p-3 border border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-blue-800">💰 Advance Balance</span>
+                    <span className="text-lg font-black text-blue-700">₹{(tenant.advanceLeft).toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-1">This needs to be settled on exit.</p>
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 text-center text-sm text-gray-500">
+                  No advance balance to settle.
+                </div>
+              )}
+
+              {/* Leave Date */}
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-700">Leave Date</label>
+                <input type="date" value={exitForm.leaveDate}
+                  onChange={(e) => setExitForm(prev => ({ ...prev, leaveDate: e.target.value }))}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100" />
+              </div>
+
+              {/* Advance Settlement Action */}
+              {(tenant.advanceLeft || 0) > 0 && (
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-gray-700">Advance Settlement</label>
+                  <div className="space-y-2">
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-blue-300 transition">
+                      <input type="radio" name="action" value="adjust"
+                        checked={exitForm.action === 'adjust'}
+                        onChange={() => setExitForm(prev => ({ ...prev, action: 'adjust' }))}
+                        className="mt-0.5 accent-blue-600" />
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">Adjust against next month’s rent</div>
+                        <div className="text-xs text-gray-500">₹{(tenant.advanceLeft).toLocaleString()} will be applied toward next month payment</div>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-gray-200 hover:border-green-300 transition">
+                      <input type="radio" name="action" value="refund"
+                        checked={exitForm.action === 'refund'}
+                        onChange={() => setExitForm(prev => ({ ...prev, action: 'refund' }))}
+                        className="mt-0.5 accent-green-600" />
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">Cash Refund to Tenant</div>
+                        <div className="text-xs text-gray-500">You will manually pay ₹{(tenant.advanceLeft).toLocaleString()} back in cash</div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-red-50 rounded-xl p-3 border border-red-200 text-xs text-red-700">
+                <strong>Note:</strong> This will mark the tenant as <strong>Left</strong> and stop automated payment generation.
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button type="button" onClick={() => setShowExitModal(false)}
+                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleExitSettlement} disabled={processExit}
+                  className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-70">
+                  {processExit ? 'Processing...' : 'Confirm Exit'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
