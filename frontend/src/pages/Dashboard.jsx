@@ -222,13 +222,6 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* Summary row */}
-              <div className="bg-gray-50 rounded-lg p-2.5 mb-3 text-xs grid grid-cols-3 gap-2 text-center">
-                <div><div className="text-gray-500">Rent</div><div className="font-bold">₹{mp.rentAmount?.toLocaleString()}</div></div>
-                <div><div className="text-gray-500">Paid</div><div className="font-bold text-green-600">₹{(mp.amountPaid||0).toLocaleString()}</div></div>
-                <div><div className="text-gray-500">Balance</div><div className="font-bold text-red-600">₹{balance.toLocaleString()}</div></div>
-              </div>
-
               {mpAdvLeft > 0 && (
                 <div className="flex items-center justify-between bg-blue-50 rounded-lg px-3 py-1.5 mb-3 text-xs">
                   <span className="text-blue-700 font-semibold">💰 Advance Available</span>
