@@ -609,6 +609,11 @@ function Payments() {
                           </button>
                         </>
                       )}
+                      {canDo('payments', 'delete') && (
+                        <button onClick={() => handleDelete(payment)} className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-medium hover:bg-red-700 transition cursor-pointer" title="Delete Payment">
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
