@@ -252,18 +252,25 @@ exports.updateTenant = async (req, res) => {
     }
 
     // Handle status change to COMPLETED - free up room/bed
-    if (status === 'COMPLETED' && tenant.status !== 'COMPLETED' && tenant.roomId) {
-      const room = await Room.findById(tenant.roomId);
-      if (room) {
-        if (tenant.bedNumber) {
-          const bed = room.beds.find(b => b.bedNumber === tenant.bedNumber);
-          if (bed) {
-            bed.status = 'AVAILABLE';
+    if (status === 'COMPLETED' && tenant.status !== 'COMPLETED') {
+      if (tenant.roomId) {
+        const room = await Room.findById(tenant.roomId);
+        if (room) {
+          if (tenant.bedNumber) {
+            const bed = room.beds.find(b => b.bedNumber === tenant.bedNumber);
+            if (bed) {
+              bed.status = 'AVAILABLE';
+            }
+          } else {
+            room.status = 'AVAILABLE';
           }
-        } else {
-          room.status = 'AVAILABLE';
+          await room.save();
         }
-        await room.save();
+      }
+      
+      // If no leaveDate provided, set it to today
+      if (!leaveDate && !tenant.leaveDate) {
+        req.body.leaveDate = new Date();
       }
     }
 
