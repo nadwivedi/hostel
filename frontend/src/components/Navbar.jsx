@@ -213,7 +213,7 @@ function Navbar() {
         </div>
       </div>
 
-      <main className="max-w-[95%] mx-auto px-3 sm:px-4 lg:px-6 pt-14 sm:pt-16 lg:pt-20 pb-4 sm:pb-6 lg:pb-8">
+      <main className="w-full px-0 sm:px-4 lg:px-6 pt-[56px] sm:pt-16 lg:pt-20 pb-4 sm:pb-6 lg:pb-8">
         <Outlet />
       </main>
     </>
