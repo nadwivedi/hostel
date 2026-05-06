@@ -239,33 +239,41 @@ function Dashboard() {
             </div>
           ) : pendingPayments.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {pendingPayments.map((payment) => {
+               {pendingPayments.map((payment) => {
                 const tenant = payment.tenant;
                 const balance = payment.rentAmount - (payment.amountPaid || 0);
                 const urgency = getPaymentUrgency(payment.dueDate);
                 const roomNum = tenant?.roomId?.roomNumber || "N/A";
-                const propName = tenant?.propertyId?.name || "Hostel";
+                const prop = tenant?.propertyId || {};
+                const propName = prop.name || "Hostel";
+                const propType = prop.propertyType || "hostel";
+
+                const getPropIcon = (type) => {
+                  if (type === 'shop') return <img src="/shop_converted.avif" className="w-4 h-4 object-contain" alt="shop" />;
+                  return <img src="/hostel.png" className="w-4 h-4 object-contain" alt="hostel" />;
+                };
 
                 return (
                   <div
                     key={payment._id}
                     className="group bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all flex flex-col overflow-hidden"
                   >
-                    {/* Tinted Header: Property & Room */}
+                    {/* Tinted Header: Icon, Property & Room */}
                     <div className="bg-slate-50 border-b border-slate-100 px-2.5 py-2 flex justify-between items-start">
                       <div className="flex-1">
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <span className="text-[9px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded shadow-sm">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          {getPropIcon(propType)}
+                          <h4 className="text-[10px] font-black text-slate-700 uppercase tracking-tight line-clamp-1">{propName}</h4>
+                          <span className="text-[9px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded shadow-sm ml-auto">
                             ROOM-{roomNum}
                           </span>
-                          <h4 className="text-[10px] font-black text-slate-700 uppercase tracking-tight line-clamp-1">{propName}</h4>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <p className="text-[11px] font-bold text-slate-500">{tenant?.name || "Unknown"}</p>
                           {urgency.pulse && <span className="flex h-1 w-1 rounded-full bg-rose-500 animate-pulse"></span>}
                         </div>
                       </div>
-                      <span className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded border shadow-sm ${urgency.class}`}>
+                      <span className={`text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded border shadow-sm ml-2 ${urgency.class}`}>
                         {urgency.label}
                       </span>
                     </div>
@@ -333,106 +341,132 @@ function Dashboard() {
       )}
 
       {/* Modern Record Payment Modal */}
-      {markPaidModal.open && mp && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[2rem] w-full max-w-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-xl font-black text-slate-800">Collect Rent</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase">{mp.tenant?.name} • Room {mp.tenant?.roomId?.roomNumber}</p>
-                </div>
-                <button onClick={closeMarkPaidModal} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-              </div>
+      {markPaidModal.open && mp && (() => {
+        const balance = mp.rentAmount - (mp.amountPaid || 0);
+        const advLeft = mp.tenant?.advanceLeft || 0;
+        const cash = parseFloat(markPaidModal.cashCollected) || 0;
+        const advToUse = parseFloat(markPaidModal.advanceUsed) || 0;
+        
+        // Summary calculations
+        let summaryText = "";
+        if (markPaidModal.useAdvanceChecked) {
+          summaryText = `₹${advToUse.toLocaleString()} will be used from Advance. New Advance: ₹${(advLeft - advToUse).toLocaleString()}`;
+        } else {
+          const excess = Math.max(0, cash - balance);
+          summaryText = excess > 0 
+            ? `₹${balance.toLocaleString()} for Rent + ₹${excess.toLocaleString()} added to Advance.`
+            : `₹${cash.toLocaleString()} collected for Rent. Remaining: ₹${(balance - cash).toLocaleString()}`;
+        }
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Balance</p>
-                    <p className="text-lg font-black text-rose-600">₹{mpBalance.toLocaleString()}</p>
+        return (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-[2rem] w-full max-w-sm overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+              <div className="p-5">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-800">Collect Payment</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{mp.tenant?.name} • Room {mp.tenant?.roomId?.roomNumber}</p>
                   </div>
-                  <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase mb-1">Advance</p>
-                    <p className="text-lg font-black text-indigo-600">₹{mpAdvLeft.toLocaleString()}</p>
-                  </div>
+                  <button onClick={closeMarkPaidModal} className="p-1.5 hover:bg-slate-100 rounded-full transition-colors">
+                    <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  {!markPaidModal.useAdvanceChecked ? (
-                    <>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">Payment Date</label>
-                        <input 
-                          type="date" 
-                          value={markPaidModal.date}
-                          onChange={(e) => setMarkPaidModal(prev => ({ ...prev, date: e.target.value }))}
-                          className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">Cash Collected (₹)</label>
-                        <input 
-                          type="number"
-                          value={markPaidModal.cashCollected}
-                          onChange={(e) => setMarkPaidModal(prev => ({ ...prev, cashCollected: e.target.value }))}
-                          className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-lg font-black focus:border-indigo-500 focus:bg-white outline-none transition-all"
-                        />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="animate-in fade-in slide-in-from-top-2">
-                      <label className="block text-[10px] font-black text-indigo-400 uppercase mb-1.5 ml-1">Amount to use from Advance</label>
-                      <input 
-                        type="number"
-                        max={Math.min(mpAdvLeft, mpBalance)}
-                        value={markPaidModal.advanceUsed}
-                        onChange={(e) => setMarkPaidModal(prev => ({ ...prev, advanceUsed: e.target.value }))}
-                        className="w-full bg-indigo-50 border-2 border-indigo-100 rounded-2xl px-4 py-3 text-lg font-black text-indigo-700 focus:border-indigo-500 outline-none"
-                      />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-rose-50 p-3 rounded-2xl border border-rose-100">
+                      <p className="text-[8px] font-black text-rose-400 uppercase mb-0.5 tracking-wider">Due</p>
+                      <p className="text-sm font-black text-rose-600">₹{balance.toLocaleString()}</p>
                     </div>
-                  )}
+                    <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
+                      <p className="text-[8px] font-black text-emerald-400 uppercase mb-0.5 tracking-wider">Advance</p>
+                      <p className="text-sm font-black text-emerald-600">₹{advLeft.toLocaleString()}</p>
+                    </div>
+                  </div>
 
-                  {mpAdvLeft > 0 && (
-                    <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
-                      <input 
-                        type="checkbox"
-                        checked={markPaidModal.useAdvanceChecked}
-                        onChange={(e) => setMarkPaidModal(prev => ({
-                          ...prev,
-                          useAdvanceChecked: e.target.checked,
-                          advanceUsed: e.target.checked ? String(Math.min(mpAdvLeft, mpBalance)) : "",
-                          cashCollected: e.target.checked ? "" : String(mpBalance)
-                        }))}
-                        className="w-5 h-5 rounded-lg accent-indigo-600"
-                      />
-                      <span className="text-xs font-bold text-slate-600">Use Advance Balance instead of Cash</span>
-                    </label>
-                  )}
+                  <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
+                    <button 
+                      onClick={() => setMarkPaidModal(prev => ({ ...prev, useAdvanceChecked: false, cashCollected: String(balance), advanceUsed: "" }))}
+                      className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all ${!markPaidModal.useAdvanceChecked ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      CASH PAYMENT
+                    </button>
+                    {advLeft > 0 && (
+                      <button 
+                        onClick={() => setMarkPaidModal(prev => ({ ...prev, useAdvanceChecked: true, advanceUsed: String(Math.min(advLeft, balance)), cashCollected: "" }))}
+                        className={`flex-1 py-2 text-[10px] font-black rounded-lg transition-all ${markPaidModal.useAdvanceChecked ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        USE ADVANCE
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="pt-1">
+                    {!markPaidModal.useAdvanceChecked ? (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-left-2 duration-200">
+                        <div>
+                          <label className="block text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">Payment Date</label>
+                          <input 
+                            type="date" 
+                            value={markPaidModal.date}
+                            onChange={(e) => setMarkPaidModal(prev => ({ ...prev, date: e.target.value }))}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 text-xs font-bold focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-black text-slate-400 uppercase mb-1 ml-1">Amount Received (₹)</label>
+                          <input 
+                            type="number"
+                            value={markPaidModal.cashCollected}
+                            onChange={(e) => setMarkPaidModal(prev => ({ ...prev, cashCollected: e.target.value }))}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2.5 text-base font-black text-slate-800 focus:border-indigo-500 focus:bg-white outline-none transition-all"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
+                        <div>
+                          <label className="block text-[9px] font-black text-emerald-500 uppercase mb-1 ml-1">Adjust from Advance (₹)</label>
+                          <input 
+                            type="number"
+                            max={Math.min(advLeft, balance)}
+                            value={markPaidModal.advanceUsed}
+                            onChange={(e) => setMarkPaidModal(prev => ({ ...prev, advanceUsed: e.target.value }))}
+                            className="w-full bg-emerald-50 border-2 border-emerald-100 rounded-xl px-3 py-2.5 text-base font-black text-emerald-600 focus:border-emerald-500 outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-8 flex gap-3">
-                <button 
-                  onClick={closeMarkPaidModal}
-                  className="flex-1 px-6 py-3.5 rounded-2xl font-black text-xs text-slate-400 bg-slate-100 hover:bg-slate-200 transition-all"
-                >
-                  CANCEL
-                </button>
-                <button 
-                  onClick={handleConfirmMarkAsPaid}
-                  disabled={markingPaid}
-                  className="flex-[2] px-6 py-3.5 rounded-2xl font-black text-xs text-white bg-indigo-600 shadow-xl shadow-indigo-200 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                >
-                  {markingPaid ? <svg className="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : null}
-                  {markingPaid ? "PROCESSING..." : "CONFIRM RECEIPT"}
-                </button>
+                <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Transaction Summary</p>
+                  <p className="text-[10px] font-black text-slate-600 italic">“{summaryText}”</p>
+                </div>
+
+                <div className="mt-5 flex gap-2">
+                  <button 
+                    onClick={closeMarkPaidModal}
+                    className="flex-1 px-4 py-3 rounded-xl font-black text-[10px] text-slate-400 bg-slate-100 hover:bg-slate-200 transition-all uppercase"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleConfirmMarkAsPaid}
+                    disabled={markingPaid}
+                    className={`flex-[2] px-4 py-3 rounded-xl font-black text-[10px] text-white shadow-lg transition-all flex items-center justify-center gap-2 uppercase ${markPaidModal.useAdvanceChecked ? 'bg-emerald-600 shadow-emerald-100 hover:bg-emerald-700' : 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700'}`}
+                  >
+                    {markingPaid ? <svg className="animate-spin w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> : null}
+                    {markingPaid ? "Saving..." : "Confirm Payment"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Add Tenant Modal would follow a similar premium redesign pattern */}
       {showAddTenant && (
