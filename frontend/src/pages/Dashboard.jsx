@@ -259,11 +259,11 @@ function Dashboard() {
                     className="group bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all flex flex-col overflow-hidden"
                   >
                     {/* Tinted Header: Icon, Property & Room */}
-                    <div className="bg-slate-50 border-b border-slate-100 px-2.5 py-2 flex justify-between items-start">
+                    <div className="bg-slate-100/80 border-b border-slate-200 px-2.5 py-2 flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           {getPropIcon(propType)}
-                          <h4 className="text-[10px] font-black text-slate-700 uppercase tracking-tight line-clamp-1">{propName}</h4>
+                          <h4 className="text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-tight line-clamp-1">{propName}</h4>
                           <span className="text-[9px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded shadow-sm ml-auto">
                             ROOM-{roomNum}
                           </span>
