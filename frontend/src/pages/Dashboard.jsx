@@ -217,16 +217,26 @@ function Dashboard() {
       <div className="max-w-7xl mx-auto px-2 sm:px-6 pt-2 pb-6 space-y-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-all group-hover:w-14 group-hover:h-14"></div>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Pending</p>
-            <h3 className="text-lg sm:text-xl font-black text-slate-800">{stats.totalPending}</h3>
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-6 -mt-6 transition-all group-hover:bg-blue-100/50"></div>
+            <div className="relative">
+              <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              </div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</p>
+              <h3 className="text-xl font-black text-slate-800">{stats.totalPending}</h3>
+            </div>
           </div>
 
-          <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-rose-50 rounded-bl-full -mr-4 -mt-4 transition-all group-hover:w-14 group-hover:h-14"></div>
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Due</p>
-            <h3 className="text-lg sm:text-xl font-black text-rose-600">₹{stats.totalAmount.toLocaleString()}</h3>
+          <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-rose-50 rounded-bl-full -mr-6 -mt-6 transition-all group-hover:bg-rose-100/50"></div>
+            <div className="relative">
+              <div className="w-8 h-8 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center mb-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Due</p>
+              <h3 className="text-xl font-black text-rose-600">₹{stats.totalAmount.toLocaleString()}</h3>
+            </div>
           </div>
         </div>
 
@@ -253,6 +263,21 @@ function Dashboard() {
                   return <img src="/hostel.png" className="w-4 h-4 object-contain" alt="hostel" />;
                 };
 
+                const getCardColors = (name) => {
+                  const colors = [
+                    { header: "bg-indigo-50 border-indigo-100", text: "text-indigo-800", badge: "bg-indigo-900", iconBg: "bg-indigo-100", iconText: "text-indigo-600" },
+                    { header: "bg-emerald-50 border-emerald-100", text: "text-emerald-800", badge: "bg-emerald-900", iconBg: "bg-emerald-100", iconText: "text-emerald-600" },
+                    { header: "bg-amber-50 border-amber-100", text: "text-amber-800", badge: "bg-amber-900", iconBg: "bg-amber-100", iconText: "text-amber-600" },
+                    { header: "bg-purple-50 border-purple-100", text: "text-purple-800", badge: "bg-purple-900", iconBg: "bg-purple-100", iconText: "text-purple-600" },
+                    { header: "bg-blue-50 border-blue-100", text: "text-blue-800", badge: "bg-blue-900", iconBg: "bg-blue-100", iconText: "text-blue-600" },
+                  ];
+                  let hash = 0;
+                  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+                  return colors[Math.abs(hash) % colors.length];
+                };
+
+                const theme = getCardColors(propName);
+
                 return (
                   <div
                     key={payment._id}
@@ -260,12 +285,14 @@ function Dashboard() {
                     className="group bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl transition-all flex flex-col overflow-hidden cursor-pointer"
                   >
                     {/* Tinted Header: Icon, Property & Room */}
-                    <div className="bg-slate-100/80 border-b border-slate-200 px-2.5 py-2 flex justify-between items-start">
+                    <div className={`${theme.header} border-b px-2.5 py-2 flex justify-between items-start`}>
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          {getPropIcon(propType)}
-                          <h4 className="text-[11px] sm:text-xs font-black text-slate-800 uppercase tracking-tight line-clamp-1">{propName}</h4>
-                          <span className="text-[9px] font-black bg-slate-900 text-white px-1.5 py-0.5 rounded shadow-sm ml-auto">
+                          <div className={`w-5 h-5 ${theme.iconBg} ${theme.iconText} rounded flex items-center justify-center shadow-sm`}>
+                            {getPropIcon(propType)}
+                          </div>
+                          <h4 className={`text-[11px] sm:text-xs font-black ${theme.text} uppercase tracking-tight line-clamp-1`}>{propName}</h4>
+                          <span className={`text-[9px] font-black ${theme.badge} text-white px-1.5 py-0.5 rounded shadow-sm ml-auto`}>
                             ROOM-{roomNum}
                           </span>
                         </div>
