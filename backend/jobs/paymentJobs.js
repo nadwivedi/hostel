@@ -115,7 +115,7 @@ const processTenantPayments = async (tenant, today, fourDaysFromNow) => {
 };
 
 /**
- * Auto-create payment records 4 days before they are due
+ * Auto-create payment records 3 days before they are due
  * Runs daily at 2:00 AM
  */
 const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
@@ -129,13 +129,13 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const fourDaysFromNow = new Date(today);
-    fourDaysFromNow.setDate(fourDaysFromNow.getDate() + 4);
-    fourDaysFromNow.setHours(23, 59, 59, 999);
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+    threeDaysFromNow.setHours(23, 59, 59, 999);
 
     let totalCreated = 0;
     for (const tenant of activeTenants) {
-      totalCreated += await processTenantPayments(tenant, today, fourDaysFromNow);
+      totalCreated += await processTenantPayments(tenant, today, threeDaysFromNow);
     }
 
     console.log(`Auto-create payments complete. Created ${totalCreated} new payment(s).`);
@@ -273,12 +273,12 @@ const runAllChecksNow = async () => {
     // 2. Run payment creation
     const activeTenants = await Tenant.find({ status: 'ACTIVE', roomId: { $ne: null } });
     
-    const fourDaysFromNow = new Date(today);
-    fourDaysFromNow.setDate(fourDaysFromNow.getDate() + 4);
-    fourDaysFromNow.setHours(23, 59, 59, 999);
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+    threeDaysFromNow.setHours(23, 59, 59, 999);
 
     for (const tenant of activeTenants) {
-      await processTenantPayments(tenant, today, fourDaysFromNow);
+      await processTenantPayments(tenant, today, threeDaysFromNow);
     }
 
     console.log('Startup checks complete.');
