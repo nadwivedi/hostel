@@ -281,73 +281,100 @@ function Payments() {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3 mt-2 sm:mt-0">
-        <div className="bg-white rounded-xl shadow-lg border border-red-500 p-3 lg:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 transform">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 whitespace-nowrap">Pending Payments</p>
-              <h3 className="text-xl lg:text-3xl font-black text-gray-800">{pendingPayments}</h3>
-            </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center shadow-md">
-              <span className="text-lg lg:text-xl">!</span>
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Payments Hub</h1>
+          <p className="text-xs sm:text-sm font-medium text-slate-500">Track and manage your hostel revenue</p>
+        </div>
+        {canDo('payments', 'add') && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="group relative px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center gap-2 shadow-xl shadow-slate-200 active:scale-95 overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>NEW PAYMENT</span>
+          </button>
+        )}
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+        <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-8 -mt-8 transition-all group-hover:w-28 group-hover:h-28"></div>
+          <div className="relative">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dues Pending</p>
+            <h3 className="text-3xl font-black text-slate-800">{pendingPayments}</h3>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span className="text-[10px] font-bold text-rose-600 uppercase">Attention Required</span>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg border border-orange-500 p-3 lg:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 transform">
-          <div className="flex items-center justify-between">
+
+        <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-8 -mt-8 transition-all group-hover:w-28 group-hover:h-28"></div>
+          <div className="relative">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Due in 48h</p>
+            <h3 className="text-3xl font-black text-slate-800">{rentsDueIn2Days}</h3>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              <span className="text-[10px] font-bold text-amber-600 uppercase">Upcoming Cycle</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 bg-slate-900 p-4 rounded-[2rem] shadow-xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-bl-full -mr-16 -mt-16"></div>
+          <div className="relative h-full flex flex-col justify-between">
             <div>
-              <p className="text-[10px] lg:text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 whitespace-nowrap">Due in 2 Days</p>
-              <h3 className="text-xl lg:text-3xl font-black text-gray-800">{rentsDueIn2Days}</h3>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Revenue</p>
+              <h3 className="text-3xl font-black text-white">₹{payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amountPaid, 0).toLocaleString()}</h3>
             </div>
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md">
-              <span className="text-lg lg:text-xl">~</span>
-            </div>
+            <p className="text-[10px] font-bold text-slate-500 mt-4">Total collection for all periods</p>
           </div>
         </div>
       </div>
 
-      {/* Search Bar and Add Button */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-5 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b border-gray-200">
-          <div className="flex flex-col lg:flex-row gap-2 items-stretch lg:items-center">
-            <div className="relative flex-1 lg:max-w-md">
-              <input
-                type="text"
-                placeholder="Search name, mobile, month, rent..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-500 focus:border-gray-400 transition-all bg-white shadow-sm"
-              />
-              <svg className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 lg:pb-0">
-              {[["ALL","gray"],["PENDING","red"],["PARTIAL","yellow"],["PAID","green"]].map(([s, c]) => (
-                <button
-                  key={s}
-                  onClick={() => setFilterStatus(s)}
-                  className={`px-3 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition-all cursor-pointer ${
-                    filterStatus === s ? `bg-${c}-600 text-white` : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  } ${filterStatus === s && s === "ALL" ? "bg-gray-700" : ""}`}
-                >
-                  {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
-                </button>
-              ))}
-            </div>
-            {canDo('payments', 'add') && (
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-gray-800 text-white rounded-xl font-semibold text-sm hover:bg-gray-700 transition-all flex items-center gap-2 whitespace-nowrap"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Payment
-            </button>
-            )}
+      {/* Filters & Search */}
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex-1 relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
           </div>
+          <input
+            type="text"
+            placeholder="Search tenant name, mobile, month..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
+          />
+        </div>
+
+        <div className="bg-white p-1 rounded-2xl border border-slate-200 flex gap-1 shadow-sm overflow-x-auto no-scrollbar">
+          {[
+            { id: "ALL", label: "All", color: "slate" },
+            { id: "PENDING", label: "Pending", color: "rose" },
+            { id: "PARTIAL", label: "Partial", color: "amber" },
+            { id: "PAID", label: "Paid", color: "emerald" }
+          ].map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setFilterStatus(s.id)}
+              className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                filterStatus === s.id 
+                  ? `bg-slate-900 text-white shadow-lg` 
+                  : `text-slate-400 hover:text-slate-600 hover:bg-slate-50`
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -575,49 +602,71 @@ function Payments() {
         {/* Mobile Card View */}
         <div className="block lg:hidden">
           {filteredPayments.length > 0 ? (
-            <div className="divide-y divide-gray-100">
-              {filteredPayments.map((payment) => (
-                <div key={payment._id} className="p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-gray-700 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                        {payment.tenantId?.name?.charAt(0).toUpperCase() || "?"}
+            <div className="divide-y divide-slate-100">
+              {filteredPayments.map((payment) => {
+                const balance = payment.rentAmount - payment.amountPaid;
+                const monthName = months.find((m) => m.value === payment.month)?.label;
+                const initials = payment.tenantId?.name?.charAt(0).toUpperCase() || "?";
+                
+                return (
+                  <div key={payment._id} className="p-4 hover:bg-slate-50/50 transition-all group">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-200">
+                          {initials}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-slate-800 leading-tight">{payment.tenantId?.name || "Unknown"}</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{monthName} {payment.year}</p>
+                        </div>
                       </div>
-                      <div className="ml-3">
-                        <div className="text-sm font-bold text-gray-900">{payment.tenantId?.name || "N/A"}</div>
-                        <div className="text-[10px] text-gray-400">{months.find((m) => m.value === payment.month)?.label} {payment.year}</div>
+                      <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border ${
+                        payment.status === "PAID" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
+                        payment.status === "PARTIAL" ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                        "bg-rose-50 text-rose-600 border-rose-100"
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-2xl p-3 mb-4 grid grid-cols-3 gap-2">
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Rent</p>
+                        <p className="text-xs font-black text-slate-800">₹{payment.rentAmount.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Paid</p>
+                        <p className="text-xs font-black text-emerald-600">₹{payment.amountPaid.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Due</p>
+                        <p className="text-xs font-black text-rose-600">₹{balance.toLocaleString()}</p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${payment.status === "PAID" ? "bg-green-100 text-green-700" : payment.status === "PARTIAL" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
-                      {payment.status}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs">
-                    <div className="flex gap-3">
-                      <span className="text-gray-600">Rent: <span className="font-semibold text-gray-800">₹{payment.rentAmount}</span></span>
-                      <span className="text-gray-600">Paid: <span className="font-semibold text-green-600">₹{payment.amountPaid}</span></span>
-                      {payment.rentAmount - payment.amountPaid > 0 && (
-                        <span className="text-gray-600">Due: <span className="font-semibold text-red-600">₹{payment.rentAmount - payment.amountPaid}</span></span>
-                      )}
-                    </div>
-                    <div className="flex gap-1">
-                      {payment.status !== "PAID" && canDo('payments', 'edit') && (
-                        <>
-                          <button onClick={() => handleOpenMarkPaid(payment)} className="px-2 py-1 bg-green-600 text-white rounded text-[10px] font-medium hover:bg-green-700 transition cursor-pointer">Mark Paid</button>
-                          <button onClick={() => handleWhatsAppReminder(payment)} className="px-2 py-1 bg-green-500 text-white rounded text-[10px] font-medium hover:bg-green-600 transition cursor-pointer" title="WhatsApp Reminder">
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                          </button>
-                        </>
-                      )}
-                      {canDo('payments', 'delete') && (
-                        <button onClick={() => handleDelete(payment)} className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-medium hover:bg-red-700 transition cursor-pointer" title="Delete Payment">
-                          Delete
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <button onClick={() => handleWhatsAppReminder(payment)} className="w-8 h-8 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
+                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                         </button>
-                      )}
+                        {canDo('payments', 'delete') && (
+                          <button onClick={() => handleDelete(payment)} className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-sm">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        )}
+                        {payment.status !== "PAID" && canDo('payments', 'edit') && (
+                          <button 
+                            onClick={() => handleOpenMarkPaid(payment)} 
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all"
+                          >
+                            COLLECT
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12">
@@ -636,101 +685,94 @@ function Payments() {
 
         {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Tenant</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Month/Year</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Rent</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Paid</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Balance</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Date</th>
-                <th className="px-4 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">Status</th>
-                <th className="px-4 py-4 text-center text-sm font-bold text-white uppercase tracking-wider">Actions</th>
+          <table className="w-full border-separate border-spacing-0">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-100">
+                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Tenant</th>
+                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Period</th>
+                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Rent</th>
+                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Paid</th>
+                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Balance</th>
+                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Status</th>
+                <th className="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-slate-50">
               {filteredPayments.length > 0 ? (
-                filteredPayments.map((payment) => (
-                  <tr key={payment._id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:via-indigo-50 hover:to-purple-50 transition-all duration-300 group">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-md text-sm">
-                          {payment.tenantId?.name?.charAt(0).toUpperCase() || "?"}
+                filteredPayments.map((payment) => {
+                  const balance = payment.rentAmount - payment.amountPaid;
+                  const monthName = months.find((m) => m.value === payment.month)?.label;
+                  const initials = payment.tenantId?.name?.charAt(0).toUpperCase() || "?";
+
+                  return (
+                    <tr key={payment._id} className="hover:bg-slate-50/50 transition-all group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-100">
+                            {initials}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-800">{payment.tenantId?.name || "Unknown"}</p>
+                            {payment.advanceUsed > 0 && (
+                              <p className="text-[9px] font-bold text-indigo-600 bg-indigo-50 inline-block px-1.5 py-0.5 rounded mt-0.5">🔄 ADV USED: ₹{payment.advanceUsed}</p>
+                            )}
+                          </div>
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-bold text-gray-900">{payment.tenantId?.name || "N/A"}</div>
-                          {payment.advanceUsed > 0 && (
-                            <div className="text-[10px] text-blue-600 font-semibold">🔄 Adv: ₹{payment.advanceUsed}</div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-black text-slate-800">{monthName}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{payment.year}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-sm font-black text-slate-800">₹{payment.rentAmount.toLocaleString()}</td>
+                      <td className="px-6 py-5 text-sm font-black text-emerald-600">₹{payment.amountPaid.toLocaleString()}</td>
+                      <td className="px-6 py-5 text-sm font-black text-rose-600">
+                        {balance > 0 ? `₹${balance.toLocaleString()}` : <span className="text-emerald-600 font-black">✓ CLEARED</span>}
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`text-[9px] font-black px-2.5 py-1.5 rounded-lg uppercase tracking-widest border ${
+                          payment.status === "PAID" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
+                          payment.status === "PARTIAL" ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                          "bg-rose-50 text-rose-600 border-rose-100"
+                        }`}>
+                          {payment.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleWhatsAppReminder(payment)} className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="WhatsApp Reminder">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                          </button>
+                          {canDo('payments', 'delete') && (
+                            <button onClick={() => handleDelete(payment)} className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm" title="Delete Record">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          )}
+                          {payment.status !== "PAID" && canDo('payments', 'edit') && (
+                            <button 
+                              onClick={() => handleOpenMarkPaid(payment)} 
+                              className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black shadow-lg shadow-slate-100 hover:bg-slate-800 active:scale-95 transition-all uppercase tracking-widest"
+                            >
+                              Collect
+                            </button>
                           )}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-100 text-blue-700 font-semibold text-sm border border-blue-200">
-                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {months.find((m) => m.value === payment.month)?.label} {payment.year}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-700">Rs.{payment.rentAmount}</td>
-                    <td className="px-4 py-4 text-sm font-medium text-green-600">Rs.{payment.amountPaid}</td>
-                    <td className="px-4 py-4 text-sm font-medium text-red-600">
-                      {Math.max(0, payment.rentAmount - payment.amountPaid) > 0
-                        ? `Rs.${payment.rentAmount - payment.amountPaid}`
-                        : <span className="text-green-600">✓ Cleared</span>}
-                    </td>
-                    <td className="px-4 py-4 text-sm text-gray-600">
-                      {payment.paymentDate
-                        ? new Date(payment.paymentDate).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })
-                        : "-"}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${payment.status === "PAID" ? "bg-green-100 text-green-700" : payment.status === "PARTIAL" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
-                        {payment.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        {payment.status !== "PAID" && canDo('payments', 'edit') && (
-                          <>
-                            <button onClick={() => handleOpenMarkPaid(payment)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 cursor-pointer" title="Record Payment">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                              </svg>
-                            </button>
-                            <button onClick={() => handleWhatsAppReminder(payment)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 cursor-pointer" title="WhatsApp Reminder">
-                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                              </svg>
-                            </button>
-                          </>
-                        )}
-                        {canDo('payments', 'delete') && (
-                        <button onClick={() => handleDelete(payment)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 cursor-pointer" title="Delete">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="8" className="px-6 py-16">
+                  <td colSpan="7" className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
-                        <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-4">
+                        <svg className="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-bold text-gray-700 mb-2">No Payments Found</h3>
-                      <p className="text-sm text-gray-500 text-center max-w-xs">
-                        {searchQuery ? "No payments match your search criteria." : "Get started by adding a payment record."}
-                      </p>
+                      <h3 className="text-lg font-black text-slate-800">No payment records</h3>
+                      <p className="text-sm font-medium text-slate-400 mt-1">Try adjusting your filters or search query</p>
                     </div>
                   </td>
                 </tr>

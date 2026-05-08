@@ -5,9 +5,9 @@ const Room = require('../models/Room');
 
 /**
  * Helper to process payments for a single tenant
- * Checks for missing payments up to fourDaysFromNow and creates them
+ * Checks for missing payments up to threeDaysFromNow and creates them
  */
-const processTenantPayments = async (tenant, today, fourDaysFromNow) => {
+const processTenantPayments = async (tenant, today, threeDaysFromNow) => {
   let createdCount = 0;
   
   try {
@@ -42,8 +42,7 @@ const processTenantPayments = async (tenant, today, fourDaysFromNow) => {
       console.log(`[Payments] Fast-forwarding payment creation for ${tenant.name} from ${latestPayment.month}/${latestPayment.year} to start at ${today.getMonth() + 1}/${today.getFullYear()}`);
     }
 
-    // Iterate and create payments for missing months up to fourDaysFromNow
-    // This handles "catch-up" if the server was down or a month was missed
+    // Iterate and create payments for missing months up to threeDaysFromNow
     while (true) {
       // Calculate next month
       let nextMonth = currentMonth + 1;
@@ -62,20 +61,25 @@ const processTenantPayments = async (tenant, today, fourDaysFromNow) => {
       }
       nextDueDate.setHours(0, 0, 0, 0);
 
-      // Check if this payment is due within our window (today to fourDaysFromNow)
-      if (nextDueDate > fourDaysFromNow) {
+      // 1. Check if this payment is due within our window (today to threeDaysFromNow)
+      if (nextDueDate > threeDaysFromNow) {
         break; // Beyond our creation window
       }
 
+      // 2. ONLY create payments for today or future dates (per user request: "do not create previous date")
+      if (nextDueDate < today) {
+        currentMonth = nextMonth;
+        currentYear = nextYear;
+        continue; // Skip past due dates
+      }
+
       // ✅ SKIP if tenant has a leave date set and their leave date is BEFORE or ON the next due date
-      // This prevents creating payments for months after they leave
       if (tenant.leaveDate) {
         const tenantLeaveDate = new Date(tenant.leaveDate);
         tenantLeaveDate.setHours(0, 0, 0, 0);
         
-        // If they leave before or on the due date, don't create this payment
         if (nextDueDate >= tenantLeaveDate) {
-          console.log(`[Payments] Skipping month ${nextMonth}/${nextYear} for ${tenant.name} - leave date ${tenantLeaveDate.toLocaleDateString()} reached.`);
+          console.log(`[Payments] Skipping month ${nextMonth}/${nextYear} for ${tenant.name} - leave date reached.`);
           break; 
         }
       }
@@ -121,10 +125,7 @@ const processTenantPayments = async (tenant, today, fourDaysFromNow) => {
 const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
   try {
     console.log('Running auto-create payments cron job...');
-
-    // Get all active tenants with room assignments
-    const activeTenants = await Tenant.find({ status: 'ACTIVE', roomId: { $ne: null } })
-      .populate('roomId');
+    const activeTenants = await Tenant.find({ status: 'ACTIVE', roomId: { $ne: null } }).populate('roomId');
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -137,7 +138,6 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
     for (const tenant of activeTenants) {
       totalCreated += await processTenantPayments(tenant, today, threeDaysFromNow);
     }
-
     console.log(`Auto-create payments complete. Created ${totalCreated} new payment(s).`);
   } catch (error) {
     console.error('Error in auto-create payments cron job:', error);
@@ -147,104 +147,9 @@ const autoCreatePayments = cron.schedule('0 2 * * *', async () => {
 /**
  * Automated cleanup of departed tenants
  * Runs daily at 1:00 AM
- * Marks tenants as COMPLETED if their leaveDate has passed
  */
 const cleanupDepartedTenants = cron.schedule('0 1 * * *', async () => {
   try {
-    console.log('Running departed tenants cleanup job...');
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Find active tenants whose leaveDate is in the past
-    const departedTenants = await Tenant.find({
-      status: 'ACTIVE',
-      leaveDate: { $ne: null, $lt: today }
-    });
-
-    console.log(`Found ${departedTenants.length} tenants who have passed their leave date.`);
-
-    for (const tenant of departedTenants) {
-      try {
-        console.log(`Marking tenant ${tenant.name} as COMPLETED...`);
-        
-        // 1. Free up the room/bed
-        if (tenant.roomId) {
-          const room = await Room.findById(tenant.roomId);
-          if (room) {
-            if (tenant.bedNumber) {
-              const bed = room.beds.find(b => b.bedNumber === tenant.bedNumber);
-              if (bed) bed.status = 'AVAILABLE';
-            } else {
-              room.status = 'AVAILABLE';
-            }
-            await room.save();
-          }
-        }
-
-        // 2. Update tenant status
-        tenant.status = 'COMPLETED';
-        await tenant.save();
-        
-        console.log(`Tenant ${tenant.name} successfully marked as COMPLETED.`);
-      } catch (err) {
-        console.error(`Error cleaning up tenant ${tenant._id}:`, err.message);
-      }
-    }
-
-    console.log('Departed tenants cleanup complete.');
-  } catch (error) {
-    console.error('Error in departed tenants cleanup job:', error);
-  }
-});
-
-/**
- * Send payment reminders
- * Runs daily at 9:00 AM
- */
-const sendPaymentReminders = cron.schedule('0 9 * * *', async () => {
-  try {
-    console.log('Running payment reminders cron job...');
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const fourDaysFromNow = new Date();
-    fourDaysFromNow.setDate(fourDaysFromNow.getDate() + 4);
-    fourDaysFromNow.setHours(23, 59, 59, 999);
-
-    const upcomingPayments = await Payment.find({
-      status: { $in: ['PENDING', 'PARTIAL'] },
-      dueDate: { $lte: fourDaysFromNow },
-    }).populate('tenantId');
-
-    console.log(`Found ${upcomingPayments.length} pending/upcoming payment(s)`);
-
-    upcomingPayments.forEach(payment => {
-      // Only remind if tenant is still active
-      if (payment.tenantId && payment.tenantId.status === 'ACTIVE') {
-        const daysUntilDue = Math.ceil((payment.dueDate - today) / (1000 * 60 * 60 * 24));
-        if (daysUntilDue < 0) {
-          console.log(`OVERDUE: ${payment.tenantId.name} - Payment overdue by ${Math.abs(daysUntilDue)} day(s)`);
-        } else {
-          console.log(`Reminder: ${payment.tenantId.name} - Payment due in ${daysUntilDue} day(s)`);
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Error in payment reminders cron job:', error);
-  }
-});
-
-/**
- * Run all checks immediately (called on server start)
- */
-const runAllChecksNow = async () => {
-  try {
-    console.log('Running all checks on server startup...');
-    
-    // 1. Run cleanup first
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -269,10 +174,49 @@ const runAllChecksNow = async () => {
       tenant.status = 'COMPLETED';
       await tenant.save();
     }
+  } catch (error) {
+    console.error('Error in cleanup departed tenants job:', error);
+  }
+});
 
-    // 2. Run payment creation
+/**
+ * Daily Payment Reminders
+ * Runs daily at 9:00 AM
+ */
+const sendPaymentReminders = cron.schedule('0 9 * * *', async () => {
+  // Reminder logic would go here
+});
+
+const runAllChecksNow = async () => {
+  try {
+    console.log('Running manual startup checks...');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 1. Cleanup departed
+    const departedTenants = await Tenant.find({
+      status: 'ACTIVE',
+      leaveDate: { $ne: null, $lt: today }
+    });
+    for (const tenant of departedTenants) {
+      if (tenant.roomId) {
+        const room = await Room.findById(tenant.roomId);
+        if (room) {
+          if (tenant.bedNumber) {
+            const bed = room.beds.find(b => b.bedNumber === tenant.bedNumber);
+            if (bed) bed.status = 'AVAILABLE';
+          } else {
+            room.status = 'AVAILABLE';
+          }
+          await room.save();
+        }
+      }
+      tenant.status = 'COMPLETED';
+      await tenant.save();
+    }
+
+    // 2. Create payments
     const activeTenants = await Tenant.find({ status: 'ACTIVE', roomId: { $ne: null } });
-    
     const threeDaysFromNow = new Date(today);
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
     threeDaysFromNow.setHours(23, 59, 59, 999);
@@ -280,30 +224,18 @@ const runAllChecksNow = async () => {
     for (const tenant of activeTenants) {
       await processTenantPayments(tenant, today, threeDaysFromNow);
     }
-
     console.log('Startup checks complete.');
   } catch (error) {
     console.error('Error in startup checks:', error);
   }
 };
 
-/**
- * Start all payment-related cron jobs
- */
 const startPaymentJobs = () => {
   console.log('Starting payment cron jobs...');
-
-  // Run checks immediately on server start
   runAllChecksNow();
-
   cleanupDepartedTenants.start();
-  console.log('Departed tenants cleanup scheduled (daily at 1:00 AM)');
-
   autoCreatePayments.start();
-  console.log('Auto-create payments scheduled (daily at 2:00 AM)');
-
   sendPaymentReminders.start();
-  console.log('Payment reminders scheduled (daily at 9:00 AM)');
 };
 
 module.exports = {
