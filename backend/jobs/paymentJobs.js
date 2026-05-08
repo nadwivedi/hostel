@@ -28,6 +28,20 @@ const processTenantPayments = async (tenant, today, fourDaysFromNow) => {
     let currentYear = latestPayment.year;
     let currentMonth = latestPayment.month;
 
+    // Fast-forward to the current month if the latest payment is from the past.
+    // This prevents creating a long list of "catch-up" payments for old months 
+    // when a tenant is added with a past joining date.
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const latestPaymentStart = new Date(currentYear, currentMonth - 1, 1);
+
+    if (latestPaymentStart < currentMonthStart) {
+      // Start from the previous month relative to today, so the loop creates the current month's payment
+      const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      currentMonth = prevMonthDate.getMonth() + 1;
+      currentYear = prevMonthDate.getFullYear();
+      console.log(`[Payments] Fast-forwarding payment creation for ${tenant.name} from ${latestPayment.month}/${latestPayment.year} to start at ${today.getMonth() + 1}/${today.getFullYear()}`);
+    }
+
     // Iterate and create payments for missing months up to fourDaysFromNow
     // This handles "catch-up" if the server was down or a month was missed
     while (true) {
