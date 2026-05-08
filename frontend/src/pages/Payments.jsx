@@ -280,507 +280,328 @@ function Payments() {
   const mpTenantAdvance = markPaidModal.payment?.tenantId?.advanceLeft || 0;
 
   return (
-    <div className="space-y-4 sm:space-y-5">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+    <div className="space-y-3 sm:space-y-4 max-w-full overflow-hidden">
+      {/* Mobile-Optimized Header */}
+      <div className="flex justify-between items-center px-1">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Payments Hub</h1>
-          <p className="text-xs sm:text-sm font-medium text-slate-500">Track and manage your hostel revenue</p>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">Payments</h1>
+          <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">Revenue Tracker</p>
         </div>
         {canDo('payments', 'add') && (
           <button
             onClick={() => setShowForm(true)}
-            className="group relative px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center gap-2 shadow-xl shadow-slate-200 active:scale-95 overflow-hidden"
+            className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-all"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-10 transition-opacity"></div>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
             </svg>
-            <span>NEW PAYMENT</span>
           </button>
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-        <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-50 rounded-bl-full -mr-8 -mt-8 transition-all group-hover:w-28 group-hover:h-28"></div>
-          <div className="relative">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Dues Pending</p>
-            <h3 className="text-3xl font-black text-slate-800">{pendingPayments}</h3>
-            <div className="mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-              <span className="text-[10px] font-bold text-rose-600 uppercase">Attention Required</span>
-            </div>
+      {/* Compact Stats Grid - 2x2 for Mobile */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-12 h-12 bg-rose-50 rounded-bl-full -mr-4 -mt-4 opacity-50"></div>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Dues</p>
+          <div className="flex items-end justify-between">
+            <h3 className="text-xl font-black text-slate-800 leading-none">{pendingPayments}</h3>
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-50 rounded-bl-full -mr-8 -mt-8 transition-all group-hover:w-28 group-hover:h-28"></div>
-          <div className="relative">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Due in 48h</p>
-            <h3 className="text-3xl font-black text-slate-800">{rentsDueIn2Days}</h3>
-            <div className="mt-2 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-              <span className="text-[10px] font-bold text-amber-600 uppercase">Upcoming Cycle</span>
-            </div>
+        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-12 h-12 bg-amber-50 rounded-bl-full -mr-4 -mt-4 opacity-50"></div>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Due 48h</p>
+          <div className="flex items-end justify-between">
+            <h3 className="text-xl font-black text-slate-800 leading-none">{rentsDueIn2Days}</h3>
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-slate-900 p-4 rounded-[2rem] shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-bl-full -mr-16 -mt-16"></div>
-          <div className="relative h-full flex flex-col justify-between">
+        <div className="col-span-2 bg-slate-900 p-3 rounded-2xl shadow-md relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full -mr-8 -mt-8"></div>
+          <div className="relative flex justify-between items-center">
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Revenue</p>
-              <h3 className="text-3xl font-black text-white">₹{payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amountPaid, 0).toLocaleString()}</h3>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Revenue</p>
+              <h3 className="text-xl font-black text-white">₹{payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amountPaid, 0).toLocaleString()}</h3>
             </div>
-            <p className="text-[10px] font-bold text-slate-500 mt-4">Total collection for all periods</p>
+            <div className="p-2 bg-white/10 rounded-lg">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1 relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Compact Search & Filter */}
+      <div className="space-y-2">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search tenant, month..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-bold placeholder:text-slate-400 focus:outline-none focus:border-slate-900 shadow-sm"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <input
-            type="text"
-            placeholder="Search tenant name, mobile, month..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
-          />
         </div>
 
-        <div className="bg-white p-1 rounded-2xl border border-slate-200 flex gap-1 shadow-sm overflow-x-auto no-scrollbar">
-          {[
-            { id: "ALL", label: "All", color: "slate" },
-            { id: "PENDING", label: "Pending", color: "rose" },
-            { id: "PARTIAL", label: "Partial", color: "amber" },
-            { id: "PAID", label: "Paid", color: "emerald" }
-          ].map((s) => (
+        <div className="flex gap-1 overflow-x-auto no-scrollbar pb-1">
+          {["ALL", "PENDING", "PARTIAL", "PAID"].map((s) => (
             <button
-              key={s.id}
-              onClick={() => setFilterStatus(s.id)}
-              className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                filterStatus === s.id 
-                  ? `bg-slate-900 text-white shadow-lg` 
-                  : `text-slate-400 hover:text-slate-600 hover:bg-slate-50`
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap border ${
+                filterStatus === s 
+                  ? `bg-slate-900 text-white border-slate-900 shadow-sm` 
+                  : `bg-white text-slate-400 border-slate-100 hover:border-slate-200`
               }`}
             >
-              {s.label}
+              {s}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Mark Paid Modal */}
+      {/* Organized Mobile Payment Cards */}
+      <div className="space-y-2">
+        {filteredPayments.length > 0 ? (
+          filteredPayments.map((payment) => {
+            const balance = payment.rentAmount - payment.amountPaid;
+            const monthName = months.find((m) => m.value === payment.month)?.label;
+            const initials = payment.tenantId?.name?.charAt(0).toUpperCase() || "?";
+            
+            return (
+              <div key={payment._id} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm active:bg-slate-50 transition-all">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs">
+                      {initials}
+                    </div>
+                    <div>
+                      <h4 className="text-[11px] font-black text-slate-800 leading-none mb-0.5">{payment.tenantId?.name || "Unknown"}</h4>
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{monthName} {payment.year}</p>
+                    </div>
+                  </div>
+                  <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border ${
+                    payment.status === "PAID" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
+                    payment.status === "PARTIAL" ? "bg-amber-50 text-amber-600 border-amber-100" : 
+                    "bg-rose-50 text-rose-600 border-rose-100"
+                  }`}>
+                    {payment.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1 mb-3 bg-slate-50/50 rounded-xl p-2 border border-slate-50">
+                  <div className="text-center border-r border-slate-100">
+                    <p className="text-[7px] font-black text-slate-400 uppercase mb-0.5">Rent</p>
+                    <p className="text-[10px] font-black text-slate-800">₹{payment.rentAmount}</p>
+                  </div>
+                  <div className="text-center border-r border-slate-100">
+                    <p className="text-[7px] font-black text-slate-400 uppercase mb-0.5">Paid</p>
+                    <p className="text-[10px] font-black text-emerald-600">₹{payment.amountPaid}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[7px] font-black text-slate-400 uppercase mb-0.5">Due</p>
+                    <p className="text-[10px] font-black text-rose-600">₹{balance}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleWhatsAppReminder(payment)} 
+                      className="w-8 h-8 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    </button>
+                    {canDo('payments', 'delete') && (
+                      <button 
+                        onClick={() => handleDelete(payment)} 
+                        className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    )}
+                  </div>
+                  {payment.status !== "PAID" && canDo('payments', 'edit') && (
+                    <button 
+                      onClick={() => handleOpenMarkPaid(payment)} 
+                      className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black shadow-lg active:scale-95 transition-all uppercase tracking-widest"
+                    >
+                      Collect
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10">
+            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
+              <svg className="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h3 className="text-sm font-black text-slate-800">No records found</h3>
+            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Adjust filters</p>
+          </div>
+        )}
+      </div>
+
+      {/* Mark Paid Modal - Mobile Optimized */}
       {markPaidModal.open && markPaidModal.payment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-6 overflow-hidden">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Record Payment</h3>
-                <p className="text-sm text-gray-500">
-                  {markPaidModal.payment.tenantId?.name} — {months.find(m => m.value === markPaidModal.payment.month)?.label} {markPaidModal.payment.year}
-                </p>
+              <div className="min-w-0">
+                <h3 className="text-sm font-black text-slate-900 truncate">{markPaidModal.payment.tenantId?.name}</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Record Payment</p>
               </div>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm">
-              <div className="flex justify-between"><span className="text-gray-600">Rent Due:</span><span className="font-bold">₹{markPaidModal.payment.rentAmount}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Already Paid:</span><span className="font-bold text-green-600">₹{markPaidModal.payment.amountPaid}</span></div>
-              <div className="flex justify-between"><span className="text-gray-600">Balance:</span><span className="font-bold text-red-600">₹{markPaidModal.payment.rentAmount - markPaidModal.payment.amountPaid}</span></div>
+            <div className="bg-slate-50 rounded-2xl p-4 mb-5 border border-slate-100">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Due</span>
+                <span className="text-sm font-black text-slate-900">₹{markPaidModal.payment.rentAmount - markPaidModal.payment.amountPaid}</span>
+              </div>
               {mpTenantAdvance > 0 && (
-                <div className="flex justify-between mt-1 pt-1 border-t border-gray-200">
-                  <span className="text-gray-600">Advance Available:</span>
-                  <span className="font-bold text-blue-600">₹{mpTenantAdvance}</span>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Advance</span>
+                  <span className="text-xs font-black text-blue-600">₹{mpTenantAdvance}</span>
                 </div>
               )}
             </div>
 
-            <div className="space-y-3 mb-4">
+            <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Payment Date</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Payment Date</label>
                 <input
                   type="date"
                   value={markPaidModal.date}
                   onChange={(e) => setMarkPaidModal(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 text-gray-800"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 focus:outline-none focus:border-slate-900"
                 />
               </div>
               {mpTenantAdvance > 0 && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Use Advance (Rs.) <span className="text-xs font-normal text-gray-400">— Available: ₹{mpTenantAdvance}</span>
-                  </label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Use Advance (₹)</label>
                   <input
                     type="number"
-                    min="0"
                     max={mpTenantAdvance}
                     value={markPaidModal.advanceUsed}
                     onChange={(e) => setMarkPaidModal(prev => ({ ...prev, advanceUsed: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 focus:outline-none focus:border-slate-900"
                     placeholder="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 text-gray-800"
                   />
-                  <p className="text-xs text-gray-400 mt-1">This will be deducted from the tenant's advance balance.</p>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setMarkPaidModal({ open: false, payment: null, date: new Date().toISOString().split("T")[0], advanceUsed: "" })}
-                className="px-5 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold text-sm"
+                className="py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmMarkPaid}
-                className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold text-sm"
+                className="py-3.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-slate-200 active:scale-95 transition-all"
               >
-                Confirm Payment
+                Confirm
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Create Payment Modal */}
+      {/* Create Payment Modal - Mobile Optimized */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-gray-50 rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="bg-gray-800 p-3 sm:p-4 text-white flex-shrink-0">
-              <div className="flex justify-between items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base sm:text-xl font-bold truncate">Create Payment Record</h2>
-                  <p className="text-gray-400 text-xs sm:text-sm">Enter payment details for the tenant.</p>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl max-w-full sm:max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="px-6 py-5 border-b border-slate-50 flex justify-between items-center">
+              <div>
+                <h2 className="text-base font-black text-slate-900 tracking-tight leading-none">New Payment</h2>
+                <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Entry Details</p>
+              </div>
+              <button onClick={() => setShowForm(false)} className="w-8 h-8 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Tenant</label>
+                <select name="tenantId" value={formData.tenantId} onChange={handleChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800 focus:outline-none focus:border-slate-900 appearance-none">
+                  <option value="">Choose Tenant</option>
+                  {tenants.map((t) => <option key={t._id} value={t._id}>{t.name}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Month</label>
+                  <select name="month" value={formData.month} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800">
+                    {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </select>
                 </div>
-                <button onClick={() => setShowForm(false)} className="text-gray-400 hover:bg-gray-700 rounded-full p-1.5 sm:p-2 transition flex-shrink-0">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Year</label>
+                  <input type="number" name="year" value={formData.year} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Rent (₹)</label>
+                  <input type="number" name="rentAmount" value={formData.rentAmount} onChange={handleChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Cash (₹)</label>
+                  <input type="number" name="amountPaid" value={formData.amountPaid} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800" />
+                </div>
+              </div>
+
+              {formData.advanceAvailable > 0 && (
+                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <input type="checkbox" id="useAdvance" name="useAdvance" checked={formData.useAdvance} onChange={handleChange} className="w-4 h-4 rounded-lg accent-blue-600" />
+                    <label htmlFor="useAdvance" className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Use Advance (₹{formData.advanceAvailable})</label>
+                  </div>
+                  {formData.useAdvance && (
+                    <input type="number" name="advanceUsed" value={formData.advanceUsed} onChange={handleChange} max={formData.advanceAvailable} className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl text-xs font-black text-blue-800" placeholder="0" />
+                  )}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</label>
+                <select name="status" value={formData.status} onChange={handleChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black text-slate-800">
+                  <option value="PENDING">Pending</option>
+                  <option value="PARTIAL">Partial</option>
+                  <option value="PAID">Paid</option>
+                </select>
+              </div>
+
+              <div className="pt-2">
+                <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-200 active:scale-[0.98] transition-all">
+                  Create Record
                 </button>
               </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
-              {/* Tenant & Period */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Tenant & Period</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Select Tenant <span className="text-red-500">*</span></label>
-                    <select name="tenantId" value={formData.tenantId} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800">
-                      <option value="">Choose Tenant</option>
-                      {tenants.map((tenant) => (
-                        <option key={tenant._id} value={tenant._id}>
-                          {tenant.name} {tenant.roomId ? `- Room ${tenant.roomId.roomNumber || tenant.roomId}` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {formData.tenantId && formData.advanceAvailable > 0 && (
-                      <p className="text-xs text-blue-600 mt-1 font-semibold">💰 Advance Balance: ₹{formData.advanceAvailable}</p>
-                    )}
-                    {formData.tenantId && formData.advanceAvailable === 0 && (
-                      <p className="text-xs text-gray-400 mt-1">No advance balance available.</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Month <span className="text-red-500">*</span></label>
-                    <select name="month" value={formData.month} onChange={handleChange} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800">
-                      {months.map((month) => (
-                        <option key={month.value} value={month.value}>{month.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Year <span className="text-red-500">*</span></label>
-                    <input type="number" name="year" value={formData.year} onChange={handleChange} required min="2020" max="2030" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Details */}
-              <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Payment Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Rent Amount (Rs.) <span className="text-red-500">*</span></label>
-                    <input type="number" name="rentAmount" value={formData.rentAmount} onChange={handleChange} required min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Cash Paid (Rs.)</label>
-                    <input type="number" name="amountPaid" value={formData.amountPaid} onChange={handleChange} min="0" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800 font-semibold" />
-                  </div>
-
-                  {/* Advance Toggle */}
-                  {formData.advanceAvailable > 0 && (
-                    <div className="md:col-span-2">
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          id="useAdvance"
-                          name="useAdvance"
-                          checked={formData.useAdvance}
-                          onChange={handleChange}
-                          className="w-4 h-4 accent-blue-600 cursor-pointer"
-                        />
-                        <label htmlFor="useAdvance" className="text-sm font-semibold text-blue-700 cursor-pointer">
-                          Use Advance Balance (Available: ₹{formData.advanceAvailable})
-                        </label>
-                      </div>
-                      {formData.useAdvance && (
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Advance Amount to Use (Rs.)</label>
-                          <input
-                            type="number"
-                            name="advanceUsed"
-                            value={formData.advanceUsed}
-                            onChange={handleChange}
-                            min="0"
-                            max={formData.advanceAvailable}
-                            className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 font-semibold"
-                            placeholder={`Max ₹${formData.advanceAvailable}`}
-                          />
-                          {formData.useAdvance && formData.advanceUsed && (
-                            <p className="text-xs text-blue-600 mt-1">
-                              Effective total: ₹{(parseFloat(formData.amountPaid) || 0) + (parseFloat(formData.advanceUsed) || 0)} (cash + advance)
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Payment Date</label>
-                    <input type="date" name="paymentDate" value={formData.paymentDate} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                    <select name="status" value={formData.status} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-800">
-                      <option value="PENDING">Pending</option>
-                      <option value="PARTIAL">Partial</option>
-                      <option value="PAID">Paid</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
             </form>
-
-            <div className="border-t border-gray-200 p-3 sm:p-4 bg-gray-100 flex flex-row justify-end items-center gap-2 sm:gap-3 flex-shrink-0">
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 sm:px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-semibold transition text-sm sm:text-base">
-                Cancel
-              </button>
-              <button
-                type="submit"
-                onClick={(e) => { e.preventDefault(); document.querySelector("form").requestSubmit(); }}
-                className="px-4 sm:px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Create Payment
-              </button>
-            </div>
           </div>
         </div>
       )}
-
-      {/* Table Container */}
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-        {/* Mobile Card View */}
-        <div className="block lg:hidden">
-          {filteredPayments.length > 0 ? (
-            <div className="divide-y divide-slate-100">
-              {filteredPayments.map((payment) => {
-                const balance = payment.rentAmount - payment.amountPaid;
-                const monthName = months.find((m) => m.value === payment.month)?.label;
-                const initials = payment.tenantId?.name?.charAt(0).toUpperCase() || "?";
-                
-                return (
-                  <div key={payment._id} className="p-4 hover:bg-slate-50/50 transition-all group">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-200">
-                          {initials}
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-black text-slate-800 leading-tight">{payment.tenantId?.name || "Unknown"}</h4>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{monthName} {payment.year}</p>
-                        </div>
-                      </div>
-                      <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest border ${
-                        payment.status === "PAID" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
-                        payment.status === "PARTIAL" ? "bg-amber-50 text-amber-600 border-amber-100" : 
-                        "bg-rose-50 text-rose-600 border-rose-100"
-                      }`}>
-                        {payment.status}
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 rounded-2xl p-3 mb-4 grid grid-cols-3 gap-2">
-                      <div>
-                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Rent</p>
-                        <p className="text-xs font-black text-slate-800">₹{payment.rentAmount.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Paid</p>
-                        <p className="text-xs font-black text-emerald-600">₹{payment.amountPaid.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-[8px] font-black text-slate-400 uppercase mb-0.5">Due</p>
-                        <p className="text-xs font-black text-rose-600">₹{balance.toLocaleString()}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <button onClick={() => handleWhatsAppReminder(payment)} className="w-8 h-8 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all shadow-sm">
-                          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                        </button>
-                        {canDo('payments', 'delete') && (
-                          <button onClick={() => handleDelete(payment)} className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all shadow-sm">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        )}
-                        {payment.status !== "PAID" && canDo('payments', 'edit') && (
-                          <button 
-                            onClick={() => handleOpenMarkPaid(payment)} 
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all"
-                          >
-                            COLLECT
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-700 mb-2">No Payments Found</h3>
-              <p className="text-sm text-gray-500 text-center max-w-xs">
-                {searchQuery ? "No payments match your search criteria." : "Get started by adding a payment record."}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto">
-          <table className="w-full border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Tenant</th>
-                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Period</th>
-                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Rent</th>
-                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Paid</th>
-                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Balance</th>
-                <th className="px-6 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Status</th>
-                <th className="px-6 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredPayments.length > 0 ? (
-                filteredPayments.map((payment) => {
-                  const balance = payment.rentAmount - payment.amountPaid;
-                  const monthName = months.find((m) => m.value === payment.month)?.label;
-                  const initials = payment.tenantId?.name?.charAt(0).toUpperCase() || "?";
-
-                  return (
-                    <tr key={payment._id} className="hover:bg-slate-50/50 transition-all group">
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-100">
-                            {initials}
-                          </div>
-                          <div>
-                            <p className="text-sm font-black text-slate-800">{payment.tenantId?.name || "Unknown"}</p>
-                            {payment.advanceUsed > 0 && (
-                              <p className="text-[9px] font-bold text-indigo-600 bg-indigo-50 inline-block px-1.5 py-0.5 rounded mt-0.5">🔄 ADV USED: ₹{payment.advanceUsed}</p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-black text-slate-800">{monthName}</span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{payment.year}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-sm font-black text-slate-800">₹{payment.rentAmount.toLocaleString()}</td>
-                      <td className="px-6 py-5 text-sm font-black text-emerald-600">₹{payment.amountPaid.toLocaleString()}</td>
-                      <td className="px-6 py-5 text-sm font-black text-rose-600">
-                        {balance > 0 ? `₹${balance.toLocaleString()}` : <span className="text-emerald-600 font-black">✓ CLEARED</span>}
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className={`text-[9px] font-black px-2.5 py-1.5 rounded-lg uppercase tracking-widest border ${
-                          payment.status === "PAID" ? "bg-emerald-50 text-emerald-600 border-emerald-100" : 
-                          payment.status === "PARTIAL" ? "bg-amber-50 text-amber-600 border-amber-100" : 
-                          "bg-rose-50 text-rose-600 border-rose-100"
-                        }`}>
-                          {payment.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleWhatsAppReminder(payment)} className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="WhatsApp Reminder">
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                          </button>
-                          {canDo('payments', 'delete') && (
-                            <button onClick={() => handleDelete(payment)} className="p-2 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm" title="Delete Record">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                            </button>
-                          )}
-                          {payment.status !== "PAID" && canDo('payments', 'edit') && (
-                            <button 
-                              onClick={() => handleOpenMarkPaid(payment)} 
-                              className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black shadow-lg shadow-slate-100 hover:bg-slate-800 active:scale-95 transition-all uppercase tracking-widest"
-                            >
-                              Collect
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="7" className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center mb-4">
-                        <svg className="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-black text-slate-800">No payment records</h3>
-                      <p className="text-sm font-medium text-slate-400 mt-1">Try adjusting your filters or search query</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }

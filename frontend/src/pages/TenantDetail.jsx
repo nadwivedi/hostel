@@ -359,85 +359,90 @@ function TenantDetail() {
       </div>
 
       {/* Payment History */}
-      <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4">
-        <h3 className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase mb-3">Payment History</h3>
+      <div className="bg-white rounded-[2rem] border border-slate-100 p-4 sm:p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Payment History</h3>
+            <p className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase">All recorded transactions</p>
+          </div>
+          <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+            {payments.length} Records
+          </span>
+        </div>
+
         {payments.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {payments.map((payment) => {
               const paymentDate = new Date(payment.year, payment.month - 1);
-              const monthYear = paymentDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+              const monthLabel = paymentDate.toLocaleDateString('en-US', { month: 'long' });
               const isPaid = payment.status === 'PAID';
               const isPartial = payment.status === 'PARTIAL';
 
               return (
                 <div
                   key={payment._id}
-                  className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${
-                    isPaid ? 'bg-green-50 border-green-200' : isPartial ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
-                  }`}
+                  className="group relative bg-white border border-slate-100 rounded-2xl p-4 transition-all hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 sm:gap-3 flex-1">
-                      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isPaid ? 'bg-green-100' : isPartial ? 'bg-yellow-100' : 'bg-red-100'
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-slate-100 ${
+                        isPaid ? 'bg-emerald-50 text-emerald-600' : isPartial ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
                       }`}>
                         {isPaid ? (
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                         ) : isPartial ? (
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         ) : (
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs sm:text-sm font-bold text-gray-900">{monthYear}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500">
-                          Created: {formatDate(payment.createdAt)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-black text-slate-800">{monthLabel} {payment.year}</h4>
+                          <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border ${
+                            isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                            isPartial ? 'bg-amber-50 text-amber-600 border-amber-100' : 
+                            'bg-rose-50 text-rose-600 border-rose-100'
+                          }`}>
+                            {payment.status}
+                          </span>
                         </div>
-                        <div className="text-[10px] sm:text-xs text-gray-500">
-                          Rent: ₹{payment.rentAmount.toLocaleString()}
-                          {payment.amountPaid > 0 && ` · Paid: ₹${payment.amountPaid.toLocaleString()}`}
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span>Rent: <span className="text-slate-600">₹{payment.rentAmount.toLocaleString()}</span></span>
+                          {payment.amountPaid > 0 && <span>Paid: <span className="text-emerald-600">₹{payment.amountPaid.toLocaleString()}</span></span>}
+                          <span>Date: <span className="text-slate-600">{formatDate(payment.createdAt)}</span></span>
                         </div>
+                        
                         {(payment.advanceUsed > 0 || payment.advanceAdded > 0) && (
-                          <div className="flex gap-2 mt-0.5 flex-wrap">
+                          <div className="flex gap-2 mt-2">
                             {payment.advanceUsed > 0 && (
-                              <span className="text-[9px] sm:text-[10px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                Advance used: ₹{payment.advanceUsed.toLocaleString()}
+                              <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                                🔄 Adv Used: ₹{payment.advanceUsed.toLocaleString()}
                               </span>
                             )}
                             {payment.advanceAdded > 0 && (
-                              <span className="text-[9px] sm:text-[10px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">
-                                +₹{payment.advanceAdded.toLocaleString()} to advance
+                              <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                                💰 +₹{payment.advanceAdded.toLocaleString()} Adv
                               </span>
                             )}
                           </div>
                         )}
                         {payment.notes && (
-                          <div className="mt-1 text-[9px] sm:text-[10px] text-amber-700 bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 italic">
-                            📝 {payment.notes}
+                          <div className="mt-2 text-[10px] font-medium text-slate-500 bg-slate-50 rounded-lg p-2 border border-slate-100">
+                            <span className="text-slate-400 mr-1">Note:</span> {payment.notes}
                           </div>
                         )}
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-2 flex items-center gap-2">
-                      <span className={`inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold ${
-                        isPaid ? 'bg-green-600 text-white' : isPartial ? 'bg-yellow-500 text-white' : 'bg-red-600 text-white'
-                      }`}>
-                        {isPaid ? 'Paid' : isPartial ? 'Partial' : 'Pending'}
-                      </span>
+
+                    <div className="flex items-center sm:justify-end gap-2 border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
                       {canDo('payments', 'delete') && (
                         <button 
                           onClick={() => handleDeletePayment(payment._id)}
-                          className="p-1.5 text-red-500 hover:bg-red-100 rounded-full transition-colors"
-                          title="Delete Payment"
+                          className="flex items-center gap-2 px-3 py-2 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all duration-300 font-black text-[10px] uppercase tracking-widest shadow-sm shadow-rose-100"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          Delete
                         </button>
                       )}
                     </div>
