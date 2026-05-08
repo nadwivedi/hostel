@@ -249,7 +249,7 @@ function Dashboard() {
             </div>
           ) : pendingPayments.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-               {pendingPayments.map((payment) => {
+               {pendingPayments.map((payment, index) => {
                 const tenant = payment.tenant;
                 const balance = payment.rentAmount - (payment.amountPaid || 0);
                 const urgency = getPaymentUrgency(payment.dueDate);
@@ -263,20 +263,9 @@ function Dashboard() {
                   return <img src="/hostel.png" className="w-4 h-4 object-contain" alt="hostel" />;
                 };
 
-                const getCardColors = (name) => {
-                  const colors = [
-                    { header: "bg-indigo-50 border-indigo-100", text: "text-indigo-800", badge: "bg-indigo-900", iconBg: "bg-indigo-100", iconText: "text-indigo-600" },
-                    { header: "bg-emerald-50 border-emerald-100", text: "text-emerald-800", badge: "bg-emerald-900", iconBg: "bg-emerald-100", iconText: "text-emerald-600" },
-                    { header: "bg-amber-50 border-amber-100", text: "text-amber-800", badge: "bg-amber-900", iconBg: "bg-amber-100", iconText: "text-amber-600" },
-                    { header: "bg-purple-50 border-purple-100", text: "text-purple-800", badge: "bg-purple-900", iconBg: "bg-purple-100", iconText: "text-purple-600" },
-                    { header: "bg-blue-50 border-blue-100", text: "text-blue-800", badge: "bg-blue-900", iconBg: "bg-blue-100", iconText: "text-blue-600" },
-                  ];
-                  let hash = 0;
-                  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                  return colors[Math.abs(hash) % colors.length];
-                };
-
-                const theme = getCardColors(propName);
+                const theme = (index % 2 === 0) 
+                  ? { header: "bg-amber-50 border-amber-100", text: "text-amber-800", badge: "bg-amber-900", iconBg: "bg-amber-100", iconText: "text-amber-600" }
+                  : { header: "bg-emerald-50 border-emerald-100", text: "text-emerald-800", badge: "bg-emerald-900", iconBg: "bg-emerald-100", iconText: "text-emerald-600" };
 
                 return (
                   <div
