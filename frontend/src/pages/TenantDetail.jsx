@@ -383,21 +383,22 @@ function TenantDetail() {
                   key={payment._id}
                   className="group relative bg-white border border-slate-100 rounded-2xl p-4 transition-all hover:shadow-lg hover:-translate-y-0.5"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-slate-100 ${
-                        isPaid ? 'bg-emerald-50 text-emerald-600' : isPartial ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
-                      }`}>
-                        {isPaid ? (
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                        ) : isPartial ? (
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        ) : (
-                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-slate-100 ${
+                      isPaid ? 'bg-emerald-50 text-emerald-600' : isPartial ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                    }`}>
+                      {isPaid ? (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                      ) : isPartial ? (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      ) : (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
                           <h4 className="text-sm font-black text-slate-800">{monthLabel} {payment.year}</h4>
                           <span className={`text-[8px] font-black px-2 py-0.5 rounded-md uppercase tracking-widest border ${
                             isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
@@ -407,43 +408,42 @@ function TenantDetail() {
                             {payment.status}
                           </span>
                         </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          <span>Rent: <span className="text-slate-600">₹{payment.rentAmount.toLocaleString()}</span></span>
-                          {payment.amountPaid > 0 && <span>Paid: <span className="text-emerald-600">₹{payment.amountPaid.toLocaleString()}</span></span>}
-                          <span>Date: <span className="text-slate-600">{formatDate(payment.createdAt)}</span></span>
-                        </div>
-                        
-                        {(payment.advanceUsed > 0 || payment.advanceAdded > 0) && (
-                          <div className="flex gap-2 mt-2">
-                            {payment.advanceUsed > 0 && (
-                              <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
-                                🔄 Adv Used: ₹{payment.advanceUsed.toLocaleString()}
-                              </span>
-                            )}
-                            {payment.advanceAdded > 0 && (
-                              <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
-                                💰 +₹{payment.advanceAdded.toLocaleString()} Adv
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        {payment.notes && (
-                          <div className="mt-2 text-[10px] font-medium text-slate-500 bg-slate-50 rounded-lg p-2 border border-slate-100">
-                            <span className="text-slate-400 mr-1">Note:</span> {payment.notes}
-                          </div>
+
+                        {canDo('payments', 'delete') && (
+                          <button 
+                            onClick={() => handleDeletePayment(payment._id)}
+                            className="w-8 h-8 flex items-center justify-center text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all duration-300 shadow-sm shadow-rose-100 flex-shrink-0"
+                            title="Delete Payment"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
                         )}
                       </div>
-                    </div>
 
-                    <div className="flex items-center sm:justify-end gap-2 border-t sm:border-t-0 border-slate-50 pt-3 sm:pt-0">
-                      {canDo('payments', 'delete') && (
-                        <button 
-                          onClick={() => handleDeletePayment(payment._id)}
-                          className="flex items-center gap-2 px-3 py-2 text-rose-600 bg-rose-50 hover:bg-rose-600 hover:text-white rounded-xl transition-all duration-300 font-black text-[10px] uppercase tracking-widest shadow-sm shadow-rose-100"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          Delete
-                        </button>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span>Rent: <span className="text-slate-600">₹{payment.rentAmount.toLocaleString()}</span></span>
+                        {payment.amountPaid > 0 && <span>Paid: <span className="text-emerald-600">₹{payment.amountPaid.toLocaleString()}</span></span>}
+                        <span>Created At: <span className="text-slate-600">{formatDate(payment.createdAt)}</span></span>
+                      </div>
+                      
+                      {(payment.advanceUsed > 0 || payment.advanceAdded > 0) && (
+                        <div className="flex gap-2 mt-2">
+                          {payment.advanceUsed > 0 && (
+                            <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                              🔄 Adv Used: ₹{payment.advanceUsed.toLocaleString()}
+                            </span>
+                          )}
+                          {payment.advanceAdded > 0 && (
+                            <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-2 py-0.5 rounded-lg uppercase tracking-wider">
+                              💰 +₹{payment.advanceAdded.toLocaleString()} Adv
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {payment.notes && (
+                        <div className="mt-2 text-[10px] font-medium text-slate-500 bg-slate-50 rounded-lg p-2 border border-slate-100">
+                          <span className="text-slate-400 mr-1">Note:</span> {payment.notes}
+                        </div>
                       )}
                     </div>
                   </div>
