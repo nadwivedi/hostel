@@ -25,6 +25,12 @@ const processTenantPayments = async (tenant, today, threeDaysFromNow) => {
       return 0;
     }
 
+    // Per user request: If a leave date is set, do not create any automated payments
+    if (tenant.leaveDate) {
+      console.log(`[Payments] Skipping auto-creation for ${tenant.name} - leave date is set.`);
+      return 0;
+    }
+
     let currentYear = latestPayment.year;
     let currentMonth = latestPayment.month;
 
