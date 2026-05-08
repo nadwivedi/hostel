@@ -1080,311 +1080,133 @@ function PropertyDetail() {
         )}
 
         {/* ROOM-WISE DISPLAY */}
-        <div className="space-y-2 sm:space-y-5">
+        <div className="space-y-3 sm:space-y-4">
           {sortedRooms.map((room) => {
             const roomTenants = getTenantsForRoom(room._id);
             const isPerBed = room.rentType === "PER_BED";
             const isExpanded = !!expandedRooms[room._id];
             const totalBedsInRoom = room.beds?.length || 1;
-            const remainingBeds = Math.max(totalBedsInRoom - 1, 0);
             const isEmpty = roomTenants.length === 0;
+            const isFull = roomTenants.length >= totalBedsInRoom;
+            
             const visibleTenants =
               isPerBed && !isExpanded ? roomTenants.slice(0, 1) : roomTenants;
-
-            const roomPending = roomTenants.reduce((acc, tenant) => {
-              const paymentInfo = getTenantPaymentInfo(tenant._id);
-              return (
-                acc + (paymentInfo?.type === "pending" ? paymentInfo.amount : 0)
-              );
-            }, 0);
 
             return (
               <div
                 key={room._id}
-                className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+                className={`bg-white rounded-2xl shadow-sm border ${isEmpty ? 'border-emerald-100 shadow-emerald-50' : isFull ? 'border-rose-100 shadow-rose-50' : 'border-slate-100'} overflow-hidden transition-all`}
               >
-                {/* ROOM HEADER - DOMINANT */}
-                <div className={`p-2 sm:p-6 ${isEmpty ? "bg-gradient-to-r from-green-700 via-green-800 to-green-900" : "bg-gradient-to-r from-gray-700 via-gray-800 to-black"}`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 sm:gap-4">
-                      <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-2xl flex items-center justify-center border border-white/30 shadow-md">
-                        <span className="text-base sm:text-3xl">🏠</span>
-                      </div>
-                      <div>
-                        <h2 className="text-[15px] sm:text-3xl font-black text-white drop-shadow-lg">
-                          Room {room.roomNumber} -{" "}
-                          <span className="px-1.5 py-0.5 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-white font-bold text-[9px] sm:text-xs border border-white/30">
-                            {room.rentType === "PER_BED"
-                              ? `${room.beds?.length || 0} Beds`
-                              : "Full Room"}
-                          </span>{" "}
-                          <span className="px-1.5 py-0.5 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-white font-bold text-[9px] sm:text-xs border border-white/30">
-                            ₹{room.rentAmount?.toLocaleString()}/mo
-                          </span>
-                        </h2>
-                      </div>
+                {/* COMPACT ROOM HEADER */}
+                <div className={`px-3 py-2.5 flex items-center justify-between border-b ${isEmpty ? "bg-emerald-50/50 border-emerald-100" : isFull ? "bg-rose-50/50 border-rose-100" : "bg-slate-50 border-slate-100"}`}>
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${isEmpty ? 'bg-emerald-600' : isFull ? 'bg-rose-600' : 'bg-slate-900'} text-white`}>
+                       <span className="text-lg">🏠</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-white/80 text-[9px] sm:text-sm font-semibold">
-                        Occupancy
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-[13px] font-black text-slate-800">Room {room.roomNumber}</h2>
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${isPerBed ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {isPerBed ? 'Beds' : 'Full'}
+                        </span>
                       </div>
-                      <div className="text-[15px] sm:text-3xl font-black text-white drop-shadow-lg">
-                        {roomTenants.length}/{room.beds?.length || 1}
-                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">₹{room.rentAmount?.toLocaleString()}/mo</p>
                     </div>
+                  </div>
+                  <div className="text-right">
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Occupancy</p>
+                     <div className={`text-sm font-black px-2.5 py-0.5 rounded-lg border ${
+                       isEmpty ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
+                       isFull ? 'bg-rose-100 text-rose-700 border-rose-200' : 
+                       'bg-slate-900 text-white border-slate-900'
+                     }`}>
+                       {roomTenants.length}/{totalBedsInRoom}
+                     </div>
                   </div>
                 </div>
 
-                {/* TENANTS LIST - SECONDARY DOMINANCE */}
-                <div className="p-1.5 sm:p-4 bg-gradient-to-br from-gray-50 to-white">
-                  <div className="space-y-1.5 sm:space-y-3">
-                    {isEmpty ? (
-                      <div
-                        onClick={() => handleAddTenant(room)}
-                        className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg sm:rounded-xl border border-emerald-200 p-2 sm:p-3 flex items-center justify-between cursor-pointer hover:bg-emerald-100 transition-colors"
-                      >
-                        <div className="text-xs sm:text-sm font-bold text-emerald-700">Empty Room</div>
-                        <div className="w-6 h-6 sm:w-7 sm:h-7 bg-emerald-500 text-white rounded-lg flex items-center justify-center">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                        </div>
+                {/* TENANTS LIST - COMPACT */}
+                <div className="p-2 space-y-2">
+                  {isEmpty ? (
+                    <button
+                      onClick={() => handleAddTenant(room)}
+                      className="w-full bg-slate-50 hover:bg-emerald-50 border border-dashed border-slate-200 hover:border-emerald-200 rounded-xl py-4 flex flex-col items-center justify-center transition-all group"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:border-emerald-100 shadow-sm transition-all mb-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                       </div>
-                    ) : visibleTenants.map((tenant, index) => {
-                      const paymentInfo = getTenantPaymentInfo(tenant._id);
+                      <span className="text-[10px] font-black text-slate-400 group-hover:text-emerald-600 uppercase tracking-widest">Add Tenant</span>
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      {visibleTenants.map((tenant, idx) => {
+                        const paymentInfo = getTenantPaymentInfo(tenant._id);
+                        const initials = tenant.name.charAt(0).toUpperCase();
+                        const isPending = paymentInfo && paymentInfo.type === "pending";
 
-                      return (
-                        <div
-                          key={tenant._id}
-                          className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 p-2 sm:p-4 hover:shadow-md transition-all cursor-pointer"
-                          onClick={() =>
-                            navigate(`/tenant/${tenant._id}`, {
-                              state: { from: `/property/${locationId}` },
-                            })
-                          }
-                        >
-                          {/* Tenant Header */}
-                          <div className="flex items-center justify-between mb-1.5 sm:mb-3">
-                            <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="flex-shrink-0 h-9 w-9 sm:h-14 sm:w-14 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg sm:rounded-2xl flex items-center justify-center text-white font-black text-base sm:text-2xl shadow-sm">
-                                {tenant.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <div className="text-xs sm:text-lg font-black text-gray-900">
-                                  {tenant.name}
+                        return (
+                          <div
+                            key={tenant._id}
+                            className="bg-white border border-slate-100 rounded-xl p-2.5 hover:border-slate-300 transition-all active:bg-slate-50"
+                            onClick={() => navigate(`/tenant/${tenant._id}`, { state: { from: `/property/${locationId}` } })}
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xs shadow-sm">
+                                  {initials}
                                 </div>
-                                <div className="text-[10px] sm:text-sm text-gray-600 flex items-center font-semibold">
-                                  <svg
-                                    className="w-2.5 h-2.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                                    />
-                                  </svg>
-                                  {tenant.mobile}
-                                </div>
-                              </div>
-                            </div>
-                            <div
-                              className="flex items-center gap-0.5 sm:gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {tenant.bedNumber && (
-                                <div className="px-1.5 py-0.5 sm:px-3 sm:py-1.5 bg-blue-100 rounded-md sm:rounded-xl">
-                                  <div className="text-[7px] sm:text-xs text-blue-600 font-bold">
-                                    BED
-                                  </div>
-                                  <div className="text-sm sm:text-xl font-black text-blue-700">
-                                    {tenant.bedNumber}
+                                <div className="min-w-0">
+                                  <h4 className="text-[11px] font-black text-slate-800 truncate leading-none mb-1">{tenant.name}</h4>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[9px] font-bold text-slate-400">{tenant.mobile}</p>
+                                    {tenant.bedNumber && (
+                                      <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded uppercase">Bed {tenant.bedNumber}</span>
+                                    )}
                                   </div>
                                 </div>
-                              )}
-                              {canDo('tenants', 'edit') && (
-                              <button
-                                onClick={() => handleEdit(tenant)}
-                                className="p-1 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-md transition"
-                                title="Edit"
-                              >
-                                <svg
-                                  className="w-3.5 h-3.5 sm:w-5 sm:h-5"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                  />
-                                </svg>
-                              </button>
-                              )}
-                              {tenant.status === "ACTIVE" && canDo('tenants', 'edit') && (
-                                <button
-                                  onClick={() => handleMarkAsLeft(tenant)}
-                                  className="p-1 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-md transition"
-                                  title="Mark as Left"
-                                >
-                                  <svg
-                                    className="w-3.5 h-3.5 sm:w-5 sm:h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                                    />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Rent & Join Date - MEDIUM PROMINENCE */}
-                          <div className="grid grid-cols-2 gap-1 sm:gap-3 mb-1.5 sm:mb-3">
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-md sm:rounded-xl p-1.5 sm:p-3 border border-green-200">
-                              <div className="text-[8px] sm:text-xs text-green-600 font-bold uppercase">
-                                Rent
                               </div>
-                              <div className="text-sm sm:text-xl font-black text-green-700">
-                                ₹{tenant.rentAmount?.toLocaleString()}
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                {canDo('tenants', 'edit') && (
+                                  <button onClick={() => handleEdit(tenant)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                  </button>
+                                )}
+                                {tenant.status === "ACTIVE" && canDo('tenants', 'edit') && (
+                                  <button onClick={() => handleMarkAsLeft(tenant)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                  </button>
+                                )}
                               </div>
                             </div>
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-md sm:rounded-xl p-1.5 sm:p-3 border border-blue-200">
-                              <div className="text-[8px] sm:text-xs text-blue-600 font-bold uppercase">
-                                Joined
-                              </div>
-                              <div className="text-xs sm:text-base font-black text-blue-700">
-                                {new Date(
-                                  tenant.joiningDate,
-                                ).toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "2-digit",
-                                })}
-                              </div>
+
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                               <div className="bg-slate-50 rounded-lg p-1.5 border border-slate-100">
+                                 <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Rent</p>
+                                 <p className="text-[10px] font-black text-slate-800">₹{tenant.rentAmount?.toLocaleString()}</p>
+                               </div>
+                               <div className="bg-slate-50 rounded-lg p-1.5 border border-slate-100">
+                                 <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Joined</p>
+                                 <p className="text-[10px] font-black text-slate-800">{new Date(tenant.joiningDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}</p>
+                               </div>
                             </div>
-                          </div>
-
-                          {isPerBed &&
-                            !isExpanded &&
-                            remainingBeds > 0 &&
-                            index === 0 && (
-                              <div className="flex items-center justify-center mb-1.5 sm:mb-3">
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleRoomExpanded(room._id);
-                                  }}
-                                  className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold text-gray-600 hover:text-gray-800 transition"
-                                >
-                                  <span>2 more beds</span>
-                                  <svg
-                                    className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M19 9l-7 7-7-7"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            )}
-
-                             {/* PENDING PAYMENT - BOTTOM SMALLER SECTION */}
-                             {paymentInfo && paymentInfo.type === "pending" && (
-                               <div
-                                 className={`rounded-md sm:rounded-xl p-1.5 sm:p-3 border ${
-                                   paymentInfo.type === "pending"
-                                     ? "bg-red-50 border-red-200"
-                                     : "bg-gray-50 border-gray-200"
-                                 }`}
-                               >
-                                 <div className="flex items-center justify-between">
-                                   <div className="text-left">
-                                     <span className={`text-xs sm:text-lg font-black ${paymentInfo.type === "pending" ? "text-red-700" : "text-gray-700"}`}>
-                                       {paymentInfo.amount.toLocaleString()} 
-                                     </span>
-                                     <span className="text-[10px] ml-1 font-semibold">(pending)</span>
-                                     <div className="font-bold text-[10px]">
-                                      {paymentInfo.month}
-                                     </div>
-                                   </div>
-                                   <div className="flex items-center gap-2 sm:gap-1" onClick={(e) => e.stopPropagation()}>
-                                     <button
-                                       onClick={(e) =>
-                                         handleMarkPaymentAsPaid(
-                                           e,
-                                           paymentInfo.paymentId,
-                                       )
-                                     }
-                                     className="p-1 sm:p-2 bg-green-600 text-white rounded sm:rounded-lg hover:bg-green-700 transition"
-                                     title="Mark as Paid"
-                                   >
-                                    <svg
-                                        className="w-3 h-3 sm:w-4 sm:h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2.5}
-                                          d="M5 13l4 4L19 7"
-                                        />
-                                      </svg>
-                                    </button>
-                                      <button
-                                        onClick={(e) =>
-                                          openWhatsAppReminder(
-                                            e,
-                                            tenant,
-                                            paymentInfo.amount,
-                                            paymentInfo.month,
-                                            paymentInfo.paymentId,
-                                          )
-                                        }
-                                        className="p-1 sm:p-2 bg-green-500 text-white rounded sm:rounded-lg hover:bg-green-600 transition"
-                                        title="Send WhatsApp Reminder"
-                                      >
-                                        <svg
-                                          className="w-3 h-3 sm:w-4 sm:h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                        </svg>
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                            )}
                           </div>
                         );
                       })}
+                      {isPerBed && (totalBedsInRoom - roomTenants.length) > 0 && !isExpanded && roomTenants.length > 0 && (
+                        <button
+                          onClick={() => toggleRoomExpanded(room._id)}
+                          className="w-full py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-all"
+                        >
+                          + {totalBedsInRoom - roomTenants.length} more beds
+                        </button>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
 
         {filteredRooms.length === 0 && !searchTerm && (
           <div className="bg-white rounded-lg sm:rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-12 flex flex-col items-center justify-center">
