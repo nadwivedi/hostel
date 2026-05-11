@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "../../App";
 import { useAuth } from "../../context/AuthContext";
-import TenantFormModal from "./components/TenantFormModal";
+import TenantFormModal from "../../components/tenants/TenantFormModal";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 

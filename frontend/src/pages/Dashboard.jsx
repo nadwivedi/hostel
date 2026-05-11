@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "../App";
 import { useAuth } from "../context/AuthContext";
+import TenantFormModal from "../components/tenants/TenantFormModal";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -46,14 +47,34 @@ function Dashboard() {
   const [showAddTenant, setShowAddTenant] = useState(false);
   const [addTenantStep, setAddTenantStep] = useState(1);
   const [properties, setProperties] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [buildings, setBuildings] = useState([]);
+  const [selectedFormBuildingId, setSelectedFormBuildingId] = useState("");
   const [savingTenant, setSavingTenant] = useState(false);
+
   const [tenantForm, setTenantForm] = useState({
-    propertyId: '', roomId: '', bedNumber: '',
-    name: '', mobile: '',
-    rentAmount: '', advanceAmount: '',
-    joiningDate: new Date().toISOString().split('T')[0],
+    name: "",
+    mobile: "",
+    email: "",
+    adharNo: "",
+    adharImg: "",
+    document: "",
+    dob: "",
+    gender: "",
+    roomId: "",
+    bedNumber: "",
+    rentAmount: "",
+    advanceAmount: "",
+    joiningDate: new Date().toISOString().split("T")[0],
+    notes: "",
   });
+
+  const [aadharFile, setAadharFile] = useState(null);
+  const [documentFile, setDocumentFile] = useState(null);
+  const [aadharPreview, setAadharPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
 
   const fetchPendingPayments = async () => {
     try {
@@ -158,7 +179,27 @@ function Dashboard() {
   };
 
   const openAddTenant = async () => {
-    setTenantForm({ propertyId: '', roomId: '', bedNumber: '', name: '', mobile: '', rentAmount: '', advanceAmount: '', joiningDate: new Date().toISOString().split('T')[0] });
+    setTenantForm({
+      name: "",
+      mobile: "",
+      email: "",
+      adharNo: "",
+      adharImg: "",
+      document: "",
+      dob: "",
+      gender: "",
+      roomId: "",
+      bedNumber: "",
+      rentAmount: "",
+      advanceAmount: "",
+      joiningDate: new Date().toISOString().split("T")[0],
+      notes: "",
+    });
+    setAadharFile(null);
+    setDocumentFile(null);
+    setAadharPreview(null);
+    setShowAdditionalDetails(false);
+    setSelectedFormBuildingId("");
     setAddTenantStep(1);
     setShowAddTenant(true);
     try {
@@ -168,20 +209,125 @@ function Dashboard() {
   };
 
   const handleSelectProperty = async (propertyId) => {
-    setTenantForm(prev => ({ ...prev, propertyId, roomId: '', bedNumber: '', rentAmount: '' }));
+    const prop = properties.find(p => p._id === propertyId);
+    setSelectedLocation(prop);
     try {
-      const { data } = await axios.get(`${BACKEND_URL}/api/rooms?propertyId=${propertyId}`, { withCredentials: true });
-      setRooms(data || []);
+      setLoading(true);
+      const [roomsRes, buildingsRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/rooms?locationId=${propertyId}`, { withCredentials: true }),
+        axios.get(`${BACKEND_URL}/api/buildings/property/${propertyId}`, { withCredentials: true })
+      ]);
+      setRooms(roomsRes.data || []);
+      setBuildings(buildingsRes.data || []);
       setAddTenantStep(2);
-    } catch { toast.error('Failed to load rooms'); }
+    } catch { 
+      toast.error('Failed to load property details'); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "mobile") {
+      const numericValue = value.replace(/\D/g, "").slice(0, 10);
+      setTenantForm({ ...tenantForm, [name]: numericValue });
+    } else if (name === "adharNo") {
+      const numericValue = value.replace(/\D/g, "").slice(0, 12);
+      setTenantForm({ ...tenantForm, [name]: numericValue });
+    } else if (name === "roomId") {
+      const selectedRoom = rooms.find((r) => r._id === value);
+      const rent = selectedRoom ? selectedRoom.rentAmount : "";
+      setTenantForm({
+        ...tenantForm,
+        roomId: value,
+        bedNumber: "",
+        rentAmount: rent,
+        advanceAmount: rent ? rent * 2 : "",
+      });
+    } else if (name === "buildingId") {
+      setSelectedFormBuildingId(value);
+      setTenantForm({
+        ...tenantForm,
+        roomId: "",
+        bedNumber: "",
+        rentAmount: "",
+        advanceAmount: "",
+      });
+    } else if (name === "rentAmount") {
+      const rent = value ? parseFloat(value) : "";
+      setTenantForm({
+        ...tenantForm,
+        rentAmount: value,
+        advanceAmount: rent ? rent * 2 : "",
+      });
+    } else {
+      setTenantForm({ ...tenantForm, [name]: value });
+    }
+  };
+
+  const handleFileUpload = async (file, type, tenantName) => {
+    if (!file) return null;
+    const userId = currentUserId;
+    const formDataUpload = new FormData();
+    formDataUpload.append(type, file);
+    formDataUpload.append("tenantName", tenantName);
+    formDataUpload.append("userId", userId);
+
+    try {
+      setUploading(true);
+      const response = await axios.post(`${BACKEND_URL}/api/uploads/${type}`, formDataUpload, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      });
+      return response.data.fileUrl;
+    } catch (error) {
+      console.error(`Error uploading ${type}:`, error);
+      toast.error(`Error uploading ${type}`);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleAadharChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAadharFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setAadharPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDocumentChange = (e) => {
+    const file = e.target.files[0];
+    if (file) setDocumentFile(file);
   };
 
   const handleAddTenantSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (!currentUserId) { toast.error("User not authenticated."); return; }
+
     try {
       setSavingTenant(true);
+      let aadharUrl = tenantForm.adharImg;
+      let documentUrl = tenantForm.document;
+
+      if (aadharFile) aadharUrl = await handleFileUpload(aadharFile, "aadhar", tenantForm.name);
+      if (documentFile) documentUrl = await handleFileUpload(documentFile, "document", tenantForm.name);
+
+      const tenantData = {
+        ...tenantForm,
+        adharImg: aadharUrl || undefined,
+        document: documentUrl || undefined,
+        locationId: selectedLocation?._id,
+        rentAmount: tenantForm.rentAmount ? parseFloat(tenantForm.rentAmount) : undefined,
+        advanceAmount: tenantForm.advanceAmount ? parseFloat(tenantForm.advanceAmount) : 0,
+      };
+
       await axios.post(`${BACKEND_URL}/api/tenants`,
-        { userId: currentUserId, ...tenantForm },
+        { userId: currentUserId, ...tenantData },
         { withCredentials: true }
       );
       toast.success(`${tenantForm.name} added successfully!`);
@@ -192,6 +338,11 @@ function Dashboard() {
     } finally {
       setSavingTenant(false);
     }
+  };
+
+  const handleCancelAddTenant = () => {
+    setShowAddTenant(false);
+    setAddTenantStep(1);
   };
 
   const getPaymentUrgency = (dueDate) => {
@@ -492,22 +643,22 @@ function Dashboard() {
         );
       })()}
 
-      {/* Add Tenant Modal would follow a similar premium redesign pattern */}
+      {/* Add Tenant Modal */}
       {showAddTenant && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-[2rem] w-full max-w-md my-auto shadow-2xl overflow-hidden">
-            <div className="bg-slate-900 p-6 text-white">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-black uppercase tracking-tight">New Tenant</h3>
-                <button onClick={() => setShowAddTenant(false)} className="p-1 hover:bg-white/10 rounded-full">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+        addTenantStep === 1 ? (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+            <div className="bg-white rounded-[2rem] w-full max-w-md my-auto shadow-2xl overflow-hidden">
+              <div className="bg-slate-900 p-6 text-white">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-black uppercase tracking-tight">New Tenant</h3>
+                  <button onClick={() => setShowAddTenant(false)} className="p-1 hover:bg-white/10 rounded-full">
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 mt-1">STEP 1 OF 2: SELECT PROPERTY</p>
               </div>
-              <p className="text-[10px] font-bold text-slate-400 mt-1">STEP {addTenantStep} OF 2</p>
-            </div>
 
-            <div className="p-6">
-              {addTenantStep === 1 ? (
+              <div className="p-6">
                 <div className="space-y-3">
                   <p className="text-xs font-bold text-slate-500 mb-4">Choose a property to begin:</p>
                   {properties.map(prop => (
@@ -527,36 +678,40 @@ function Dashboard() {
                     </button>
                   ))}
                 </div>
-              ) : (
-                <form onSubmit={handleAddTenantSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">Full Name</label>
-                      <input required value={tenantForm.name} onChange={e => setTenantForm(p => ({...p, name: e.target.value}))} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-indigo-500 outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">Mobile</label>
-                      <input required type="tel" maxLength={10} value={tenantForm.mobile} onChange={e => setTenantForm(p => ({...p, mobile: e.target.value}))} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-indigo-500 outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase mb-1.5 ml-1">Room</label>
-                      <select required value={tenantForm.roomId} onChange={e => setTenantForm(p => ({...p, roomId: e.target.value}))} className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold focus:border-indigo-500 outline-none appearance-none">
-                        <option value="">Select</option>
-                        {rooms.map(r => <option key={r._id} value={r._id}>Room {r.roomNumber}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-8">
-                    <button type="button" onClick={() => setAddTenantStep(1)} className="flex-1 px-6 py-3.5 rounded-2xl font-black text-xs text-slate-400 bg-slate-100">BACK</button>
-                    <button type="submit" disabled={savingTenant} className="flex-[2] px-6 py-3.5 rounded-2xl font-black text-xs text-white bg-indigo-600 shadow-xl shadow-indigo-200">
-                      {savingTenant ? "SAVING..." : "CREATE TENANT"}
-                    </button>
-                  </div>
-                </form>
-              )}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <TenantFormModal
+            show={true}
+            editingTenant={null}
+            location={selectedLocation}
+            handleCancel={handleCancelAddTenant}
+            handleSubmit={handleAddTenantSubmit}
+            formData={tenantForm}
+            handleChange={handleChange}
+            hasBuildings={buildings.length > 0}
+            buildings={buildings}
+            roomsWithoutBuilding={rooms.filter(r => !r.buildingId)}
+            selectedFormBuildingId={selectedFormBuildingId}
+            formRooms={rooms.filter(room => {
+              if (buildings.length === 0) return true;
+              if (!selectedFormBuildingId) return false;
+              if (selectedFormBuildingId === "no-building") return !room.buildingId;
+              const roomBuildingId = room.buildingId?._id || room.buildingId;
+              return roomBuildingId === selectedFormBuildingId;
+            })}
+            selectedRoom={rooms.find(r => r._id === tenantForm.roomId)}
+            uploading={uploading || savingTenant}
+            showAdditionalDetails={showAdditionalDetails}
+            setShowAdditionalDetails={setShowAdditionalDetails}
+            handleAadharChange={handleAadharChange}
+            handleDocumentChange={handleDocumentChange}
+            aadharPreview={aadharPreview}
+            documentFile={documentFile}
+            BACKEND_URL={BACKEND_URL}
+          />
+        )
       )}
     </div>
   );
